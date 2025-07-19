@@ -1,6 +1,6 @@
 """
-分析报告页面
-负责生成综合分析报告和可解释性分析
+Analysis Report Page
+Responsible for generating comprehensive analysis reports and explainability analysis
 """
 
 import streamlit as st
@@ -22,13 +22,13 @@ from backend.explainer.lime_explainer import LIMEExplainer
 from backend.analysis_reporting.report_generator import ReportGenerator
 
 def show():
-    """显示分析报告页面"""
-    st.markdown('<div class="sub-header">📋 综合分析报告与可解释性分析</div>', unsafe_allow_html=True)
-    
+    """Display analysis report page"""
+    st.markdown('<div class="sub-header">📋 Comprehensive Analysis Report & Explainability Analysis</div>', unsafe_allow_html=True)
+
     # 检查是否有特征工程数据
     if 'engineered_features' not in st.session_state or st.session_state.engineered_features is None:
-        st.warning("⚠️ 请先完成特征工程！")
-        st.info("💡 请在'🔧 特征工程'页面完成特征生成")
+        st.warning("⚠️ Please complete feature engineering first!")
+        st.info("💡 Please complete feature generation on the '🔧 Feature Engineering' page")
         return
     
     # 初始化session state
@@ -42,80 +42,80 @@ def show():
     # 获取特征工程数据
     engineered_data = st.session_state.engineered_features
     
-    st.markdown("### 📊 数据概览")
-    
+    st.markdown("### 📊 Data Overview")
+
     col1, col2, col3, col4 = st.columns(4)
-    
+
     with col1:
-        st.metric("记录数", f"{len(engineered_data):,}")
+        st.metric("Records", f"{len(engineered_data):,}")
     
     with col2:
-        st.metric("特征数", f"{len(engineered_data.columns)}")
-    
+        st.metric("Feature Count", f"{len(engineered_data.columns)}")
+
     with col3:
         numeric_features = len(engineered_data.select_dtypes(include=['number']).columns)
-        st.metric("数值特征", f"{numeric_features}")
-    
+        st.metric("Numeric Features", f"{numeric_features}")
+
     with col4:
         if 'is_fraudulent' in engineered_data.columns:
             fraud_rate = (engineered_data['is_fraudulent'].sum() / len(engineered_data) * 100).round(2)
-            st.metric("欺诈率", f"{fraud_rate}%")
+            st.metric("Fraud Rate", f"{fraud_rate}%")
         else:
-            st.metric("欺诈率", "N/A")
-    
+            st.metric("Fraud Rate", "N/A")
+
     # 报告配置
-    st.markdown("### ⚙️ 报告配置")
-    
+    st.markdown("### ⚙️ Report Configuration")
+
     col1, col2 = st.columns(2)
-    
+
     with col1:
-        st.markdown("#### 📋 报告内容选择")
-        
+        st.markdown("#### 📋 Report Content Selection")
+
         # 报告内容选择
-        include_data_analysis = st.checkbox("数据分析报告", value=True)
-        include_model_performance = st.checkbox("模型性能报告", value=True)
-        include_risk_assessment = st.checkbox("风险评估报告", value=True)
-        include_attack_analysis = st.checkbox("攻击分析报告", value=True)
-        include_explainability = st.checkbox("可解释性分析", value=True)
-        include_recommendations = st.checkbox("防护建议", value=True)
-    
+        include_data_analysis = st.checkbox("Data Analysis Report", value=True)
+        include_model_performance = st.checkbox("Model Performance Report", value=True)
+        include_risk_assessment = st.checkbox("Risk Assessment Report", value=True)
+        include_attack_analysis = st.checkbox("Attack Analysis Report", value=True)
+        include_explainability = st.checkbox("Explainability Analysis", value=True)
+        include_recommendations = st.checkbox("Protection Recommendations", value=True)
+
     with col2:
-        st.markdown("#### 🎯 可解释性分析")
-        
+        st.markdown("#### 🎯 Explainability Analysis")
+
         # 可解释性分析选择
-        include_shap_analysis = st.checkbox("SHAP分析", value=True)
-        include_lime_analysis = st.checkbox("LIME分析", value=True)
-        
+        include_shap_analysis = st.checkbox("SHAP Analysis", value=True)
+        include_lime_analysis = st.checkbox("LIME Analysis", value=True)
+
         # 分析样本数
         analysis_sample_size = st.slider(
-            "分析样本数", 100, 1000, 500,
-            help="用于可解释性分析的样本数量"
+            "Analysis Sample Size", 100, 1000, 500,
+            help="Number of samples for explainability analysis"
         )
-        
+
         # 特征重要性阈值
         feature_importance_threshold = st.slider(
-            "特征重要性阈值", 0.01, 0.1, 0.05, 0.01,
-            help="显示特征重要性的最小阈值"
+            "Feature Importance Threshold", 0.01, 0.1, 0.05, 0.01,
+            help="Minimum threshold for displaying feature importance"
         )
     
     # 报告格式选择
-    st.markdown("#### 📄 报告格式")
-    
+    st.markdown("#### 📄 Report Format")
+
     col1, col2, col3 = st.columns(3)
-    
+
     with col1:
-        export_pdf = st.checkbox("PDF格式", value=True)
-    
+        export_pdf = st.checkbox("PDF Format", value=True)
+
     with col2:
-        export_excel = st.checkbox("Excel格式", value=True)
-    
+        export_excel = st.checkbox("Excel Format", value=True)
+
     with col3:
-        export_html = st.checkbox("HTML格式", value=True)
-    
+        export_html = st.checkbox("HTML Format", value=True)
+
     # 执行分析
-    if st.button("🚀 生成分析报告", type="primary", help="基于当前配置生成综合分析报告"):
+    if st.button("🚀 Generate Analysis Report", type="primary", help="Generate comprehensive analysis report based on current configuration"):
         try:
-            with st.spinner("正在生成分析报告..."):
+            with st.spinner("Generating analysis report..."):
                 # 准备数据
                 X = engineered_data.select_dtypes(include=['number'])
                 if 'is_fraudulent' in X.columns:
@@ -125,29 +125,29 @@ def show():
                 else:
                     y = None
                     has_labels = False
-                
+
                 # 处理缺失值
                 X = X.fillna(0)
-                
+
                 # SHAP分析
                 if include_shap_analysis and has_labels:
                     try:
                         shap_explainer = SHAPExplainer()
                         shap_analysis = shap_explainer.analyze(X, y, sample_size=analysis_sample_size)
                         st.session_state.shap_analysis = shap_analysis
-                        st.success("✅ SHAP分析完成")
+                        st.success("✅ SHAP analysis completed")
                     except Exception as e:
-                        st.warning(f"⚠️ SHAP分析失败: {e}")
-                
+                        st.warning(f"⚠️ SHAP analysis failed: {e}")
+
                 # LIME分析
                 if include_lime_analysis and has_labels:
                     try:
                         lime_explainer = LIMEExplainer()
                         lime_analysis = lime_explainer.analyze(X, y, sample_size=analysis_sample_size)
                         st.session_state.lime_analysis = lime_analysis
-                        st.success("✅ LIME分析完成")
+                        st.success("✅ LIME analysis completed")
                     except Exception as e:
-                        st.warning(f"⚠️ LIME分析失败: {e}")
+                        st.warning(f"⚠️ LIME analysis failed: {e}")
                 
                 # 生成报告数据
                 report_data = {
@@ -341,24 +341,24 @@ def show():
         if 'clustering_results' in report_data:
             clustering_results = report_data['clustering_results']
             analysis_summary.append({
-                '分析项目': '聚类分析',
-                '算法': clustering_results.get('algorithm', 'N/A'),
-                '聚类数': clustering_results.get('n_clusters', 'N/A'),
-                '特征数': len(clustering_results.get('features', [])),
-                '记录数': len(st.session_state.cluster_labels) if 'cluster_labels' in st.session_state else 'N/A'
+                'Analysis Item': 'Clustering Analysis',
+                'Algorithm': clustering_results.get('algorithm', 'N/A'),
+                'Cluster Count': clustering_results.get('n_clusters', 'N/A'),
+                'Feature Count': len(clustering_results.get('features', [])),
+                'Record Count': len(st.session_state.cluster_labels) if 'cluster_labels' in st.session_state else 'N/A'
             })
-        
+
         # 风险评分分析
         if 'risk_analysis' in report_data:
             risk_analysis = report_data['risk_analysis']
             analysis_summary.append({
-                '分析项目': '风险评分',
-                '平均评分': f"{risk_analysis['score_stats']['mean']:.2f}",
-                '标准差': f"{risk_analysis['score_stats']['std']:.2f}",
-                '最高评分': f"{risk_analysis['score_stats']['max']:.2f}",
-                '最低评分': f"{risk_analysis['score_stats']['min']:.2f}"
+                'Analysis Item': 'Risk Scoring',
+                'Average Score': f"{risk_analysis['score_stats']['mean']:.2f}",
+                'Standard Deviation': f"{risk_analysis['score_stats']['std']:.2f}",
+                'Highest Score': f"{risk_analysis['score_stats']['max']:.2f}",
+                'Lowest Score': f"{risk_analysis['score_stats']['min']:.2f}"
             })
-        
+
         # 模型性能分析
         if 'model_performance' in report_data:
             model_performance = report_data['model_performance']
@@ -366,22 +366,44 @@ def show():
                 best_model = max(model_performance.items(), key=lambda x: x[1].get('accuracy', 0))[0]
                 best_accuracy = model_performance[best_model].get('accuracy', 0)
                 analysis_summary.append({
-                    '分析项目': '模型性能',
-                    '最佳模型': best_model,
-                    '最佳准确率': f"{best_accuracy:.3f}",
-                    '模型数量': len(model_performance),
-                    '平均准确率': f"{np.mean([p.get('accuracy', 0) for p in model_performance.values()]):.3f}"
+                    'Analysis Item': 'Model Performance',
+                    'Best Model': best_model,
+                    'Best Accuracy': f"{best_accuracy:.3f}",
+                    'Model Count': len(model_performance),
+                    'Average Accuracy': f"{np.mean([p.get('accuracy', 0) for p in model_performance.values()]):.3f}"
                 })
         
         # 攻击分析
         if 'attack_analysis' in report_data:
             attack_analysis = report_data['attack_analysis']
+
+            # 安全地获取置信度数据
+            try:
+                if 'attack_results' in st.session_state and st.session_state.attack_results:
+                    attack_results = st.session_state.attack_results
+                    if isinstance(attack_results, dict):
+                        attack_data = attack_results.get('attack_predictions', [])
+                    elif isinstance(attack_results, list):
+                        attack_data = attack_results
+                    else:
+                        attack_data = []
+
+                    if attack_data and isinstance(attack_data, list):
+                        confidences = [r.get('confidence', 0) for r in attack_data if isinstance(r, dict) and 'confidence' in r]
+                        avg_confidence = np.mean(confidences) if confidences else 0
+                    else:
+                        avg_confidence = 0
+                else:
+                    avg_confidence = 0
+            except Exception:
+                avg_confidence = 0
+
             analysis_summary.append({
-                '分析项目': '攻击检测',
-                '检测到攻击': attack_analysis.get('total_attacks', 0),
-                '攻击类型数': len(attack_analysis.get('attack_types', {})),
-                '高危攻击率': f"{attack_analysis.get('severity_distribution', {}).get('高危', 0) / max(attack_analysis.get('total_attacks', 1), 1) * 100:.2f}%",
-                '平均置信度': f"{np.mean([r.get('confidence', 0) for r in st.session_state.attack_results]) if 'attack_results' in st.session_state and st.session_state.attack_results else 0:.3f}"
+                'Analysis Item': 'Attack Detection',
+                'Detected Attacks': attack_analysis.get('total_attacks', 0),
+                'Attack Types': len(attack_analysis.get('attack_types', {})),
+                'High Risk Rate': f"{attack_analysis.get('severity_distribution', {}).get('high', 0) / max(attack_analysis.get('total_attacks', 1), 1) * 100:.2f}%",
+                'Average Confidence': f"{avg_confidence:.3f}"
             })
         
         # 显示综合分析表格
@@ -390,50 +412,50 @@ def show():
             st.dataframe(summary_df, use_container_width=True)
         
         # 报告导出
-        st.markdown("#### 📄 报告导出")
-        
+        st.markdown("#### 📄 Report Export")
+
         col1, col2, col3 = st.columns(3)
-        
+
         with col1:
-            if st.button("📊 导出PDF报告", type="primary", use_container_width=True):
+            if st.button("📊 Export PDF Report", type="primary", use_container_width=True):
                 if report_data is None:
-                    st.error("❌ 请先生成分析报告")
+                    st.error("❌ Please generate analysis report first")
                 else:
                     try:
                         report_generator = ReportGenerator()
                         pdf_path = report_generator.generate_pdf_report(report_data)
-                        st.success(f"✅ PDF报告已生成: {pdf_path}")
+                        st.success(f"✅ PDF report generated: {pdf_path}")
 
                         # 提供下载链接
                         if os.path.exists(pdf_path):
                             with open(pdf_path, "rb") as file:
                                 st.download_button(
-                                    label="📥 下载PDF报告",
+                                    label="📥 Download PDF Report",
                                     data=file.read(),
                                     file_name="fraud_detection_report.pdf",
                                     mime="application/pdf"
                                 )
                         else:
-                            st.warning("⚠️ PDF文件生成失败")
+                            st.warning("⚠️ PDF file generation failed")
                     except Exception as e:
-                        st.error(f"❌ PDF报告生成失败: {str(e)}")
-                        st.info("💡 PDF报告功能正在开发中，请尝试其他格式")
-        
+                        st.error(f"❌ PDF report generation failed: {str(e)}")
+                        st.info("💡 PDF report feature is under development, please try other formats")
+
         with col2:
-            if st.button("📊 导出Excel报告", type="primary", use_container_width=True):
+            if st.button("📊 Export Excel Report", type="primary", use_container_width=True):
                 if report_data is None:
-                    st.error("❌ 请先生成分析报告")
+                    st.error("❌ Please generate analysis report first")
                 else:
                     try:
                         report_generator = ReportGenerator()
                         excel_path = report_generator.generate_excel_report(report_data)
-                        st.success(f"✅ Excel报告已生成: {excel_path}")
+                        st.success(f"✅ Excel report generated: {excel_path}")
 
                         # 提供下载链接
                         if os.path.exists(excel_path):
                             with open(excel_path, "rb") as file:
                                 st.download_button(
-                                    label="📥 下载Excel报告",
+                                    label="📥 Download Excel Report",
                                     data=file.read(),
                                     file_name="fraud_detection_report.xlsx",
                                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -469,66 +491,66 @@ def show():
         
         # 报告完成
         st.markdown("---")
-        st.success("🎉 恭喜！您已完成整个电商欺诈风险预测系统的分析流程！")
+        st.success("🎉 Congratulations! You have completed the entire e-commerce fraud risk prediction system analysis process!")
         st.markdown("""
-        **分析流程总结：**
-        1. ✅ 数据上传与预处理
-        2. ✅ 特征工程与风险特征生成
-        3. ✅ 聚类分析与异常群体识别
-        4. ✅ 风险评分与等级分类
-        5. ✅ 多模型预测与性能对比
-        6. ✅ 攻击类型分类与防护建议
-        7. ✅ 综合分析报告与可解释性分析
-        
-        **系统特点：**
-        - 多维度风险评估
-        - 智能特征工程
-        - 多模型集成预测
-        - 攻击类型识别
-        - 可解释性分析
-        - 综合报告生成
+        **Analysis Process Summary:**
+        1. ✅ Data upload and preprocessing
+        2. ✅ Feature engineering and risk feature generation
+        3. ✅ Clustering analysis and anomalous group identification
+        4. ✅ Risk scoring and level classification
+        5. ✅ Multi-model prediction and performance comparison
+        6. ✅ Attack type classification and protection recommendations
+        7. ✅ Comprehensive analysis report and explainability analysis
+
+        **System Features:**
+        - Multi-dimensional risk assessment
+        - Intelligent feature engineering
+        - Multi-model ensemble prediction
+        - Attack type identification
+        - Explainability analysis
+        - Comprehensive report generation
         """)
     
     else:
         # 显示分析报告说明
-        st.markdown("### 📝 分析报告说明")
+        st.markdown("### 📝 Analysis Report Description")
         
         st.markdown("""
-        **报告内容：**
-        
-        1. **数据分析报告**
-           - 数据质量评估
-           - 特征分布分析
-           - 数据统计信息
-        
-        2. **模型性能报告**
-           - 多模型对比分析
-           - 性能指标详解
-           - 预测结果统计
-        
-        3. **风险评估报告**
-           - 风险等级分布
-           - 风险评分分析
-           - 风险趋势分析
-        
-        4. **攻击分析报告**
-           - 攻击类型统计
-           - 攻击严重程度分析
-           - 攻击特征分析
-        
-        5. **可解释性报告**
-           - SHAP全局特征重要性
-           - LIME局部解释分析
-           - 特征贡献分析
-        
-        6. **防护建议报告**
-           - 总体防护建议
-           - 针对性防护措施
-           - 紧急处理建议
-        
-        **可解释性分析：**
-        - **SHAP分析**: 全局特征重要性和局部特征贡献
-        - **LIME分析**: 单个预测的局部线性解释
-        - **特征交互**: 特征之间的相互作用分析
-        - **决策路径**: 模型决策过程的可视化
-        """) 
+        **Report Content:**
+
+        1. **Data Analysis Report**
+           - Data quality assessment
+           - Feature distribution analysis
+           - Data statistical information
+
+        2. **Model Performance Report**
+           - Multi-model comparison analysis
+           - Performance metrics explanation
+           - Prediction result statistics
+
+        3. **Risk Assessment Report**
+           - Risk level distribution
+           - Risk score analysis
+           - Risk trend analysis
+
+        4. **Attack Analysis Report**
+           - Attack type statistics
+           - Attack severity analysis
+           - Attack feature analysis
+
+        5. **Explainability Report**
+           - SHAP global feature importance
+           - LIME local explanation analysis
+           - Feature contribution analysis
+
+        6. **Protection Recommendation Report**
+           - Overall protection recommendations
+           - Targeted protection measures
+           - Emergency handling recommendations
+
+        **Explainability Analysis:**
+        - **SHAP Analysis**: Global feature importance and local feature contribution
+        - **LIME Analysis**: Local linear explanation for individual predictions
+        - **Feature Interaction**: Analysis of interactions between features
+        - **Decision Path**: Visualization of model decision process
+        """)

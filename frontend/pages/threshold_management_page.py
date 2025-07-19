@@ -1,6 +1,6 @@
 """
-动态阈值管理页面
-实时监控和调整四分类风险阈值
+Dynamic Threshold Management Page
+Real-time monitoring and adjustment of four-class risk thresholds
 """
 
 import streamlit as st
@@ -19,8 +19,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 from backend.risk_scoring.dynamic_threshold_manager import DynamicThresholdManager
 
 def show():
-    """显示动态阈值管理页面"""
-    st.markdown('<div class="sub-header">🎛️ 动态阈值管理中心</div>', unsafe_allow_html=True)
+    """Display dynamic threshold management page"""
+    st.markdown('<div class="sub-header">🎛️ Dynamic Threshold Management Center</div>', unsafe_allow_html=True)
     
     # 初始化session state
     _initialize_session_state()
@@ -45,7 +45,7 @@ def show():
     _show_threshold_adjustment_history()
 
 def _initialize_session_state():
-    """初始化session state"""
+    """Initialize session state"""
     if 'threshold_manager' not in st.session_state:
         st.session_state.threshold_manager = DynamicThresholdManager()
     if 'threshold_history' not in st.session_state:
@@ -54,121 +54,121 @@ def _initialize_session_state():
         st.session_state.current_thresholds = None
 
 def _check_prerequisites():
-    """检查前置条件"""
+    """Check prerequisites"""
     if 'four_class_risk_results' not in st.session_state or st.session_state.four_class_risk_results is None:
-        st.warning("⚠️ 请先完成四分类风险评分！")
-        st.info("💡 请在'🎯 风险评分'页面完成四分类风险评分")
+        st.warning("⚠️ Please complete four-class risk scoring first!")
+        st.info("💡 Please complete four-class risk scoring in the '🎯 Risk Scoring' page")
         return False
     return True
 
 def _show_system_description():
-    """显示系统说明"""
-    with st.expander("📖 动态阈值管理系统说明", expanded=False):
+    """Show system description"""
+    with st.expander("📖 Dynamic Threshold Management System Description", expanded=False):
         st.markdown("""
-        ### 🎯 系统功能
-        - **实时监控**: 监控当前风险分布和阈值效果
-        - **智能优化**: 基于目标分布自动优化阈值
-        - **手动调整**: 支持手动微调阈值参数
-        - **历史追踪**: 记录阈值调整历史和效果
+        ### 🎯 System Functions
+        - **Real-time Monitoring**: Monitor current risk distribution and threshold effectiveness
+        - **Intelligent Optimization**: Automatically optimize thresholds based on target distribution
+        - **Manual Adjustment**: Support manual fine-tuning of threshold parameters
+        - **History Tracking**: Record threshold adjustment history and effects
 
-        ### 📊 目标分布
-        - 🟢 **低风险**: 60% (正常交易)
-        - 🟡 **中风险**: 25% (需要监控)
-        - 🟠 **高风险**: 12% (需要关注)
-        - 🔴 **极高风险**: 3% (需要处理)
+        ### 📊 Target Distribution
+        - 🟢 **Low Risk**: 60% (Normal transactions)
+        - 🟡 **Medium Risk**: 25% (Need monitoring)
+        - 🟠 **High Risk**: 12% (Need attention)
+        - 🔴 **Critical Risk**: 3% (Need handling)
 
-        ### 🔧 优化策略
-        1. 基于当前分布计算偏差
-        2. 使用迭代算法优化阈值
-        3. 验证新阈值的分布效果
-        4. 应用最优阈值配置
+        ### 🔧 Optimization Strategy
+        1. Calculate deviation based on current distribution
+        2. Use iterative algorithm to optimize thresholds
+        3. Validate distribution effect of new thresholds
+        4. Apply optimal threshold configuration
         """)
 
 def _show_current_threshold_status():
-    """显示当前阈值状态"""
-    st.markdown("### 📊 当前阈值状态")
-    
+    """Show current threshold status"""
+    st.markdown("### 📊 Current Threshold Status")
+
     risk_results = st.session_state.four_class_risk_results
     current_thresholds = risk_results.get('thresholds', {})
     distribution = risk_results.get('distribution', {})
-    
+
     # 阈值信息
     col1, col2 = st.columns(2)
-    
+
     with col1:
-        st.markdown("#### 🎯 当前阈值设置")
+        st.markdown("#### 🎯 Current Threshold Settings")
         threshold_type = risk_results.get('threshold_type', 'unknown')
-        st.info(f"**阈值类型**: {threshold_type}")
-        
+        st.info(f"**Threshold Type**: {threshold_type}")
+
         if current_thresholds:
-            st.markdown(f"- 🟢 **低风险**: 0 - {current_thresholds.get('low', 40):.1f}")
-            st.markdown(f"- 🟡 **中风险**: {current_thresholds.get('low', 40):.1f} - {current_thresholds.get('medium', 60):.1f}")
-            st.markdown(f"- 🟠 **高风险**: {current_thresholds.get('medium', 60):.1f} - {current_thresholds.get('high', 80):.1f}")
-            st.markdown(f"- 🔴 **极高风险**: {current_thresholds.get('high', 80):.1f} - 100")
-    
+            st.markdown(f"- 🟢 **Low Risk**: 0 - {current_thresholds.get('low', 40):.1f}")
+            st.markdown(f"- 🟡 **Medium Risk**: {current_thresholds.get('low', 40):.1f} - {current_thresholds.get('medium', 60):.1f}")
+            st.markdown(f"- 🟠 **High Risk**: {current_thresholds.get('medium', 60):.1f} - {current_thresholds.get('high', 80):.1f}")
+            st.markdown(f"- 🔴 **Critical Risk**: {current_thresholds.get('high', 80):.1f} - 100")
+
     with col2:
-        st.markdown("#### 📈 实际分布情况")
+        st.markdown("#### 📈 Actual Distribution Status")
         if distribution:
             target_dist = {'low': 60, 'medium': 25, 'high': 12, 'critical': 3}
-            
+
             for level, data in distribution.items():
                 actual_pct = data['percentage']
                 target_pct = target_dist.get(level, 0)
                 deviation = actual_pct - target_pct
-                
+
                 icon = {'low': '🟢', 'medium': '🟡', 'high': '🟠', 'critical': '🔴'}.get(level, '⚪')
-                
+
                 if abs(deviation) <= 5:
                     status = "✅"
                 elif abs(deviation) <= 10:
                     status = "⚠️"
                 else:
                     status = "❌"
-                
-                st.markdown(f"- {icon} **{level.title()}**: {actual_pct:.1f}% (目标: {target_pct}%) {status}")
+
+                st.markdown(f"- {icon} **{level.title()}**: {actual_pct:.1f}% (Target: {target_pct}%) {status}")
 
 def _show_threshold_optimization_panel():
-    """显示阈值优化控制面板"""
-    st.markdown("### 🎛️ 阈值优化控制面板")
-    
+    """Show threshold optimization control panel"""
+    st.markdown("### 🎛️ Threshold Optimization Control Panel")
+
     col1, col2, col3 = st.columns(3)
-    
+
     with col1:
-        if st.button("🔄 自动优化阈值", type="primary", use_container_width=True):
+        if st.button("🔄 Auto Optimize Thresholds", type="primary", use_container_width=True):
             _execute_threshold_optimization()
-    
+
     with col2:
-        if st.button("📊 分析当前分布", use_container_width=True):
+        if st.button("📊 Analyze Current Distribution", use_container_width=True):
             _analyze_current_distribution()
-    
+
     with col3:
-        if st.button("🎯 重置为默认阈值", use_container_width=True):
+        if st.button("🎯 Reset to Default Thresholds", use_container_width=True):
             _reset_to_default_thresholds()
 
 def _execute_threshold_optimization():
-    """执行阈值优化"""
+    """Execute threshold optimization"""
     try:
-        with st.spinner("正在优化阈值..."):
+        with st.spinner("Optimizing thresholds..."):
             risk_results = st.session_state.four_class_risk_results
             detailed_results = risk_results.get('detailed_results', [])
-            
+
             if not detailed_results:
-                st.error("❌ 没有可用的风险评分数据")
+                st.error("❌ No available risk scoring data")
                 return
-            
+
             # 提取风险评分
             risk_scores = [r['risk_score'] for r in detailed_results]
-            
+
             # 使用动态阈值管理器优化
             threshold_manager = st.session_state.threshold_manager
             optimized_thresholds = threshold_manager.optimize_thresholds_iteratively(risk_scores)
-            
+
             # 分析优化效果
             analysis = threshold_manager.analyze_distribution(risk_scores, optimized_thresholds)
-            
+
             # 更新session state
             st.session_state.current_thresholds = optimized_thresholds
-            
+
             # 记录历史
             import datetime
             history_entry = {
@@ -179,21 +179,21 @@ def _execute_threshold_optimization():
                 'is_reasonable': analysis['is_reasonable']
             }
             st.session_state.threshold_history.append(history_entry)
-            
+
             # 显示结果
             if analysis['is_reasonable']:
-                st.success(f"✅ 阈值优化成功！分布偏差: {analysis['total_deviation']:.3f}")
+                st.success(f"✅ Threshold optimization successful! Distribution deviation: {analysis['total_deviation']:.3f}")
             else:
-                st.warning(f"⚠️ 阈值已优化，但分布仍需调整。偏差: {analysis['total_deviation']:.3f}")
-            
+                st.warning(f"⚠️ Thresholds optimized, but distribution still needs adjustment. Deviation: {analysis['total_deviation']:.3f}")
+
             # 显示新阈值
-            st.info("**优化后的阈值**:")
+            st.info("**Optimized Thresholds**:")
             for level, threshold in optimized_thresholds.items():
                 if level != 'critical':
                     st.write(f"- {level.title()}: {threshold:.1f}")
-            
+
     except Exception as e:
-        st.error(f"❌ 阈值优化失败: {str(e)}")
+        st.error(f"❌ Threshold optimization failed: {str(e)}")
 
 def _analyze_current_distribution():
     """分析当前分布"""

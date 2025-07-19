@@ -1,6 +1,6 @@
 """
-伪标签生成页面
-提供多种策略的伪标签生成和质量评估功能
+Pseudo Label Generation Page
+Provides multi-strategy pseudo label generation and quality assessment functions
 """
 
 import streamlit as st
@@ -15,8 +15,8 @@ from backend.pseudo_labeling.pseudo_label_generator import PseudoLabelGenerator
 from backend.pseudo_labeling.fast_pseudo_label_generator import FastPseudoLabelGenerator
 
 def show():
-    """显示伪标签生成页面"""
-    st.markdown('<div class="sub-header">🏷️ 智能伪标签生成系统</div>', unsafe_allow_html=True)
+    """Display pseudo label generation page"""
+    st.markdown('<div class="sub-header">🏷️ Intelligent Pseudo Label Generation System</div>', unsafe_allow_html=True)
 
     # 检查前置条件
     if not _check_prerequisites():
@@ -38,8 +38,8 @@ def show():
 
     # 执行伪标签生成
     mode = st.session_state.label_generation_mode
-    button_text = "🔍 生成高质量伪标签 (标准模式)" if mode == "standard" else "⚡ 快速生成伪标签 (快速模式)"
-    button_help = "多策略集成，高质量标签，2-3分钟完成" if mode == "standard" else "简化算法，快速生成，30秒内完成"
+    button_text = "🔍 Generate High-Quality Pseudo Labels (Standard Mode)" if mode == "standard" else "⚡ Quick Generate Pseudo Labels (Fast Mode)"
+    button_help = "Multi-strategy integration, high-quality labels, completed in 2-3 minutes" if mode == "standard" else "Simplified algorithm, quick generation, completed within 30 seconds"
 
     if st.button(button_text, type="primary", help=button_help):
         _execute_pseudo_label_generation(engineered_data)
@@ -56,16 +56,16 @@ def show():
 
 
 def _check_prerequisites():
-    """检查前置条件"""
+    """Check prerequisites"""
     if 'engineered_features' not in st.session_state or st.session_state.engineered_features is None:
-        st.warning("⚠️ 请先完成特征工程！")
-        st.info("💡 请在'🔧 特征工程'页面完成特征生成")
+        st.warning("⚠️ Please complete feature engineering first!")
+        st.info("💡 Please complete feature generation on the '🔧 Feature Engineering' page")
         return False
     return True
 
 
 def _initialize_session_state():
-    """初始化session state"""
+    """Initialize session state"""
     if 'pseudo_labels' not in st.session_state:
         st.session_state.pseudo_labels = None
     if 'label_generator' not in st.session_state:
@@ -79,123 +79,123 @@ def _initialize_session_state():
 
 
 def _show_system_description():
-    """显示系统说明"""
-    with st.expander("📖 智能伪标签生成系统说明", expanded=False):
+    """Display system description"""
+    with st.expander("📖 Intelligent Pseudo Label Generation System Description", expanded=False):
         st.markdown("""
-        ### 🎯 系统特点
-        - **无监督驱动**: 基于聚类分析和无监督风险评分生成伪标签
-        - **多策略集成**: 融合风险评分、聚类分析、专家规则三种策略
-        - **质量优先**: 自动筛选高置信度标签，确保标签质量
-        - **智能校准**: 可选使用少量真实标签进行校准优化
+        ### 🎯 System Features
+        - **Unsupervised Driven**: Generate pseudo labels based on clustering analysis and unsupervised risk scoring
+        - **Multi-strategy Integration**: Integrate risk scoring, clustering analysis, and expert rules
+        - **Quality First**: Automatically filter high-confidence labels to ensure label quality
+        - **Intelligent Calibration**: Optionally use a small amount of real labels for calibration optimization
 
-        ### 📊 生成策略
-        1. **无监督风险评分** (45%): 基于聚类异常度和特征偏离度
-        2. **聚类风险映射** (35%): 基于聚类质量和风险等级
-        3. **专家业务规则** (20%): 基于领域知识的规则匹配
+        ### 📊 Generation Strategies
+        1. **Unsupervised Risk Scoring** (45%): Based on cluster anomaly and feature deviation
+        2. **Cluster Risk Mapping** (35%): Based on cluster quality and risk level
+        3. **Expert Business Rules** (20%): Rule matching based on domain knowledge
 
-        ### 🔧 质量控制
-        - **动态权重**: 根据各策略质量自动调整权重
-        - **置信度筛选**: 只保留高置信度的伪标签
-        - **一致性检验**: 多策略一致性越高，置信度越高
-        - **平衡性优化**: 自动调整标签分布，避免极端不平衡
+        ### 🔧 Quality Control
+        - **Dynamic Weights**: Automatically adjust weights based on strategy quality
+        - **Confidence Filtering**: Only retain high-confidence pseudo labels
+        - **Consistency Verification**: Higher multi-strategy consistency leads to higher confidence
+        - **Balance Optimization**: Automatically adjust label distribution to avoid extreme imbalance
         """)
 
 
 def _show_data_overview(engineered_data):
-    """显示数据概览"""
-    st.markdown("### 📊 数据概览")
+    """Display data overview"""
+    st.markdown("### 📊 Data Overview")
 
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        st.metric("总样本数", f"{len(engineered_data):,}")
+        st.metric("Total Samples", f"{len(engineered_data):,}")
 
     with col2:
         if 'is_fraudulent' in engineered_data.columns:
             true_fraud_rate = round(engineered_data['is_fraudulent'].sum() / len(engineered_data) * 100, 2)
-            st.metric("真实欺诈率", f"{true_fraud_rate}%")
+            st.metric("True Fraud Rate", f"{true_fraud_rate}%")
         else:
-            st.metric("真实欺诈率", "N/A")
+            st.metric("True Fraud Rate", "N/A")
 
     with col3:
-        st.metric("特征数量", f"{len(engineered_data.columns)}")
+        st.metric("Feature Count", f"{len(engineered_data.columns)}")
 
     with col4:
         # 检查是否有无监督风险评分结果
         if st.session_state.get('unsupervised_risk_results'):
             avg_risk = st.session_state.unsupervised_risk_results.get('average_risk_score', 0)
-            st.metric("平均风险评分", f"{avg_risk:.1f}")
+            st.metric("Average Risk Score", f"{avg_risk:.1f}")
         else:
-            st.metric("平均风险评分", "待计算")
+            st.metric("Average Risk Score", "To be calculated")
 
 
 def _show_generation_config():
-    """显示生成配置"""
-    st.markdown("### ⚙️ 伪标签生成配置")
+    """Show generation configuration"""
+    st.markdown("### ⚙️ Pseudo Label Generation Configuration")
 
     # 生成模式选择
-    st.markdown("#### 🎯 生成模式选择")
+    st.markdown("#### 🎯 Generation Mode Selection")
 
     col_mode1, col_mode2 = st.columns(2)
 
     with col_mode1:
-        if st.button("🔍 标准模式", use_container_width=True,
-                    help="完整策略集成，高质量标签，2-3分钟完成"):
+        if st.button("🔍 Standard Mode", use_container_width=True,
+                    help="Complete strategy integration, high-quality labels, completed in 2-3 minutes"):
             st.session_state.label_generation_mode = "standard"
 
     with col_mode2:
-        if st.button("⚡ 快速模式", use_container_width=True,
-                    help="简化算法，快速生成，30秒内完成"):
+        if st.button("⚡ Fast Mode", use_container_width=True,
+                    help="Simplified algorithm, quick generation, completed within 30 seconds"):
             st.session_state.label_generation_mode = "fast"
 
     # 显示当前模式
     mode = st.session_state.label_generation_mode
     if mode == "standard":
-        st.success("🔍 **当前模式: 标准模式** - 多策略集成，高质量标签")
+        st.success("🔍 **Current Mode: Standard Mode** - Multi-strategy integration, high-quality labels")
     else:
-        st.info("⚡ **当前模式: 快速模式** - 简化算法，快速生成")
+        st.info("⚡ **Current Mode: Fast Mode** - Simplified algorithm, quick generation")
 
     st.markdown("---")
 
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("**质量控制参数**")
+        st.markdown("**Quality Control Parameters**")
         min_confidence = st.slider(
-            "最小置信度阈值",
+            "Minimum Confidence Threshold",
             min_value=0.5,
             max_value=0.95,
             value=0.8,
             step=0.05,
-            help="只保留置信度高于此阈值的伪标签"
+            help="Only retain pseudo labels with confidence above this threshold"
         )
 
         use_calibration = st.checkbox(
-            "启用校准优化",
+            "Enable Calibration Optimization",
             value=True,
-            help="使用少量真实标签校准风险评分阈值"
+            help="Use a small amount of real labels to calibrate risk scoring thresholds"
         )
 
         balance_labels = st.checkbox(
-            "标签平衡优化",
+            "Label Balance Optimization",
             value=True,
-            help="自动调整标签分布，避免极端不平衡"
+            help="Automatically adjust label distribution to avoid extreme imbalance"
         )
 
     with col2:
-        st.markdown("**策略权重配置**")
+        st.markdown("**Strategy Weight Configuration**")
 
         # 显示当前权重配置
         current_weights = {
-            "无监督风险评分": 45,
-            "聚类风险映射": 35,
-            "专家业务规则": 20
+            "Unsupervised Risk Scoring": 45,
+            "Cluster Risk Mapping": 35,
+            "Expert Business Rules": 20
         }
 
         for strategy, weight in current_weights.items():
             st.write(f"- {strategy}: {weight}%")
 
-        st.info("💡 权重会根据各策略的实际质量动态调整")
+        st.info("💡 Weights will be dynamically adjusted based on actual quality of each strategy")
 
     # 保存配置到session state
     st.session_state.label_config = {
@@ -206,58 +206,58 @@ def _show_generation_config():
     
     # 高级配置（仅标准模式显示）
     if mode == "standard":
-        st.markdown("#### 🔧 高级配置")
-    
+        st.markdown("#### 🔧 Advanced Configuration")
+
     col1, col2 = st.columns([2, 1])
-    
+
     with col1:
         strategy = st.selectbox(
-            "选择标签生成策略",
+            "Select Label Generation Strategy",
             options=['ensemble', 'risk_based', 'cluster_based', 'rule_based'],
             format_func=lambda x: {
-                'ensemble': '🎯 集成策略 (推荐)',
-                'risk_based': '📊 基于风险评分',
-                'cluster_based': '🔍 基于聚类分析',
-                'rule_based': '📋 基于专家规则'
+                'ensemble': '🎯 Ensemble Strategy (Recommended)',
+                'risk_based': '📊 Risk Score Based',
+                'cluster_based': '🔍 Cluster Analysis Based',
+                'rule_based': '📋 Expert Rules Based'
             }[x],
-            help="选择伪标签生成策略"
+            help="Select pseudo label generation strategy"
         )
-    
+
     with col2:
         confidence_threshold = st.slider(
-            "置信度阈值",
+            "Confidence Threshold",
             min_value=0.1,
             max_value=0.9,
             value=0.7,
             step=0.05,
-            help="只保留置信度高于此阈值的标签"
+            help="Only retain labels with confidence above this threshold"
         )
     
     # 策略说明
     strategy_descriptions = {
         'ensemble': """
-        **🎯 集成策略**
-        - 综合风险评分、聚类分析和专家规则
-        - 使用加权投票机制
-        - 提供最高的标签质量和稳定性
+        **🎯 Ensemble Strategy**
+        - Combines risk scoring, clustering analysis, and expert rules
+        - Uses weighted voting mechanism
+        - Provides highest label quality and stability
         """,
         'risk_based': """
-        **📊 基于风险评分**
-        - 根据多维度风险评分生成标签
-        - 高风险评分(>70) → 欺诈标签
-        - 适合有明确风险阈值的场景
+        **📊 Risk Score Based**
+        - Generate labels based on multi-dimensional risk scores
+        - High risk score (>70) → Fraud label
+        - Suitable for scenarios with clear risk thresholds
         """,
         'cluster_based': """
-        **🔍 基于聚类分析**
-        - 根据聚类的欺诈率生成标签
-        - 高欺诈率聚类 → 欺诈标签
-        - 适合发现隐藏的欺诈模式
+        **🔍 Clustering Based**
+        - Generate labels based on cluster fraud rates
+        - High fraud rate clusters → Fraud labels
+        - Suitable for discovering hidden fraud patterns
         """,
         'rule_based': """
-        **📋 基于专家规则**
-        - 基于业务专家经验规则
-        - 包含时间、金额、设备等规则
-        - 适合有明确业务逻辑的场景
+        **📋 Expert Rules Based**
+        - Based on business expert experience rules
+        - Includes time, amount, device and other rules
+        - Suitable for scenarios with clear business logic
         """
     }
     
@@ -265,14 +265,14 @@ def _show_generation_config():
     
     # 执行伪标签生成
     col1, col2 = st.columns([3, 1])
-    
+
     with col1:
-        generate_labels = st.button("🚀 生成伪标签", type="primary", help="基于选择的策略生成伪标签")
-    
+        generate_labels = st.button("🚀 Generate Pseudo Labels", type="primary", help="Generate pseudo labels based on selected strategy")
+
     with col2:
-        if st.button("🗑️ 清除结果", help="清除之前的生成结果"):
+        if st.button("🗑️ Clear Results", help="Clear previous generation results"):
             st.session_state.pseudo_labels = None
-            st.success("✅ 结果已清除！")
+            st.success("✅ Results cleared!")
             st.rerun()
     
     if generate_labels:
@@ -632,7 +632,7 @@ def _show_quality_assessment():
                 st.metric("召回率", f"{recall:.3f}")
 
             with col4:
-                st.metric("F1分数", f"{f1:.3f}")
+                st.metric("F1 Score", f"{f1:.3f}")
 
             # 混淆矩阵
             cm = confusion_matrix(true_labels_hq, hq_labels)
@@ -641,18 +641,18 @@ def _show_quality_assessment():
                 cm,
                 text_auto=True,
                 aspect="auto",
-                title="混淆矩阵",
-                labels=dict(x="预测标签", y="真实标签"),
-                x=['正常', '欺诈'],
-                y=['正常', '欺诈']
+                title="Confusion Matrix",
+                labels=dict(x="Predicted Label", y="True Label"),
+                x=['Normal', 'Fraud'],
+                y=['Normal', 'Fraud']
             )
 
             st.plotly_chart(fig, use_container_width=True)
 
 
 def _show_label_export():
-    """显示标签导出"""
-    st.markdown("### 📥 标签导出与应用")
+    """Display label export"""
+    st.markdown("### 📥 Label Export & Application")
 
     label_results = st.session_state.pseudo_labels
     engineered_data = st.session_state.engineered_features
@@ -660,18 +660,18 @@ def _show_label_export():
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("**导出选项**")
+        st.markdown("**Export Options**")
 
         export_option = st.radio(
-            "选择导出内容",
-            ["仅高质量标签", "全部标签", "标签对比报告"]
+            "Select export content",
+            ["High-quality labels only", "All labels", "Label comparison report"]
         )
 
-        include_features = st.checkbox("包含特征数据", value=True)
-        include_confidence = st.checkbox("包含置信度", value=True)
+        include_features = st.checkbox("Include feature data", value=True)
+        include_confidence = st.checkbox("Include confidence", value=True)
 
     with col2:
-        st.markdown("**导出统计**")
+        st.markdown("**Export Statistics**")
 
         if export_option == "仅高质量标签":
             export_count = len(label_results.get('high_quality_labels', []))

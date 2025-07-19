@@ -114,36 +114,36 @@ class DataUploadHandler:
         return True, f"数据结构验证通过，字段匹配度: {match_ratio:.1%}"
     
     def upload_data(self, file) -> Tuple[bool, str, Optional[pd.DataFrame]]:
-        """上传数据的主函数"""
+        """Main function for uploading data"""
         try:
             # 验证文件格式
             if not self.validate_file_format(file):
-                return False, "不支持的文件格式，请上传CSV文件", None
-                
+                return False, "Unsupported file format, please upload CSV file", None
+
             # 验证文件大小
             if not self.validate_file_size(file):
-                return False, f"文件大小超过限制 ({self.max_file_size / 1024 / 1024:.1f}MB)", None
-                
+                return False, f"File size exceeds limit ({self.max_file_size / 1024 / 1024:.1f}MB)", None
+
             # 加载数据
             data = self.load_csv_data(file)
             if data is None:
-                return False, "数据加载失败", None
-                
+                return False, "Data loading failed", None
+
             # 验证数据结构
             is_valid, message = self.validate_data_structure(data)
             if not is_valid:
                 return False, message, None
-                
+
             # 获取数据信息
             self.data_info = self.get_data_info(data)
             self.uploaded_data = data
-            
-            logger.info(f"数据上传成功: {data.shape}")
-            return True, "数据上传成功", data
-            
+
+            logger.info(f"Data upload successful: {data.shape}")
+            return True, "Data upload successful", data
+
         except Exception as e:
-            logger.error(f"数据上传过程中发生错误: {e}")
-            return False, f"数据上传失败: {e}", None
+            logger.error(f"Error occurred during data upload: {e}")
+            return False, f"Data upload failed: {e}", None
     
     def load_sample_data(self, dataset_name: str) -> Tuple[bool, str, Optional[pd.DataFrame]]:
         """加载示例数据"""

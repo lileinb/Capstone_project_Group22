@@ -39,24 +39,24 @@ def safe_import_page(module_name):
         module = importlib.import_module(module_name)
         return module
     except Exception as e:
-        st.error(f"❌ 页面加载失败: {module_name}")
-        st.error(f"错误详情: {str(e)}")
+        st.error(f"❌ Page loading failed: {module_name}")
+        st.error(f"Error details: {str(e)}")
 
         # 提供简化的解决方案
-        st.warning("🔧 请尝试以下解决方案:")
-        st.info("1. 刷新浏览器页面 (F5)")
-        st.info("2. 重启Streamlit应用 (Ctrl+C 然后重新运行)")
-        st.info("3. 清除浏览器缓存")
+        st.warning("🔧 Please try the following solutions:")
+        st.info("1. Refresh browser page (F5)")
+        st.info("2. Restart Streamlit application (Ctrl+C then restart)")
+        st.info("3. Clear browser cache")
 
         # 显示备用页面
-        st.markdown("### 📄 页面暂时不可用")
-        st.markdown("该功能模块正在加载中，请稍后再试。")
+        st.markdown("### 📄 Page Temporarily Unavailable")
+        st.markdown("This module is loading, please try again later.")
 
         return None
 
 # 页面配置
 st.set_page_config(
-    page_title="电商欺诈风险预测系统",
+    page_title="E-commerce Fraud Risk Prediction System",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -108,176 +108,162 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # 侧边栏导航
-st.sidebar.markdown("## 🛡️ 电商欺诈风险预测系统")
+st.sidebar.markdown("## 🛡️ E-commerce Fraud Risk Prediction System")
 st.sidebar.markdown("---")
 
 # 页面选择
 page = st.sidebar.selectbox(
-    "选择页面",
+    "Select Page",
     [
-        "🏠 首页",
-        "📁 数据上传",
-        "🔧 特征工程",
-        "📊 聚类分析",
-        "🎯 风险评分",
-        "🎛️ 阈值管理",
-        "🏷️ 伪标签生成",
-        "🤖 模型预测",
-        "⚔️ 攻击分类",
-        "📊 性能监控",
-        "📋 分析报告"
+        "🏠 Home",
+        "📁 Data Upload",
+        "🔧 Feature Engineering",
+        "📊 Clustering Analysis",
+        "🎯 Risk Scoring",
+        "🎛️ Threshold Management",
+        "🏷️ Pseudo Labeling",
+        "🤖 Model Prediction",
+        "⚔️ Attack Classification",
+        "📊 Performance Monitoring",
+        "📋 Analysis Report"
     ]
 )
 
 # 页面路由
-if page == "🏠 首页":
-    st.markdown('<div class="main-header">🛡️ 电商欺诈风险预测系统</div>', unsafe_allow_html=True)
-    
+if page == "🏠 Home":
+    st.markdown('<div class="main-header">🛡️ E-commerce Fraud Risk Prediction System</div>', unsafe_allow_html=True)
+
     # 系统概述
     col1, col2 = st.columns(2)
-    
+
     with col1:
-        st.markdown("### 📊 系统功能")
+        st.markdown("### 📊 System Features")
         st.markdown("""
-        - **多维度风险评估**: 结合无监督聚类、专家规则评分和监督学习
-        - **风险等级预测**: 预测用户未来成为低/中/高/极高风险的概率
-        - **攻击类型分类**: 识别4种主要攻击类型并提供防护建议
-        - **多模型对比**: 4个预训练模型性能对比和集成预测
-        - **可解释性分析**: SHAP/LIME深度解释模型决策过程
+        - **Multi-dimensional Risk Assessment**: Combines unsupervised clustering, expert rule scoring, and supervised learning
+        - **Risk Level Prediction**: Predicts probability of users becoming low/medium/high/critical risk
+        - **Attack Type Classification**: Identifies 4 main attack types and provides protection recommendations
+        - **Multi-model Comparison**: Performance comparison and ensemble prediction of 4 pre-trained models
+        - **Explainability Analysis**: SHAP/LIME deep interpretation of model decision process
         """)
-    
+
     with col2:
-        st.markdown("### 🎯 核心特性")
+        st.markdown("### 🎯 Core Features")
         st.markdown("""
-        - **智能特征工程**: 基于原始16个特征创建20+个风险特征
-        - **聚类异常检测**: 使用K-means、DBSCAN、高斯混合模型
-        - **实时风险评分**: 动态权重调整的多维度评分系统
-        - **伪标签生成**: 多策略集成的高质量伪标签生成
-        - **攻击模式识别**: 四大攻击类型的智能分类
-        - **综合报告生成**: 自动生成PDF/Excel格式分析报告
+        - **Intelligent Feature Engineering**: Creates 20+ risk features based on original 16 features
+        - **Clustering Anomaly Detection**: Uses K-means, DBSCAN, Gaussian Mixture Models
+        - **Real-time Risk Scoring**: Multi-dimensional scoring system with dynamic weight adjustment
+        - **Pseudo Label Generation**: High-quality pseudo label generation with multi-strategy integration
+        - **Attack Pattern Recognition**: Intelligent classification of four major attack types
+        - **Comprehensive Report Generation**: Automatically generates PDF/Excel format analysis reports
         """)
     
     # 系统状态
-    st.markdown("### 🔧 系统状态")
+    st.markdown("### 🔧 System Status")
     col1, col2, col3, col4 = st.columns(4)
-    
+
     with col1:
-        st.metric("数据处理", "✅ 就绪", "支持CSV格式")
-    
+        st.metric("Data Processing", "✅ Ready", "CSV format supported")
+
     with col2:
-        st.metric("特征工程", "✅ 就绪", "20+风险特征")
-    
+        st.metric("Feature Engineering", "✅ Ready", "20+ risk features")
+
     with col3:
-        st.metric("模型预测", "⚠️ 需训练", "4个预训练模型")
-    
+        st.metric("Model Prediction", "⚠️ Training needed", "4 pre-trained models")
+
     with col4:
-        st.metric("报告生成", "✅ 就绪", "多格式导出")
+        st.metric("Report Generation", "✅ Ready", "Multi-format export")
     
     # 快速开始
-    st.markdown("### 🚀 快速开始")
+    st.markdown("### 🚀 Quick Start")
     st.markdown("""
-    1. **数据上传**: 上传您的交易数据CSV文件
-    2. **特征工程**: 系统自动生成风险特征
-    3. **聚类分析**: 发现用户行为模式和异常群体
-    4. **风险评分**: 计算多维度风险评分
-    5. **伪标签生成**: 基于多策略生成高质量伪标签
-    6. **模型预测**: 使用预训练模型进行预测
-    6. **攻击分类**: 识别攻击类型并生成防护建议
-    7. **分析报告**: 生成综合分析和可解释性报告
+    1. **Data Upload**: Upload your transaction data CSV file
+    2. **Feature Engineering**: System automatically generates risk features
+    3. **Clustering Analysis**: Discover user behavior patterns and anomalous groups
+    4. **Risk Scoring**: Calculate multi-dimensional risk scores
+    5. **Pseudo Label Generation**: Generate high-quality pseudo labels based on multi-strategy
+    6. **Model Prediction**: Use pre-trained models for prediction
+    7. **Attack Classification**: Identify attack types and generate protection recommendations
+    8. **Analysis Report**: Generate comprehensive analysis and explainability reports
     """)
     
-    # 数据集信息
-    st.markdown("### 📁 数据集信息")
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("**数据集1**: Fraudulent_E-Commerce_Transaction_Data_sampled_50000.csv")
-        st.markdown("- 记录数: 50,000条")
-        st.markdown("- 特征数: 16个原始特征")
-        st.markdown("- 欺诈率: 约5%")
-    
-    with col2:
-        st.markdown("**数据集2**: Fraudulent_E-Commerce_Transaction_Data_2_sampled_50000.csv")
-        st.markdown("- 记录数: 23,634条")
-        st.markdown("- 特征数: 16个原始特征")
-        st.markdown("- 欺诈率: 约5%")
 
-elif page == "📁 数据上传":
+
+elif page == "📁 Data Upload":
     upload_page = safe_import_page("frontend.pages.upload_page")
     if upload_page:
         upload_page.show()
 
-elif page == "🔧 特征工程":
+elif page == "🔧 Feature Engineering":
     feature_page = safe_import_page("frontend.pages.feature_analysis_page")
     if feature_page:
         feature_page.show()
 
-elif page == "📊 聚类分析":
+elif page == "📊 Clustering Analysis":
     clustering_page = safe_import_page("frontend.pages.clustering_page")
     if clustering_page:
         clustering_page.show()
 
-elif page == "🎯 风险评分":
+elif page == "🎯 Risk Scoring":
     risk_page = safe_import_page("frontend.pages.risk_scoring_page")
     if risk_page:
         risk_page.show()
 
-elif page == "🎛️ 阈值管理":
+elif page == "🎛️ Threshold Management":
     threshold_page = safe_import_page("frontend.pages.threshold_management_page")
     if threshold_page:
         threshold_page.show()
 
-elif page == "🏷️ 伪标签生成":
+elif page == "🏷️ Pseudo Labeling":
     pseudo_page = safe_import_page("frontend.pages.pseudo_labeling_page")
     if pseudo_page:
         pseudo_page.show()
 
-elif page == "🤖 模型预测":
+elif page == "🤖 Model Prediction":
     model_page = safe_import_page("frontend.pages.model_prediction_page")
     if model_page:
         model_page.show()
 
-elif page == "⚔️ 攻击分类":
+elif page == "⚔️ Attack Classification":
     attack_page = safe_import_page("frontend.pages.attack_analysis_page")
     if attack_page:
         attack_page.show()
 
-elif page == "📊 性能监控":
+elif page == "📊 Performance Monitoring":
     performance_page = safe_import_page("frontend.pages.performance_monitoring_page")
     if performance_page:
         performance_page.show()
 
-elif page == "📋 分析报告":
+elif page == "📋 Analysis Report":
     report_page = safe_import_page("frontend.pages.report_page")
     if report_page:
         report_page.show()
 
 # 页脚
 st.sidebar.markdown("---")
-st.sidebar.markdown("### 📊 系统信息")
-st.sidebar.markdown(f"- Python版本: {sys.version}")
-st.sidebar.markdown("- Streamlit界面")
-st.sidebar.markdown("- 机器学习驱动")
+st.sidebar.markdown("### 📊 System Information")
+st.sidebar.markdown(f"- Python Version: {sys.version}")
+st.sidebar.markdown("- Streamlit Interface")
+st.sidebar.markdown("- Machine Learning Powered")
 
 # 主页面内容
-if page == "🏠 首页":
+if page == "🏠 Home":
     st.markdown("---")
-    st.markdown("### 📈 系统性能指标")
-    
+    st.markdown("### 📈 System Performance Metrics")
+
     # 模拟性能指标
     col1, col2, col3 = st.columns(3)
-    
+
     with col1:
         st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        st.metric("平均准确率", "87.5%", "+2.3%")
+        st.metric("Average Accuracy", "87.5%", "+2.3%")
         st.markdown("</div>", unsafe_allow_html=True)
-    
+
     with col2:
         st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        st.metric("高风险识别率", "92.1%", "+1.8%")
+        st.metric("High Risk Detection Rate", "92.1%", "+1.8%")
         st.markdown("</div>", unsafe_allow_html=True)
-    
+
     with col3:
         st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        st.metric("误报率", "3.2%", "-0.5%")
+        st.metric("False Positive Rate", "3.2%", "-0.5%")
         st.markdown("</div>", unsafe_allow_html=True) 

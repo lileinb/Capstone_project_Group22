@@ -1,7 +1,7 @@
 """
-攻击分析页面
-三层预测架构的第三层：攻击类型分析和威胁评估
-集成欺诈检测 → 四分类风险评级 → 攻击类型分析
+Attack Analysis Page
+Third layer of three-tier prediction architecture: attack type analysis and threat assessment
+Integrated fraud detection → four-class risk grading → attack type analysis
 """
 
 import streamlit as st
@@ -20,8 +20,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 from backend.attack_classification.attack_classifier import AttackClassifier
 
 def _show_three_layer_architecture():
-    """显示三层预测架构"""
-    st.markdown("### 🏗️ 三层预测架构")
+    """Display three-tier prediction architecture"""
+    st.markdown("### 🏗️ Three-Tier Prediction Architecture")
 
     # 创建流程图
     col1, col2, col3 = st.columns(3)
@@ -30,60 +30,60 @@ def _show_three_layer_architecture():
         # 检查第一层状态
         has_features = 'engineered_features' in st.session_state and st.session_state.engineered_features is not None
         if has_features:
-            st.success("✅ **第一层：欺诈检测**")
-            st.markdown("- 特征工程完成")
-            st.markdown("- 聚类分析完成")
+            st.success("✅ **Layer 1: Fraud Detection**")
+            st.markdown("- Feature engineering completed")
+            st.markdown("- Clustering analysis completed")
         else:
-            st.error("❌ **第一层：欺诈检测**")
-            st.markdown("- 需要完成特征工程")
+            st.error("❌ **Layer 1: Fraud Detection**")
+            st.markdown("- Need to complete feature engineering")
 
     with col2:
         # 检查第二层状态
         has_risk_scoring = 'four_class_risk_results' in st.session_state and st.session_state.four_class_risk_results is not None
         if has_risk_scoring:
-            st.success("✅ **第二层：风险分级**")
-            st.markdown("- 四分类风险评分完成")
+            st.success("✅ **Layer 2: Risk Grading**")
+            st.markdown("- Four-class risk scoring completed")
             risk_results = st.session_state.four_class_risk_results
             high_risk_pct = risk_results.get('high_risk_percentage', 0)
-            st.markdown(f"- 高风险比例: {high_risk_pct:.1f}%")
+            st.markdown(f"- High risk ratio: {high_risk_pct:.1f}%")
         else:
-            st.warning("⚠️ **第二层：风险分级**")
-            st.markdown("- 需要完成四分类风险评分")
+            st.warning("⚠️ **Layer 2: Risk Grading**")
+            st.markdown("- Need to complete four-class risk scoring")
 
     with col3:
         # 第三层状态
         has_attack_analysis = 'attack_results' in st.session_state and st.session_state.attack_results is not None
         if has_attack_analysis:
-            st.success("✅ **第三层：攻击分析**")
-            st.markdown("- 攻击类型分析完成")
+            st.success("✅ **Layer 3: Attack Analysis**")
+            st.markdown("- Attack type analysis completed")
         else:
-            st.info("🎯 **第三层：攻击分析**")
-            st.markdown("- 当前页面功能")
+            st.info("🎯 **Layer 3: Attack Analysis**")
+            st.markdown("- Current page functionality")
 
     # 显示数据流向
     st.markdown("---")
-    st.markdown("**🔄 数据流向**: 原始数据 → 特征工程 → 聚类分析 → 四分类风险评分 → 攻击类型分析 → 综合威胁评估")
+    st.markdown("**🔄 Data Flow**: Raw Data → Feature Engineering → Clustering Analysis → Four-Class Risk Scoring → Attack Type Analysis → Comprehensive Threat Assessment")
 
     return has_features, has_risk_scoring
 
 def show():
-    """显示攻击分析页面"""
-    st.markdown('<div class="sub-header">⚔️ 三层预测架构：攻击类型分析</div>', unsafe_allow_html=True)
+    """Show attack analysis page"""
+    st.markdown('<div class="sub-header">⚔️ Three-Tier Prediction Architecture: Attack Type Analysis</div>', unsafe_allow_html=True)
 
     # 显示三层架构流程
     _show_three_layer_architecture()
-    
+
     # 检查前置条件
     has_features, has_risk_scoring = _show_three_layer_architecture()
 
     if not has_features:
-        st.warning("⚠️ 请先完成特征工程和聚类分析！")
-        st.info("💡 请按顺序完成前两个步骤")
+        st.warning("⚠️ Please complete feature engineering and clustering analysis first!")
+        st.info("💡 Please complete the first two steps in order")
         return
 
     if not has_risk_scoring:
-        st.warning("⚠️ 请先完成四分类风险评分！")
-        st.info("💡 请在'🎯 风险评分'页面完成四分类风险评分")
+        st.warning("⚠️ Please complete four-class risk scoring first!")
+        st.info("💡 Please complete four-class risk scoring in the '🎯 Risk Scoring' page")
         return
     
     # 初始化session state
@@ -97,53 +97,53 @@ def show():
     # 获取特征工程数据
     engineered_data = st.session_state.engineered_features
     
-    st.markdown("### 📊 数据概览")
-    
+    st.markdown("### 📊 Data Overview")
+
     col1, col2, col3, col4 = st.columns(4)
-    
+
     with col1:
-        st.metric("记录数", f"{len(engineered_data):,}")
-    
+        st.metric("Record Count", f"{len(engineered_data):,}")
+
     with col2:
-        st.metric("特征数", f"{len(engineered_data.columns)}")
-    
+        st.metric("Feature Count", f"{len(engineered_data.columns)}")
+
     with col3:
         numeric_features = len(engineered_data.select_dtypes(include=['number']).columns)
-        st.metric("数值特征", f"{numeric_features}")
-    
+        st.metric("Numeric Features", f"{numeric_features}")
+
     with col4:
         if 'is_fraudulent' in engineered_data.columns:
             fraud_rate = (engineered_data['is_fraudulent'].sum() / len(engineered_data) * 100).round(2)
-            st.metric("欺诈率", f"{fraud_rate}%")
+            st.metric("Fraud Rate", f"{fraud_rate}%")
         else:
-            st.metric("欺诈率", "N/A")
+            st.metric("Fraud Rate", "N/A")
     
     # 攻击类型说明
-    st.markdown("### 🎯 攻击类型说明")
-    
+    st.markdown("### 🎯 Attack Type Description")
+
     col1, col2 = st.columns(2)
-    
+
     with col1:
-        st.markdown("#### 🔐 账户接管攻击 (Account Takeover)")
-        st.markdown("- **检测特征**: 新设备 + 老账户 + 大额交易 + 异常时间")
-        st.markdown("- **严重程度**: 高危 (3-4特征) / 中危 (2特征) / 低危 (1特征)")
-        st.markdown("- **防护措施**: 双因素认证、设备限制、交易监控")
-        
-        st.markdown("#### 🆔 身份盗用攻击 (Identity Theft)")
-        st.markdown("- **检测特征**: 地址不匹配 + 异常支付 + 年龄不符 + IP异常")
-        st.markdown("- **严重程度**: 基于特征匹配数量")
-        st.markdown("- **防护措施**: 身份验证、地址核实、支付限制")
-    
+        st.markdown("#### 🔐 Account Takeover Attack")
+        st.markdown("- **Detection Features**: New Device + Old Account + Large Transaction + Abnormal Time")
+        st.markdown("- **Severity**: High Risk (3-4 features) / Medium Risk (2 features) / Low Risk (1 feature)")
+        st.markdown("- **Protection Measures**: Two-factor authentication, device restrictions, transaction monitoring")
+
+        st.markdown("#### 🆔 Identity Theft Attack")
+        st.markdown("- **Detection Features**: Address mismatch + Abnormal payment + Age mismatch + IP anomaly")
+        st.markdown("- **Severity**: Based on number of feature matches")
+        st.markdown("- **Protection Measures**: Identity verification, address verification, payment restrictions")
+
     with col2:
-        st.markdown("#### 📦 批量欺诈攻击 (Bulk Fraud)")
-        st.markdown("- **检测特征**: 相似IP + 短时间多笔 + 相似模式 + 批量注册")
-        st.markdown("- **严重程度**: 基于批量规模和时间密度")
-        st.markdown("- **防护措施**: IP限制、频率控制、批量检测")
-        
-        st.markdown("#### 🧪 测试性攻击 (Testing Attack)")
-        st.markdown("- **检测特征**: 小额多笔 + 多种支付 + 快速连续 + 新账户")
-        st.markdown("- **严重程度**: 基于测试频率和范围")
-        st.markdown("- **防护措施**: 支付限制、验证码、账户审核")
+        st.markdown("#### 📦 Bulk Fraud Attack")
+        st.markdown("- **Detection Features**: Similar IP + Multiple transactions in short time + Similar patterns + Bulk registration")
+        st.markdown("- **Severity**: Based on bulk scale and time density")
+        st.markdown("- **Protection Measures**: IP restrictions, frequency control, bulk detection")
+
+        st.markdown("#### 🧪 Testing Attack")
+        st.markdown("- **Detection Features**: Small multiple transactions + Multiple payment methods + Rapid succession + New account")
+        st.markdown("- **Severity**: Based on testing frequency and scope")
+        st.markdown("- **Protection Measures**: Payment restrictions, verification codes, account review")
     
     # 攻击检测配置
     st.markdown("### ⚙️ 攻击检测配置")
