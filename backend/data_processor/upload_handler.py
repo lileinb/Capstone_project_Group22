@@ -1,0 +1,202 @@
+"""
+数据上传处理器
+负责数据上传、格式验证和基础处理
+"""
+
+import pandas as pd
+import numpy as np
+from pathlib import Path
+import streamlit as st
+from typing import Optional, Dict, Any, Tuple
+import logging
+
+# 配置日志
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+class DataUploadHandler:
+    """数据上传处理器"""
+    
+    def __init__(self):
+        self.supported_formats = ['.csv']
+        self.max_file_size = 100 * 1024 * 1024  # 100MB
+        self.uploaded_data = None
+        self.data_info = {}
+        
+    def validate_file_format(self, file) -> bool:
+        """验证文件格式"""
+        if file is None:
+            return False
+            
+        file_extension = Path(file.name).suffix.lower()
+        return file_extension in self.supported_formats
+    
+    def validate_file_size(self, file) -> bool:
+        """验证文件大小"""
+        if file is None:
+            return False
+            
+        return file.size <= self.max_file_size
+    
+    def load_csv_data(self, file) -> Optional[pd.DataFrame]:
+        """加载CSV数据"""
+        try:
+            if file is None:
+                return None
+                
+            # 尝试不同的编码方式
+            encodings = ['utf-8', 'gbk', 'gb2312', 'latin1']
+            data = None
+            
+            for encoding in encodings:
+                try:
+                    file.seek(0)  # 重置文件指针
+                    data = pd.read_csv(file, encoding=encoding)
+                    logger.info(f"成功使用 {encoding} 编码读取文件")
+                    break
+                except UnicodeDecodeError:
+                    continue
+                except Exception as e:
+                    logger.error(f"使用 {encoding} 编码读取失败: {e}")
+                    continue
+            
+            if data is None:
+                st.error("无法读取文件，请检查文件格式和编码")
+                return None
+                
+            return data
+            
+        except Exception as e:
+            logger.error(f"加载数据时发生错误: {e}")
+            st.error(f"加载数据时发生错误: {e}")
+            return None
+    
+    def get_data_info(self, data: pd.DataFrame) -> Dict[str, Any]:
+        """获取数据基本信息"""
+        if data is None or data.empty:
+            return {}
+            
+        info = {
+            "shape": data.shape,
+            "columns": list(data.columns),
+            "dtypes": data.dtypes.to_dict(),
+            "memory_usage": data.memory_usage(deep=True).sum(),
+            "null_counts": data.isnull().sum().to_dict(),
+            "duplicate_count": data.duplicated().sum(),
+            "numeric_columns": data.select_dtypes(include=[np.number]).columns.tolist(),
+            "categorical_columns": data.select_dtypes(include=['object']).columns.tolist(),
+            "datetime_columns": data.select_dtypes(include=['datetime']).columns.tolist()
+        }
+        
+        return info
+    
+    def validate_data_structure(self, data: pd.DataFrame) -> Tuple[bool, str]:
+        """验证数据结构 - 检查是否符合系统支持的数据集格式"""
+        if data is None or data.empty:
+            return False, "数据为空"
+
+        # 系统支持的标准字段 (基于现有数据集)
+        standard_columns = [
+            'Transaction ID', 'Customer ID', 'Transaction Amount', 'Transaction Date',
+            'Payment Method', 'Product Category', 'Quantity', 'Customer Age',
+            'Customer Location', 'Device Used', 'IP Address',
+            'Shipping Address', 'Billing Address', 'Is Fraudulent',
+            'Account Age Days', 'Transaction Hour'
+        ]
+
+        # 检查是否包含核心字段 (至少包含80%的标准字段)
+        matching_columns = [col for col in standard_columns if col in data.columns]
+        match_ratio = len(matching_columns) / len(standard_columns)
+
+        if match_ratio < 0.8:
+            return False, f"数据格式不匹配。当前匹配度: {match_ratio:.1%}。请确保数据集包含以下字段: {standard_columns}"
+
+        return True, f"数据结构验证通过，字段匹配度: {match_ratio:.1%}"
+    
+    def upload_data(self, file) -> Tuple[bool, str, Optional[pd.DataFrame]]:
+        """上传数据的主函数"""
+        try:
+            # 验证文件格式
+            if not self.validate_file_format(file):
+                return False, "不支持的文件格式，请上传CSV文件", None
+                
+            # 验证文件大小
+            if not self.validate_file_size(file):
+                return False, f"文件大小超过限制 ({self.max_file_size / 1024 / 1024:.1f}MB)", None
+                
+            # 加载数据
+            data = self.load_csv_data(file)
+            if data is None:
+                return False, "数据加载失败", None
+                
+            # 验证数据结构
+            is_valid, message = self.validate_data_structure(data)
+            if not is_valid:
+                return False, message, None
+                
+            # 获取数据信息
+            self.data_info = self.get_data_info(data)
+            self.uploaded_data = data
+            
+            logger.info(f"数据上传成功: {data.shape}")
+            return True, "数据上传成功", data
+            
+        except Exception as e:
+            logger.error(f"数据上传过程中发生错误: {e}")
+            return False, f"数据上传失败: {e}", None
+    
+    def load_sample_data(self, dataset_name: str) -> Tuple[bool, str, Optional[pd.DataFrame]]:
+        """加载示例数据"""
+        try:
+            from config.settings import DATASET_CONFIG
+            
+            if dataset_name not in DATASET_CONFIG:
+                return False, f"未知的数据集: {dataset_name}", None
+                
+            dataset_path = DATASET_CONFIG[dataset_name]["path"]
+            
+            if not Path(dataset_path).exists():
+                return False, f"数据集文件不存在: {dataset_path}", None
+                
+            # 加载数据
+            data = pd.read_csv(dataset_path)
+            
+            # 获取数据信息
+            self.data_info = self.get_data_info(data)
+            self.uploaded_data = data
+            
+            logger.info(f"示例数据加载成功: {data.shape}")
+            return True, f"示例数据加载成功: {dataset_name}", data
+            
+        except Exception as e:
+            logger.error(f"加载示例数据时发生错误: {e}")
+            return False, f"加载示例数据失败: {e}", None
+    
+    def get_data_preview(self, data: pd.DataFrame, n_rows: int = 10) -> pd.DataFrame:
+        """获取数据预览"""
+        if data is None or data.empty:
+            return pd.DataFrame()
+            
+        return data.head(n_rows)
+    
+    def get_basic_statistics(self, data: pd.DataFrame) -> Dict[str, Any]:
+        """获取基础统计信息"""
+        if data is None or data.empty:
+            return {}
+            
+        stats = {
+            "numeric_stats": data.describe().to_dict(),
+            "null_percentage": (data.isnull().sum() / len(data) * 100).to_dict(),
+            "unique_counts": data.nunique().to_dict(),
+            "memory_usage_mb": data.memory_usage(deep=True).sum() / 1024 / 1024
+        }
+        
+        return stats
+    
+    def export_data_info(self) -> Dict[str, Any]:
+        """导出数据信息"""
+        return {
+            "data_info": self.data_info,
+            "uploaded_data_shape": self.uploaded_data.shape if self.uploaded_data is not None else None,
+            "file_size_mb": self.uploaded_data.memory_usage(deep=True).sum() / 1024 / 1024 if self.uploaded_data is not None else 0
+        } 
