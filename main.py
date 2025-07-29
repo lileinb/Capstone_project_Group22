@@ -3,14 +3,14 @@ import sys
 import os
 import importlib
 
-# 添加项目根目录到路径
+# Add project root directory to path
 project_root = os.path.dirname(os.path.abspath(__file__))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-# 清除模块缓存（解决导入问题）
+# Clear module cache (solve import issues)
 def clear_module_cache():
-    """清除相关模块缓存"""
+    """Clear related module cache"""
     modules_to_clear = [
         'frontend',
         'frontend.pages',
@@ -28,41 +28,41 @@ def clear_module_cache():
         if module_name in sys.modules:
             del sys.modules[module_name]
 
-# 在应用启动时清除缓存
+# Clear cache on application startup
 clear_module_cache()
 
-# 简化的安全导入函数
+# Simplified safe import function
 def safe_import_page(module_name):
-    """安全导入页面模块"""
+    """Safely import page module"""
     try:
-        # 直接导入，不使用复杂的重载逻辑
+        # Direct import, no complex reload logic
         module = importlib.import_module(module_name)
         return module
     except Exception as e:
         st.error(f"❌ Page loading failed: {module_name}")
         st.error(f"Error details: {str(e)}")
 
-        # 提供简化的解决方案
+        # Provide simplified solutions
         st.warning("🔧 Please try the following solutions:")
         st.info("1. Refresh browser page (F5)")
         st.info("2. Restart Streamlit application (Ctrl+C then restart)")
         st.info("3. Clear browser cache")
 
-        # 显示备用页面
+        # Display fallback page
         st.markdown("### 📄 Page Temporarily Unavailable")
         st.markdown("This module is loading, please try again later.")
 
         return None
 
-# 页面配置
+# Page configuration
 st.set_page_config(
-    page_title="E-commerce Fraud Risk Prediction System",
+    page_title="Behavioral Feature-Based E-commerce User Big Data Driven Risk Scoring Model System",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# 自定义CSS样式
+# Custom CSS styles
 st.markdown("""
 <style>
     .main-header {
@@ -107,11 +107,11 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 侧边栏导航
-st.sidebar.markdown("## 🛡️ E-commerce Fraud Risk Prediction System")
+# Sidebar navigation
+st.sidebar.markdown("## 🛡️ Behavioral Feature-Based E-commerce User Big Data Driven Risk Scoring Model System")
 st.sidebar.markdown("---")
 
-# 页面选择
+# Page selection
 page = st.sidebar.selectbox(
     "Select Page",
     [
@@ -129,11 +129,11 @@ page = st.sidebar.selectbox(
     ]
 )
 
-# 页面路由
+# Page routing
 if page == "🏠 Home":
-    st.markdown('<div class="main-header">🛡️ E-commerce Fraud Risk Prediction System</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-header">🛡️ Behavioral Feature-Based E-commerce User Big Data Driven Risk Scoring Model System</div>', unsafe_allow_html=True)
 
-    # 系统概述
+    # System overview
     col1, col2 = st.columns(2)
 
     with col1:
@@ -157,7 +157,7 @@ if page == "🏠 Home":
         - **Comprehensive Report Generation**: Automatically generates PDF/Excel format analysis reports
         """)
     
-    # 系统状态
+    # System status
     st.markdown("### 🔧 System Status")
     col1, col2, col3, col4 = st.columns(4)
 
@@ -173,7 +173,7 @@ if page == "🏠 Home":
     with col4:
         st.metric("Report Generation", "✅ Ready", "Multi-format export")
     
-    # 快速开始
+    # Quick start
     st.markdown("### 🚀 Quick Start")
     st.markdown("""
     1. **Data Upload**: Upload your transaction data CSV file
@@ -238,19 +238,19 @@ elif page == "📋 Analysis Report":
     if report_page:
         report_page.show()
 
-# 页脚
+# Footer
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 📊 System Information")
 st.sidebar.markdown(f"- Python Version: {sys.version}")
 st.sidebar.markdown("- Streamlit Interface")
 st.sidebar.markdown("- Machine Learning Powered")
 
-# 主页面内容
+# Main page content
 if page == "🏠 Home":
     st.markdown("---")
     st.markdown("### 📈 System Performance Metrics")
 
-    # 模拟性能指标
+    # Simulated performance metrics
     col1, col2, col3 = st.columns(3)
 
     with col1:

@@ -12,36 +12,36 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-# 添加项目根目录到路径
+# Add project root directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-# 导入后端模块
+# Import backend modules
 from backend.risk_scoring.dynamic_threshold_manager import DynamicThresholdManager
 
 def show():
     """Display dynamic threshold management page"""
     st.markdown('<div class="sub-header">🎛️ Dynamic Threshold Management Center</div>', unsafe_allow_html=True)
     
-    # 初始化session state
+    # Initialize session state
     _initialize_session_state()
-    
-    # 检查前置条件
+
+    # Check prerequisites
     if not _check_prerequisites():
         return
-    
-    # 显示系统说明
+
+    # Display system description
     _show_system_description()
-    
-    # 显示当前阈值状态
+
+    # Display current threshold status
     _show_current_threshold_status()
-    
-    # 阈值优化控制面板
+
+    # Threshold optimization control panel
     _show_threshold_optimization_panel()
-    
-    # 实时分布监控
+
+    # Real-time distribution monitoring
     _show_real_time_distribution_monitoring()
-    
-    # 阈值调整历史
+
+    # Threshold adjustment history
     _show_threshold_adjustment_history()
 
 def _initialize_session_state():
@@ -92,7 +92,7 @@ def _show_current_threshold_status():
     current_thresholds = risk_results.get('thresholds', {})
     distribution = risk_results.get('distribution', {})
 
-    # 阈值信息
+    # Threshold information
     col1, col2 = st.columns(2)
 
     with col1:
@@ -156,20 +156,20 @@ def _execute_threshold_optimization():
                 st.error("❌ No available risk scoring data")
                 return
 
-            # 提取风险评分
+            # Extract risk scores
             risk_scores = [r['risk_score'] for r in detailed_results]
 
-            # 使用动态阈值管理器优化
+            # Use dynamic threshold manager for optimization
             threshold_manager = st.session_state.threshold_manager
             optimized_thresholds = threshold_manager.optimize_thresholds_iteratively(risk_scores)
 
-            # 分析优化效果
+            # Analyze optimization effects
             analysis = threshold_manager.analyze_distribution(risk_scores, optimized_thresholds)
 
-            # 更新session state
+            # Update session state
             st.session_state.current_thresholds = optimized_thresholds
 
-            # 记录历史
+            # Record history
             import datetime
             history_entry = {
                 'timestamp': datetime.datetime.now(),
@@ -180,13 +180,13 @@ def _execute_threshold_optimization():
             }
             st.session_state.threshold_history.append(history_entry)
 
-            # 显示结果
+            # Display results
             if analysis['is_reasonable']:
                 st.success(f"✅ Threshold optimization successful! Distribution deviation: {analysis['total_deviation']:.3f}")
             else:
                 st.warning(f"⚠️ Thresholds optimized, but distribution still needs adjustment. Deviation: {analysis['total_deviation']:.3f}")
 
-            # 显示新阈值
+            # Display new thresholds
             st.info("**Optimized Thresholds**:")
             for level, threshold in optimized_thresholds.items():
                 if level != 'critical':
@@ -196,20 +196,20 @@ def _execute_threshold_optimization():
         st.error(f"❌ Threshold optimization failed: {str(e)}")
 
 def _analyze_current_distribution():
-    """分析当前分布"""
+    """Analyze current distribution"""
     try:
         risk_results = st.session_state.four_class_risk_results
         distribution = risk_results.get('distribution', {})
-        
+
         if not distribution:
-            st.error("❌ 没有可用的分布数据")
+            st.error("❌ No distribution data available")
             return
-        
-        # 计算分布偏差
+
+        # Calculate distribution deviation
         target_dist = {'low': 60, 'medium': 25, 'high': 12, 'critical': 3}
         total_deviation = 0
-        
-        st.markdown("#### 📊 分布偏差分析")
+
+        st.markdown("#### 📊 Distribution Deviation Analysis")
         
         for level, data in distribution.items():
             actual_pct = data['percentage']
@@ -221,41 +221,41 @@ def _analyze_current_distribution():
             with col1:
                 st.metric(f"{level.title()}", f"{actual_pct:.1f}%")
             with col2:
-                st.metric("目标", f"{target_pct}%")
+                st.metric("Target", f"{target_pct}%")
             with col3:
-                st.metric("偏差", f"{deviation:+.1f}%")
+                st.metric("Deviation", f"{deviation:+.1f}%")
             with col4:
                 if abs(deviation) <= 3:
-                    st.success("✅ 良好")
+                    st.success("✅ Good")
                 elif abs(deviation) <= 8:
-                    st.warning("⚠️ 一般")
+                    st.warning("⚠️ Fair")
                 else:
-                    st.error("❌ 需要调整")
-        
-        # 总体评估
+                    st.error("❌ Needs Adjustment")
+
+        # Overall assessment
         st.markdown("---")
         if total_deviation <= 10:
-            st.success(f"✅ **总体评估**: 分布良好 (总偏差: {total_deviation:.1f}%)")
+            st.success(f"✅ **Overall Assessment**: Good distribution (Total deviation: {total_deviation:.1f}%)")
         elif total_deviation <= 20:
-            st.warning(f"⚠️ **总体评估**: 分布一般 (总偏差: {total_deviation:.1f}%)")
+            st.warning(f"⚠️ **Overall Assessment**: Fair distribution (Total deviation: {total_deviation:.1f}%)")
         else:
-            st.error(f"❌ **总体评估**: 分布需要优化 (总偏差: {total_deviation:.1f}%)")
-            
+            st.error(f"❌ **Overall Assessment**: Distribution needs optimization (Total deviation: {total_deviation:.1f}%)")
+
     except Exception as e:
-        st.error(f"❌ 分布分析失败: {str(e)}")
+        st.error(f"❌ Distribution analysis failed: {str(e)}")
 
 def _reset_to_default_thresholds():
-    """重置为默认阈值"""
+    """Reset to default thresholds"""
     default_thresholds = {
         'low': 40,
         'medium': 60,
         'high': 80,
         'critical': 100
     }
-    
+
     st.session_state.current_thresholds = default_thresholds
-    
-    # 记录历史
+
+    # Record history
     import datetime
     history_entry = {
         'timestamp': datetime.datetime.now(),
@@ -265,109 +265,109 @@ def _reset_to_default_thresholds():
         'is_reasonable': None
     }
     st.session_state.threshold_history.append(history_entry)
-    
-    st.success("✅ 已重置为默认阈值")
-    st.info("**默认阈值**: 低风险: 40, 中风险: 60, 高风险: 80")
+
+    st.success("✅ Reset to default thresholds completed")
+    st.info("**Default Thresholds**: Low Risk: 40, Medium Risk: 60, High Risk: 80")
 
 def _show_real_time_distribution_monitoring():
-    """显示实时分布监控"""
-    st.markdown("### 📈 实时分布监控")
-    
+    """Display real-time distribution monitoring"""
+    st.markdown("### 📈 Real-time Distribution Monitoring")
+
     risk_results = st.session_state.four_class_risk_results
     distribution = risk_results.get('distribution', {})
-    
+
     if not distribution:
-        st.warning("⚠️ 没有可用的分布数据")
+        st.warning("⚠️ No distribution data available")
         return
-    
-    # 创建分布对比图
+
+    # Create distribution comparison chart
     col1, col2 = st.columns(2)
-    
+
     with col1:
-        # 当前分布 vs 目标分布
+        # Current distribution vs target distribution
         levels = ['low', 'medium', 'high', 'critical']
         actual_values = [distribution.get(level, {}).get('percentage', 0) for level in levels]
         target_values = [60, 25, 12, 3]
-        
+
         fig = go.Figure()
         fig.add_trace(go.Bar(
-            name='实际分布',
+            name='Actual Distribution',
             x=levels,
             y=actual_values,
             marker_color=['#22c55e', '#f59e0b', '#f97316', '#ef4444']
         ))
         fig.add_trace(go.Bar(
-            name='目标分布',
+            name='Target Distribution',
             x=levels,
             y=target_values,
             marker_color=['#22c55e', '#f59e0b', '#f97316', '#ef4444'],
             opacity=0.5
         ))
-        
+
         fig.update_layout(
-            title="分布对比",
-            xaxis_title="风险等级",
-            yaxis_title="百分比 (%)",
+            title="Distribution Comparison",
+            xaxis_title="Risk Level",
+            yaxis_title="Percentage (%)",
             barmode='group'
         )
         st.plotly_chart(fig, use_container_width=True)
-    
+
     with col2:
-        # 偏差雷达图
-        levels_cn = ['低风险', '中风险', '高风险', '极高风险']
+        # Deviation radar chart
+        levels_en = ['Low Risk', 'Medium Risk', 'High Risk', 'Critical Risk']
         deviations = [abs(actual_values[i] - target_values[i]) for i in range(4)]
-        
+
         fig = go.Figure()
         fig.add_trace(go.Scatterpolar(
             r=deviations,
-            theta=levels_cn,
+            theta=levels_en,
             fill='toself',
-            name='分布偏差',
+            name='Distribution Deviation',
             marker_color='red'
         ))
-        
+
         fig.update_layout(
             polar=dict(
                 radialaxis=dict(
                     visible=True,
                     range=[0, max(deviations) + 5]
                 )),
-            title="分布偏差雷达图"
+            title="Distribution Deviation Radar Chart"
         )
         st.plotly_chart(fig, use_container_width=True)
 
 def _show_threshold_adjustment_history():
-    """显示阈值调整历史"""
-    st.markdown("### 📋 阈值调整历史")
-    
+    """Display threshold adjustment history"""
+    st.markdown("### 📋 Threshold Adjustment History")
+
     if not st.session_state.threshold_history:
-        st.info("💡 暂无阈值调整历史")
+        st.info("💡 No threshold adjustment history available")
         return
-    
-    # 显示历史记录
+
+    # Display history records
     history_df = pd.DataFrame(st.session_state.threshold_history)
-    
-    # 格式化显示
-    for i, record in enumerate(reversed(st.session_state.threshold_history[-10:])):  # 显示最近10条
-        with st.expander(f"调整记录 {len(st.session_state.threshold_history) - i}: {record['timestamp'].strftime('%Y-%m-%d %H:%M:%S')}"):
+
+    # Formatted display
+    for i, record in enumerate(reversed(st.session_state.threshold_history[-10:])):  # Display last 10 records
+        with st.expander(f"Adjustment Record {len(st.session_state.threshold_history) - i}: {record['timestamp'].strftime('%Y-%m-%d %H:%M:%S')}"):
             col1, col2 = st.columns(2)
-            
+
             with col1:
-                st.markdown(f"**操作类型**: {record['action']}")
+                st.markdown(f"**Action Type**: {record['action']}")
                 if record['total_deviation'] is not None:
-                    st.markdown(f"**分布偏差**: {record['total_deviation']:.3f}")
+                    st.markdown(f"**Distribution Deviation**: {record['total_deviation']:.3f}")
                 if record['is_reasonable'] is not None:
-                    status = "✅ 合理" if record['is_reasonable'] else "⚠️ 需要调整"
-                    st.markdown(f"**分布状态**: {status}")
-            
+                    status = "✅ Reasonable" if record['is_reasonable'] else "⚠️ Needs Adjustment"
+                    st.markdown(f"**Distribution Status**: {status}")
+
             with col2:
-                st.markdown("**阈值设置**:")
+                st.markdown("**Threshold Settings**:")
                 thresholds = record['thresholds']
                 for level, value in thresholds.items():
                     if level != 'critical':
                         st.markdown(f"- {level.title()}: {value:.1f}")
-    
-    # 清理历史按钮
-    if st.button("🗑️ 清理历史记录"):
+
+    # Clear history button
+    if st.button("🗑️ Clear History"):
         st.session_state.threshold_history = []
-        st.success("✅ 历史记录已清理")
+        st.success("✅ History cleared")

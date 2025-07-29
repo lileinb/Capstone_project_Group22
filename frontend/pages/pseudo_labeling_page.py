@@ -10,7 +10,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-# 导入后端模块
+# Import backend modules
 from backend.pseudo_labeling.pseudo_label_generator import PseudoLabelGenerator
 from backend.pseudo_labeling.fast_pseudo_label_generator import FastPseudoLabelGenerator
 
@@ -18,25 +18,25 @@ def show():
     """Display pseudo label generation page"""
     st.markdown('<div class="sub-header">🏷️ Intelligent Pseudo Label Generation System</div>', unsafe_allow_html=True)
 
-    # 检查前置条件
+    # Check prerequisites
     if not _check_prerequisites():
         return
 
-    # 初始化session state
+    # Initialize session state
     _initialize_session_state()
 
     engineered_data = st.session_state.engineered_features
 
-    # 显示系统说明
+    # Show system description
     _show_system_description()
 
-    # 数据概览
+    # Data overview
     _show_data_overview(engineered_data)
 
-    # 伪标签生成配置
+    # Pseudo label generation configuration
     _show_generation_config()
 
-    # 执行伪标签生成
+    # Execute pseudo label generation
     mode = st.session_state.label_generation_mode
     button_text = "🔍 Generate High-Quality Pseudo Labels (Standard Mode)" if mode == "standard" else "⚡ Quick Generate Pseudo Labels (Fast Mode)"
     button_help = "Multi-strategy integration, high-quality labels, completed in 2-3 minutes" if mode == "standard" else "Simplified algorithm, quick generation, completed within 30 seconds"
@@ -44,14 +44,14 @@ def show():
     if st.button(button_text, type="primary", help=button_help):
         _execute_pseudo_label_generation(engineered_data)
 
-    # 显示伪标签结果
+    # Show pseudo label results
     if st.session_state.pseudo_labels:
         _show_pseudo_label_results()
 
-        # 质量评估
+        # Quality assessment
         _show_quality_assessment()
 
-        # 标签导出
+        # Label export
         _show_label_export()
 
 
@@ -121,7 +121,7 @@ def _show_data_overview(engineered_data):
         st.metric("Feature Count", f"{len(engineered_data.columns)}")
 
     with col4:
-        # 检查是否有无监督风险评分结果
+        # Check if unsupervised risk scoring results exist
         if st.session_state.get('unsupervised_risk_results'):
             avg_risk = st.session_state.unsupervised_risk_results.get('average_risk_score', 0)
             st.metric("Average Risk Score", f"{avg_risk:.1f}")
@@ -133,7 +133,7 @@ def _show_generation_config():
     """Show generation configuration"""
     st.markdown("### ⚙️ Pseudo Label Generation Configuration")
 
-    # 生成模式选择
+    # Generation mode selection
     st.markdown("#### 🎯 Generation Mode Selection")
 
     col_mode1, col_mode2 = st.columns(2)
@@ -148,7 +148,7 @@ def _show_generation_config():
                     help="Simplified algorithm, quick generation, completed within 30 seconds"):
             st.session_state.label_generation_mode = "fast"
 
-    # 显示当前模式
+    # Show current mode
     mode = st.session_state.label_generation_mode
     if mode == "standard":
         st.success("🔍 **Current Mode: Standard Mode** - Multi-strategy integration, high-quality labels")
@@ -185,7 +185,7 @@ def _show_generation_config():
     with col2:
         st.markdown("**Strategy Weight Configuration**")
 
-        # 显示当前权重配置
+        # Show current weight configuration
         current_weights = {
             "Unsupervised Risk Scoring": 45,
             "Cluster Risk Mapping": 35,
@@ -197,7 +197,7 @@ def _show_generation_config():
 
         st.info("💡 Weights will be dynamically adjusted based on actual quality of each strategy")
 
-    # 保存配置到session state
+    # Save configuration to session state
     st.session_state.label_config = {
         'min_confidence': min_confidence,
         'use_calibration': use_calibration,
@@ -280,112 +280,112 @@ def _show_generation_config():
             # 获取工程化特征数据
             engineered_data = st.session_state.engineered_features
             if engineered_data is None or engineered_data.empty:
-                st.error("❌ 请先完成特征工程步骤！")
+                st.error("❌ Please complete feature engineering first!")
                 return
 
-            with st.spinner("正在生成伪标签..."):
-                # 更新置信度阈值
+            with st.spinner("Generating pseudo labels..."):
+                # Update confidence threshold
                 st.session_state.label_generator.update_confidence_threshold(confidence_threshold)
 
-                # 生成伪标签
+                # Generate pseudo labels
                 pseudo_results = st.session_state.label_generator.generate_pseudo_labels(
                     engineered_data, strategy=strategy
                 )
 
-                # 保存结果
+                # Save results
                 st.session_state.pseudo_labels = pseudo_results
 
-                st.success("✅ 伪标签生成完成！")
+                st.success("✅ Pseudo label generation completed!")
 
         except Exception as e:
-            st.error(f"❌ 伪标签生成失败: {e}")
+            st.error(f"❌ Pseudo label generation failed: {e}")
             st.exception(e)
     
-    # 显示伪标签结果
+    # Display pseudo label results
     if st.session_state.pseudo_labels is not None:
-        st.markdown("### 📈 伪标签生成结果")
+        st.markdown("### 📈 Pseudo Label Generation Results")
         
         pseudo_results = st.session_state.pseudo_labels
         
-        # 基本统计
+        # Basic statistics
         col1, col2, col3, col4 = st.columns(4)
-        
+
         with col1:
-            st.metric("生成策略", pseudo_results['strategy'].upper())
-        
+            st.metric("Generation Strategy", pseudo_results['strategy'].upper())
+
         with col2:
-            # 兼容不同模式的数据结构
+            # Compatible with different mode data structures
             all_labels = pseudo_results.get('all_labels', pseudo_results.get('labels', []))
             total_labels = len(all_labels)
-            st.metric("标签总数", f"{total_labels:,}")
+            st.metric("Total Labels", f"{total_labels:,}")
 
         with col3:
-            # 兼容不同的置信度字段
+            # Compatible with different confidence fields
             if 'metadata' in pseudo_results:
                 avg_confidence = pseudo_results['metadata'].get('avg_confidence_all', 0)
             else:
                 avg_confidence = pseudo_results.get('avg_confidence', 0)
-            st.metric("平均置信度", f"{avg_confidence:.3f}")
+            st.metric("Average Confidence", f"{avg_confidence:.3f}")
 
         with col4:
-            # 兼容不同的高置信度计数字段
+            # Compatible with different high confidence count fields
             if 'metadata' in pseudo_results:
                 high_conf_count = pseudo_results['metadata'].get('high_quality_count', 0)
             else:
                 high_conf_count = pseudo_results.get('high_confidence_count', 0)
             high_conf_rate = high_conf_count / total_labels * 100 if total_labels > 0 else 0
-            st.metric("高置信度比例", f"{high_conf_rate:.1f}%")
+            st.metric("High Confidence Ratio", f"{high_conf_rate:.1f}%")
         
-        # 标签分布
-        st.markdown("#### 📊 标签分布分析")
-        
+        # Label distribution
+        st.markdown("#### 📊 Label Distribution Analysis")
+
         col1, col2 = st.columns(2)
-        
+
         with col1:
-            # 标签分布饼图
-            # 兼容不同模式的数据结构
+            # Label distribution pie chart
+            # Compatible with different mode data structures
             all_labels = pseudo_results.get('all_labels', pseudo_results.get('labels', []))
             if all_labels:
                 label_counts = pd.Series(all_labels).value_counts()
 
                 fig = px.pie(
                     values=label_counts.values,
-                    names=['正常交易', '欺诈交易'],
-                    title="伪标签分布",
+                    names=['Normal Transaction', 'Fraud Transaction'],
+                    title="Pseudo Label Distribution",
                     color_discrete_map={
-                        '正常交易': '#2E8B57',
-                        '欺诈交易': '#DC143C'
+                        'Normal Transaction': '#2E8B57',
+                        'Fraud Transaction': '#DC143C'
                     }
                 )
                 st.plotly_chart(fig, use_container_width=True)
             else:
-                st.warning("⚠️ 无标签数据可显示")
+                st.warning("⚠️ No label data to display")
 
         with col2:
-            # 置信度分布直方图
-            # 兼容不同的置信度字段
+            # Confidence distribution histogram
+            # Compatible with different confidence fields
             confidences = pseudo_results.get('all_confidences', pseudo_results.get('confidences', []))
 
             if confidences:
                 fig = px.histogram(
                     x=confidences,
-                    title="置信度分布",
+                    title="Confidence Distribution",
                     nbins=20,
-                    labels={'x': '置信度', 'y': '频次'}
+                    labels={'x': 'Confidence', 'y': 'Frequency'}
                 )
                 fig.add_vline(x=confidence_threshold, line_dash="dash", line_color="red",
-                             annotation_text=f"阈值: {confidence_threshold}")
+                             annotation_text=f"Threshold: {confidence_threshold}")
                 st.plotly_chart(fig, use_container_width=True)
             else:
-                st.warning("⚠️ 无置信度数据可显示")
+                st.warning("⚠️ No confidence data to display")
         
-        # 质量评估
-        st.markdown("#### 🎯 标签质量评估")
-        
-        # 如果有真实标签，计算准确性指标
+        # Quality assessment
+        st.markdown("#### 🎯 Label Quality Assessment")
+
+        # If true labels exist, calculate accuracy metrics
         if 'is_fraudulent' in engineered_data.columns:
             true_labels = engineered_data['is_fraudulent'].tolist()
-            # 兼容不同模式的标签字段
+            # Compatible with different mode label fields
             all_labels = pseudo_results.get('all_labels', pseudo_results.get('labels', []))
 
             if all_labels and len(all_labels) == len(true_labels):
@@ -397,18 +397,18 @@ def _show_generation_config():
                     col1, col2, col3, col4 = st.columns(4)
 
                     with col1:
-                        st.metric("准确率", f"{quality_metrics['accuracy']:.3f}")
+                        st.metric("Accuracy", f"{quality_metrics['accuracy']:.3f}")
 
                     with col2:
-                        st.metric("精确率", f"{quality_metrics['precision']:.3f}")
+                        st.metric("Precision", f"{quality_metrics['precision']:.3f}")
 
                     with col3:
-                        st.metric("召回率", f"{quality_metrics['recall']:.3f}")
+                        st.metric("Recall", f"{quality_metrics['recall']:.3f}")
 
                     with col4:
-                        st.metric("F1分数", f"{quality_metrics['f1_score']:.3f}")
+                        st.metric("F1 Score", f"{quality_metrics['f1_score']:.3f}")
 
-                    # 混淆矩阵
+                    # Confusion matrix
                     from sklearn.metrics import confusion_matrix
                     cm = confusion_matrix(true_labels, all_labels)
 
@@ -416,51 +416,51 @@ def _show_generation_config():
                         cm,
                         text_auto=True,
                         aspect="auto",
-                        title="混淆矩阵",
-                        labels=dict(x="预测标签", y="真实标签"),
-                        x=['正常', '欺诈'],
-                        y=['正常', '欺诈']
+                        title="Confusion Matrix",
+                        labels=dict(x="Predicted Label", y="True Label"),
+                        x=['Normal', 'Fraud'],
+                        y=['Normal', 'Fraud']
                     )
                     st.plotly_chart(fig, use_container_width=True)
                 except Exception as e:
-                    st.warning(f"⚠️ 质量评估计算失败: {str(e)}")
+                    st.warning(f"⚠️ Quality assessment calculation failed: {str(e)}")
             else:
-                st.info("💡 标签数量不匹配，跳过质量评估")
+                st.info("💡 Label count mismatch, skipping quality assessment")
 
-        # 下一步按钮
+        # Next step button
         st.markdown("---")
         col1, col2, col3 = st.columns([1, 1, 1])
 
         with col2:
-            if st.button("🤖 下一步：模型训练", type="primary", use_container_width=True):
-                st.success("✅ 伪标签生成完成，可以进入模型训练页面！")
-                st.info("💡 请在侧边栏选择'🤖 模型训练'页面继续")
+            if st.button("🤖 Next: Model Training", type="primary", use_container_width=True):
+                st.success("✅ Pseudo label generation completed, ready for model training!")
+                st.info("💡 Please select '🤖 Model Training' page in the sidebar to continue")
 
 
 def _execute_pseudo_label_generation(engineered_data):
-    """执行伪标签生成"""
+    """Execute pseudo label generation"""
     try:
         config = st.session_state.label_config
         mode = st.session_state.label_generation_mode
 
-        mode_text = "标准模式" if mode == "standard" else "快速模式"
+        mode_text = "Standard Mode" if mode == "standard" else "Fast Mode"
         mode_icon = "🔍" if mode == "standard" else "⚡"
 
-        with st.spinner(f"正在使用{mode_text}生成伪标签..."):
-            # 记录开始时间
+        with st.spinner(f"Generating pseudo labels using {mode_text}..."):
+            # Record start time
             import time
             start_time = time.time()
 
-            # 根据模式选择生成器
+            # Select generator based on mode
             if mode == "standard":
-                # 使用标准模式生成器
+                # Use standard mode generator
                 label_results = st.session_state.label_generator.generate_high_quality_pseudo_labels(
                     engineered_data,
                     min_confidence=config['min_confidence'],
                     use_calibration=config['use_calibration']
                 )
             else:
-                # 使用快速模式生成器
+                # Use fast mode generator
                 risk_results = st.session_state.get('unsupervised_risk_results', None)
                 label_results = st.session_state.fast_label_generator.generate_fast_pseudo_labels(
                     engineered_data,
@@ -468,7 +468,7 @@ def _execute_pseudo_label_generation(engineered_data):
                     min_confidence=config['min_confidence']
                 )
 
-            # 记录结束时间
+            # Record end time
             end_time = time.time()
             generation_time = end_time - start_time
 
@@ -479,82 +479,82 @@ def _execute_pseudo_label_generation(engineered_data):
                 total_labels = len(label_results.get('all_labels', []))
                 hq_labels = len(label_results.get('high_quality_labels', []))
 
-                success_msg = f"✅ {mode_icon} {mode_text}伪标签生成完成！"
-                success_msg += f" 从 {total_labels} 个样本中筛选出 {hq_labels} 个高质量标签，耗时 {generation_time:.2f} 秒"
+                success_msg = f"✅ {mode_icon} {mode_text} pseudo label generation completed!"
+                success_msg += f" Filtered {hq_labels} high-quality labels from {total_labels} samples, time taken: {generation_time:.2f} seconds"
                 st.success(success_msg)
 
-                # 显示基本统计
+                # Show basic statistics
                 col1, col2, col3, col4 = st.columns(4)
 
                 with col1:
                     hq_rate = label_results['metadata']['high_quality_rate']
-                    st.metric("高质量比例", f"{hq_rate:.1%}")
+                    st.metric("High Quality Ratio", f"{hq_rate:.1%}")
 
                 with col2:
                     avg_conf_hq = label_results['metadata']['avg_confidence_hq']
-                    st.metric("平均置信度", f"{avg_conf_hq:.3f}")
+                    st.metric("Average Confidence", f"{avg_conf_hq:.3f}")
 
                 with col3:
                     fraud_rate_hq = label_results['metadata']['fraud_rate_hq']
-                    st.metric("伪标签欺诈率", f"{fraud_rate_hq:.1%}")
+                    st.metric("Pseudo Label Fraud Rate", f"{fraud_rate_hq:.1%}")
 
                 with col4:
                     quality_score = label_results['quality_report'].get('quality_score', 0)
-                    st.metric("质量评分", f"{quality_score:.1f}")
+                    st.metric("Quality Score", f"{quality_score:.1f}")
 
-                # 显示校准状态
+                # Show calibration status
                 if label_results.get('calibration_applied'):
-                    st.info("✅ 已应用校准优化，风险评分阈值已优化")
+                    st.info("✅ Calibration optimization applied, risk score thresholds optimized")
                 elif config['use_calibration']:
-                    st.warning("⚠️ 校准未成功应用，使用默认阈值")
+                    st.warning("⚠️ Calibration not successfully applied, using default thresholds")
 
             else:
-                st.error("❌ 未能生成足够的高质量伪标签，请降低置信度阈值")
+                st.error("❌ Failed to generate sufficient high-quality pseudo labels, please lower confidence threshold")
 
     except Exception as e:
-        st.error(f"❌ 伪标签生成失败: {str(e)}")
+        st.error(f"❌ Pseudo label generation failed: {str(e)}")
 
 
 def _show_pseudo_label_results():
-    """显示伪标签结果"""
-    st.markdown("### 📈 高质量伪标签结果")
+    """Show pseudo label results"""
+    st.markdown("### 📈 High-Quality Pseudo Label Results")
 
     label_results = st.session_state.pseudo_labels
 
-    # 结果概览
+    # Results overview
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("**标签分布对比**")
+        st.markdown("**Label Distribution Comparison**")
 
         all_labels = label_results.get('all_labels', [])
         hq_labels = label_results.get('high_quality_labels', [])
 
-        # 创建对比数据
+        # Create comparison data
         all_dist = pd.Series(all_labels).value_counts()
         hq_dist = pd.Series(hq_labels).value_counts() if hq_labels else pd.Series()
 
-        # 确保包含所有可能的标签类别
+        # Ensure all possible label categories are included
         all_dist = all_dist.reindex([0, 1], fill_value=0)
         hq_dist = hq_dist.reindex([0, 1], fill_value=0)
 
         comparison_data = pd.DataFrame({
-            '全部标签': all_dist,
-            '高质量标签': hq_dist
+            'All Labels': all_dist,
+            'High Quality Labels': hq_dist
         }).fillna(0)
 
-        comparison_data.index = ['正常', '欺诈']
+        comparison_data.index = ['Normal', 'Fraud']
 
         fig = px.bar(
             comparison_data,
-            title="标签分布对比",
-            labels={'index': '标签类型', 'value': '数量'},
-            color_discrete_map={'全部标签': '#17a2b8', '高质量标签': '#28a745'}
+            title="Label Distribution Comparison",
+            labels={'index': 'Label Type', 'value': 'Count'},
+            color_discrete_map={'All Labels': '#17a2b8', 'High Quality Labels': '#28a745'}
         )
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
-        st.markdown("**置信度分布**")
+        st.markdown("**Confidence Distribution**")
 
         all_confidences = label_results.get('all_confidences', [])
         hq_confidences = label_results.get('high_quality_confidences', [])
@@ -564,7 +564,7 @@ def _show_pseudo_label_results():
 
             fig.add_trace(go.Histogram(
                 x=all_confidences,
-                name='全部标签',
+                name='All Labels',
                 opacity=0.7,
                 nbinsx=20
             ))
@@ -572,7 +572,7 @@ def _show_pseudo_label_results():
             if hq_confidences:
                 fig.add_trace(go.Histogram(
                     x=hq_confidences,
-                    name='高质量标签',
+                    name='High Quality Labels',
                     opacity=0.7,
                     nbinsx=20
                 ))
@@ -581,13 +581,13 @@ def _show_pseudo_label_results():
                 x=label_results['min_confidence_threshold'],
                 line_dash="dash",
                 line_color="red",
-                annotation_text="置信度阈值"
+                annotation_text="Confidence Threshold"
             )
 
             fig.update_layout(
-                title="置信度分布对比",
-                xaxis_title="置信度",
-                yaxis_title="频次",
+                title="Confidence Distribution Comparison",
+                xaxis_title="Confidence",
+                yaxis_title="Frequency",
                 barmode='overlay'
             )
 
@@ -595,24 +595,24 @@ def _show_pseudo_label_results():
 
 
 def _show_quality_assessment():
-    """显示质量评估"""
-    st.markdown("### 🎯 质量评估与验证")
+    """Show quality assessment"""
+    st.markdown("### 🎯 Quality Assessment and Validation")
 
     label_results = st.session_state.pseudo_labels
     engineered_data = st.session_state.engineered_features
 
-    # 如果有真实标签，进行对比验证
+    # If true labels exist, perform comparison validation
     if 'is_fraudulent' in engineered_data.columns:
-        st.markdown("**与真实标签对比验证**")
+        st.markdown("**Comparison Validation with True Labels**")
 
         hq_indices = label_results.get('high_quality_indices', [])
         hq_labels = label_results.get('high_quality_labels', [])
 
         if hq_indices and hq_labels:
-            # 获取对应的真实标签
+            # Get corresponding true labels
             true_labels_hq = [engineered_data.iloc[i]['is_fraudulent'] for i in hq_indices]
 
-            # 计算性能指标
+            # Calculate performance metrics
             from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 
             accuracy = accuracy_score(true_labels_hq, hq_labels)
@@ -623,18 +623,18 @@ def _show_quality_assessment():
             col1, col2, col3, col4 = st.columns(4)
 
             with col1:
-                st.metric("准确率", f"{accuracy:.3f}")
+                st.metric("Accuracy", f"{accuracy:.3f}")
 
             with col2:
-                st.metric("精确率", f"{precision:.3f}")
+                st.metric("Precision", f"{precision:.3f}")
 
             with col3:
-                st.metric("召回率", f"{recall:.3f}")
+                st.metric("Recall", f"{recall:.3f}")
 
             with col4:
                 st.metric("F1 Score", f"{f1:.3f}")
 
-            # 混淆矩阵
+            # Confusion matrix
             cm = confusion_matrix(true_labels_hq, hq_labels)
 
             fig = px.imshow(
@@ -673,23 +673,23 @@ def _show_label_export():
     with col2:
         st.markdown("**Export Statistics**")
 
-        if export_option == "仅高质量标签":
+        if export_option == "High Quality Labels Only":
             export_count = len(label_results.get('high_quality_labels', []))
-            st.write(f"导出样本数: {export_count:,}")
-        elif export_option == "全部标签":
+            st.write(f"Export sample count: {export_count:,}")
+        elif export_option == "All Labels":
             export_count = len(label_results.get('all_labels', []))
-            st.write(f"导出样本数: {export_count:,}")
+            st.write(f"Export sample count: {export_count:,}")
         else:
             export_count = len(label_results.get('all_labels', []))
-            st.write(f"报告样本数: {export_count:,}")
+            st.write(f"Report sample count: {export_count:,}")
 
-    # 生成导出数据
-    if st.button("📥 生成导出文件", type="secondary"):
+    # Generate export data
+    if st.button("📥 Generate Export File", type="secondary"):
         try:
-            if export_option == "仅高质量标签":
+            if export_option == "High Quality Labels Only":
                 export_data = _prepare_high_quality_export(label_results, engineered_data, include_features, include_confidence)
                 filename = f"high_quality_pseudo_labels_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv"
-            elif export_option == "全部标签":
+            elif export_option == "All Labels":
                 export_data = _prepare_all_labels_export(label_results, engineered_data, include_features, include_confidence)
                 filename = f"all_pseudo_labels_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv"
             else:
@@ -699,34 +699,34 @@ def _show_label_export():
             csv_data = export_data.to_csv(index=False)
 
             st.download_button(
-                label=f"📥 下载 {filename}",
+                label=f"📥 Download {filename}",
                 data=csv_data,
                 file_name=filename,
                 mime="text/csv"
             )
 
-            st.success(f"✅ 导出文件已准备完成，包含 {len(export_data)} 条记录")
+            st.success(f"✅ Export file prepared successfully, contains {len(export_data)} records")
 
         except Exception as e:
-            st.error(f"❌ 导出失败: {str(e)}")
+            st.error(f"❌ Export failed: {str(e)}")
 
-    # 下一步按钮
+    # Next step button
     st.markdown("---")
     col1, col2, col3 = st.columns([1, 1, 1])
 
     with col2:
-        if st.button("🤖 下一步：模型训练", type="primary", use_container_width=True):
-            st.success("✅ 高质量伪标签生成完成，可以进入模型训练页面！")
-            st.info("💡 请在侧边栏选择'🤖 模型训练'页面继续")
+        if st.button("🤖 Next: Model Training", type="primary", use_container_width=True):
+            st.success("✅ High-quality pseudo label generation completed, ready for model training!")
+            st.info("💡 Please select '🤖 Model Training' page in the sidebar to continue")
 
 
 def _prepare_high_quality_export(label_results, engineered_data, include_features, include_confidence):
-    """准备高质量标签导出数据"""
+    """Prepare high-quality label export data"""
     hq_indices = label_results.get('high_quality_indices', [])
     hq_labels = label_results.get('high_quality_labels', [])
     hq_confidences = label_results.get('high_quality_confidences', [])
 
-    # 基础数据
+    # Basic data
     export_data = pd.DataFrame({
         'sample_index': hq_indices,
         'pseudo_label': hq_labels
@@ -736,7 +736,7 @@ def _prepare_high_quality_export(label_results, engineered_data, include_feature
         export_data['confidence'] = hq_confidences
 
     if include_features:
-        # 添加特征数据
+        # Add feature data
         feature_data = engineered_data.iloc[hq_indices].reset_index(drop=True)
         export_data = pd.concat([export_data, feature_data], axis=1)
 
@@ -744,11 +744,11 @@ def _prepare_high_quality_export(label_results, engineered_data, include_feature
 
 
 def _prepare_all_labels_export(label_results, engineered_data, include_features, include_confidence):
-    """准备全部标签导出数据"""
+    """Prepare all labels export data"""
     all_labels = label_results.get('all_labels', [])
     all_confidences = label_results.get('all_confidences', [])
 
-    # 基础数据
+    # Basic data
     export_data = pd.DataFrame({
         'sample_index': range(len(all_labels)),
         'pseudo_label': all_labels
@@ -757,24 +757,24 @@ def _prepare_all_labels_export(label_results, engineered_data, include_features,
     if include_confidence:
         export_data['confidence'] = all_confidences
 
-    # 标记高质量标签
+    # Mark high-quality labels
     hq_indices = set(label_results.get('high_quality_indices', []))
     export_data['is_high_quality'] = export_data['sample_index'].isin(hq_indices)
 
     if include_features:
-        # 添加特征数据
+        # Add feature data
         export_data = pd.concat([export_data, engineered_data.reset_index(drop=True)], axis=1)
 
     return export_data
 
 
 def _prepare_comparison_report(label_results, engineered_data):
-    """准备对比报告"""
+    """Prepare comparison report"""
     all_labels = label_results.get('all_labels', [])
     all_confidences = label_results.get('all_confidences', [])
     hq_indices = set(label_results.get('high_quality_indices', []))
 
-    # 基础报告数据
+    # Basic report data
     report_data = pd.DataFrame({
         'sample_index': range(len(all_labels)),
         'pseudo_label': all_labels,
@@ -782,7 +782,7 @@ def _prepare_comparison_report(label_results, engineered_data):
         'is_high_quality': [i in hq_indices for i in range(len(all_labels))]
     })
 
-    # 添加关键特征
+    # Add key features
     key_features = ['transaction_id', 'customer_id', 'transaction_amount', 'customer_age', 'account_age_days']
     available_features = [f for f in key_features if f in engineered_data.columns]
 
@@ -792,7 +792,7 @@ def _prepare_comparison_report(label_results, engineered_data):
             engineered_data[available_features].reset_index(drop=True)
         ], axis=1)
 
-    # 添加真实标签对比（如果有）
+    # Add true label comparison (if available)
     if 'is_fraudulent' in engineered_data.columns:
         report_data['true_label'] = engineered_data['is_fraudulent'].reset_index(drop=True)
         report_data['label_match'] = report_data['pseudo_label'] == report_data['true_label']

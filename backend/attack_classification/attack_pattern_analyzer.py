@@ -5,7 +5,7 @@
 
 import numpy as np
 import pandas as pd
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 from datetime import datetime, timedelta
 import logging
 import json
@@ -23,7 +23,7 @@ class AttackPatternAnalyzer:
     def __init__(self, data_dir: str = "data"):
         """
         初始化攻击模式分析器
-        
+
         Args:
             data_dir: 数据目录
         """
@@ -31,6 +31,7 @@ class AttackPatternAnalyzer:
         self.attack_records = []
         self.pattern_cache = {}
         self.trend_data = defaultdict(list)
+        self.cluster_patterns = {}  # 存储基于聚类的攻击模式
         self._load_attack_records()
     
     def _load_attack_records(self):
@@ -87,34 +88,34 @@ class AttackPatternAnalyzer:
     
     def analyze_attack_patterns(self, time_window: str = '7d') -> Dict:
         """
-        分析攻击模式
-        
+        Analyze attack patterns
+
         Args:
-            time_window: 时间窗口 ('1d', '7d', '30d', 'all')
-            
+            time_window: Time window ('1d', '7d', '30d', 'all')
+
         Returns:
-            攻击模式分析结果
+            Attack pattern analysis results
         """
         try:
-            # 过滤时间窗口内的记录
+            # Filter records within time window
             filtered_records = self._filter_records_by_time(self.attack_records, time_window)
-            
+
             if not filtered_records:
-                return {'message': '指定时间窗口内没有攻击记录'}
-            
-            # 分析攻击类型分布
+                return {'message': 'No attack records in specified time window'}
+
+            # Analyze attack type distribution
             attack_type_distribution = self._analyze_attack_type_distribution(filtered_records)
-            
-            # 分析风险评分分布
+
+            # Analyze risk score distribution
             risk_score_analysis = self._analyze_risk_score_distribution(filtered_records)
-            
-            # 分析时间模式
+
+            # Analyze time patterns
             time_pattern_analysis = self._analyze_time_patterns(filtered_records)
-            
-            # 分析特征关联性
+
+            # Analyze feature correlation
             feature_correlation = self._analyze_feature_correlation(filtered_records)
-            
-            # 分析攻击趋势
+
+            # Analyze attack trends
             trend_analysis = self._analyze_attack_trends(time_window)
             
             return {
@@ -316,32 +317,32 @@ class AttackPatternAnalyzer:
     
     def detect_anomalies(self, time_window: str = '7d') -> List[Dict]:
         """
-        检测异常模式
-        
+        Detect anomaly patterns
+
         Args:
-            time_window: 时间窗口
-            
+            time_window: Time window
+
         Returns:
-            异常模式列表
+            List of anomaly patterns
         """
         anomalies = []
-        
-        # 分析攻击记录
+
+        # Analyze attack records
         pattern_analysis = self.analyze_attack_patterns(time_window)
-        
+
         if 'error' in pattern_analysis:
             return anomalies
-        
-        # 检测异常攻击类型
+
+        # Detect abnormal attack types
         attack_distribution = pattern_analysis.get('attack_type_distribution', {})
         for attack_type, stats in attack_distribution.items():
-            if stats['percentage'] > 50:  # 单一攻击类型占比过高
+            if stats['percentage'] > 50:  # Single attack type proportion too high
                 anomalies.append({
                     'type': 'high_attack_type_concentration',
                     'attack_type': attack_type,
                     'percentage': stats['percentage'],
                     'severity': 'high' if stats['percentage'] > 70 else 'medium',
-                    'description': f'攻击类型 {attack_type} 占比过高 ({stats["percentage"]:.1f}%)'
+                    'description': f'Attack type {attack_type} proportion too high ({stats["percentage"]:.1f}%)'
                 })
         
         # 检测异常风险评分
@@ -373,11 +374,11 @@ class AttackPatternAnalyzer:
         return anomalies
     
     def generate_pattern_report(self, time_window: str = '7d') -> Dict:
-        """生成模式分析报告"""
+        """Generate pattern analysis report"""
         pattern_analysis = self.analyze_attack_patterns(time_window)
         anomalies = self.detect_anomalies(time_window)
-        
-        # 生成建议
+
+        # Generate recommendations
         recommendations = self._generate_recommendations(pattern_analysis, anomalies)
         
         return {
@@ -393,36 +394,36 @@ class AttackPatternAnalyzer:
         }
     
     def _generate_recommendations(self, pattern_analysis: Dict, anomalies: List[Dict]) -> List[str]:
-        """生成建议"""
+        """Generate recommendations"""
         recommendations = []
-        
-        # 基于异常生成建议
+
+        # Generate recommendations based on anomalies
         for anomaly in anomalies:
             if anomaly['type'] == 'high_attack_type_concentration':
                 recommendations.append(
-                    f"建议加强对 {anomaly['attack_type']} 类型攻击的防护措施"
+                    f"Recommend strengthening protection measures against {anomaly['attack_type']} type attacks"
                 )
             elif anomaly['type'] == 'high_risk_concentration':
                 recommendations.append(
-                    "建议提高整体安全防护等级，加强风险监控"
+                    "Recommend improving overall security protection level and strengthening risk monitoring"
                 )
             elif anomaly['type'] == 'time_concentration':
                 recommendations.append(
-                    f"建议在 {anomaly['peak_hour']} 时加强监控和防护"
+                    f"Recommend strengthening monitoring and protection at {anomaly['peak_hour']} o'clock"
                 )
-        
-        # 基于趋势生成建议
+
+        # Generate recommendations based on trends
         trend_analysis = pattern_analysis.get('trend_analysis', {})
         for attack_type, trend in trend_analysis.items():
             if trend.get('risk_trend') == 'increasing':
                 recommendations.append(
-                    f"建议关注 {attack_type} 攻击的风险上升趋势"
+                    f"Recommend paying attention to the rising risk trend of {attack_type} attacks"
                 )
             if trend.get('frequency_trend') == 'increasing':
                 recommendations.append(
-                    f"建议加强 {attack_type} 攻击的频率监控"
+                    f"Recommend strengthening frequency monitoring of {attack_type} attacks"
                 )
-        
+
         return recommendations
     
     def get_attack_statistics(self) -> Dict:
@@ -441,4 +442,187 @@ class AttackPatternAnalyzer:
             'average_risk_score': np.mean(risk_scores),
             'high_risk_attacks': len([s for s in risk_scores if s >= 0.8]),
             'attack_type_distribution': dict(attack_types)
-        } 
+        }
+
+    def analyze_cluster_based_attack_patterns(self, data: pd.DataFrame,
+                                            cluster_results: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        基于聚类结果分析攻击模式
+
+        Args:
+            data: 原始数据
+            cluster_results: 聚类分析结果
+
+        Returns:
+            基于聚类的攻击模式分析结果
+        """
+        try:
+            logger.info("开始基于聚类的攻击模式分析")
+
+            cluster_labels = cluster_results.get('cluster_labels', [])
+            cluster_details = cluster_results.get('cluster_details', [])
+
+            if not cluster_labels or not cluster_details:
+                logger.warning("聚类结果不完整，无法进行攻击模式分析")
+                return {}
+
+            attack_patterns = {}
+
+            for detail in cluster_details:
+                cluster_id = detail.get('cluster_id', -1)
+                risk_level = detail.get('risk_level', 'low')
+                fraud_rate = detail.get('fraud_rate', 0)
+                size = detail.get('size', 0)
+
+                # 获取该聚类的数据
+                cluster_mask = [label == cluster_id for label in cluster_labels]
+                cluster_data = data[cluster_mask] if len(cluster_mask) == len(data) else pd.DataFrame()
+
+                if cluster_data.empty:
+                    continue
+
+                # 分析攻击模式特征
+                pattern_features = self._extract_cluster_attack_features(cluster_data)
+
+                # 确定攻击类型
+                attack_type = self._classify_cluster_attack_type(pattern_features, risk_level, fraud_rate)
+
+                # 计算威胁等级
+                threat_level = self._calculate_cluster_threat_level(risk_level, fraud_rate, size, len(data))
+
+                attack_patterns[cluster_id] = {
+                    'cluster_id': cluster_id,
+                    'attack_type': attack_type,
+                    'threat_level': threat_level,
+                    'risk_level': risk_level,
+                    'fraud_rate': fraud_rate,
+                    'affected_samples': size,
+                    'pattern_features': pattern_features,
+                    'recommendations': self._generate_cluster_attack_recommendations(attack_type, threat_level)
+                }
+
+            # 生成总体攻击态势分析
+            overall_analysis = self._generate_cluster_overall_analysis(attack_patterns, data)
+
+            result = {
+                'cluster_attack_patterns': attack_patterns,
+                'overall_analysis': overall_analysis,
+                'analysis_timestamp': datetime.now().isoformat(),
+                'total_clusters_analyzed': len(attack_patterns)
+            }
+
+            # 缓存结果
+            self.cluster_patterns = attack_patterns
+
+            logger.info(f"聚类攻击模式分析完成，发现 {len(attack_patterns)} 种模式")
+            return result
+
+        except Exception as e:
+            logger.error(f"聚类攻击模式分析失败: {e}")
+            return {}
+
+    def _extract_cluster_attack_features(self, cluster_data: pd.DataFrame) -> Dict[str, Any]:
+        """提取聚类的攻击特征"""
+        features = {}
+
+        try:
+            # 交易金额特征
+            if 'transaction_amount' in cluster_data.columns:
+                features['avg_amount'] = float(cluster_data['transaction_amount'].mean())
+                features['amount_variance'] = float(cluster_data['transaction_amount'].var())
+                features['high_amount_rate'] = float((cluster_data['transaction_amount'] >
+                                                    cluster_data['transaction_amount'].quantile(0.9)).mean())
+
+            # 时间模式特征
+            if 'transaction_hour' in cluster_data.columns:
+                hour_dist = cluster_data['transaction_hour'].value_counts(normalize=True)
+                features['peak_hours'] = hour_dist.head(3).index.tolist()
+                features['night_transaction_rate'] = float(cluster_data['transaction_hour'].isin([22, 23, 0, 1, 2, 3]).mean())
+
+            # 账户特征
+            if 'account_age_days' in cluster_data.columns:
+                features['avg_account_age'] = float(cluster_data['account_age_days'].mean())
+                features['new_account_rate'] = float((cluster_data['account_age_days'] < 90).mean())
+
+            return features
+
+        except Exception as e:
+            logger.warning(f"攻击特征提取失败: {e}")
+            return {}
+
+    def _classify_cluster_attack_type(self, features: Dict, risk_level: str, fraud_rate: float) -> str:
+        """基于聚类特征分类攻击类型"""
+        if risk_level == 'critical' or fraud_rate > 0.3:
+            return 'high_risk_fraud'
+        elif risk_level == 'high' or fraud_rate > 0.15:
+            if features.get('night_transaction_rate', 0) > 0.5:
+                return 'suspicious_timing'
+            elif features.get('high_amount_rate', 0) > 0.3:
+                return 'large_amount_fraud'
+            else:
+                return 'moderate_risk_fraud'
+        elif risk_level == 'medium' or fraud_rate > 0.05:
+            return 'potential_fraud'
+        else:
+            return 'normal_behavior'
+
+    def _calculate_cluster_threat_level(self, risk_level: str, fraud_rate: float,
+                                      cluster_size: int, total_size: int) -> str:
+        """计算聚类威胁等级"""
+        impact_ratio = cluster_size / total_size
+
+        if risk_level == 'critical' or (fraud_rate > 0.3 and impact_ratio > 0.1):
+            return 'critical'
+        elif risk_level == 'high' or (fraud_rate > 0.15 and impact_ratio > 0.05):
+            return 'high'
+        elif risk_level == 'medium' or fraud_rate > 0.05:
+            return 'medium'
+        else:
+            return 'low'
+
+    def _generate_cluster_attack_recommendations(self, attack_type: str, threat_level: str) -> List[str]:
+        """生成基于聚类的攻击应对建议"""
+        recommendations = []
+
+        if threat_level == 'critical':
+            recommendations.extend([
+                "立即启动紧急响应程序",
+                "暂停相关账户的交易权限",
+                "通知安全团队进行深度调查"
+            ])
+        elif threat_level == 'high':
+            recommendations.extend([
+                "加强对该模式的监控",
+                "实施额外的身份验证",
+                "考虑临时限制交易额度"
+            ])
+        elif threat_level == 'medium':
+            recommendations.extend([
+                "增加人工审核频率",
+                "部署针对性的检测规则"
+            ])
+
+        if attack_type == 'suspicious_timing':
+            recommendations.append("重点监控夜间交易活动")
+        elif attack_type == 'large_amount_fraud':
+            recommendations.append("对大额交易实施严格审核")
+
+        return recommendations
+
+    def _generate_cluster_overall_analysis(self, attack_patterns: Dict, data: pd.DataFrame) -> Dict[str, Any]:
+        """生成聚类攻击态势总体分析"""
+        threat_levels = [pattern['threat_level'] for pattern in attack_patterns.values()]
+        attack_types = [pattern['attack_type'] for pattern in attack_patterns.values()]
+
+        return {
+            'total_threat_clusters': len([t for t in threat_levels if t in ['high', 'critical']]),
+            'dominant_attack_type': max(set(attack_types), key=attack_types.count) if attack_types else 'none',
+            'overall_threat_level': 'high' if 'critical' in threat_levels else
+                                  'medium' if 'high' in threat_levels else 'low',
+            'affected_population_ratio': sum(p['affected_samples'] for p in attack_patterns.values()) / len(data),
+            'recommendations': [
+                "基于聚类分析，建议重点关注高风险聚类",
+                "实施差异化的风险控制策略",
+                "定期更新聚类模型以适应新的攻击模式"
+            ]
+        }

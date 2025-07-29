@@ -11,10 +11,10 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-# 添加项目根目录到路径
+# Add project root directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-# 导入后端模块
+# Import backend modules
 from backend.data_processor.data_loader import DataLoader
 from backend.data_processor.data_cleaner import DataCleaner
 
@@ -22,7 +22,7 @@ def show():
     """Display data upload page"""
     st.markdown('<div class="sub-header">📁 Data Upload & Preprocessing</div>', unsafe_allow_html=True)
 
-    # 初始化session state
+    # Initialize session state
     if 'uploaded_data' not in st.session_state:
         st.session_state.uploaded_data = None
     if 'cleaned_data' not in st.session_state:
@@ -30,7 +30,7 @@ def show():
     if 'data_info' not in st.session_state:
         st.session_state.data_info = None
 
-    # 数据上传区域
+    # Data upload area
     st.markdown("### 📁 Data Upload")
 
     uploaded_file = st.file_uploader(
@@ -39,7 +39,7 @@ def show():
         help="Supports CSV format transaction data files"
     )
 
-    # 处理上传的文件
+    # Process uploaded file
     if uploaded_file is not None:
         try:
             data_loader = DataLoader()
@@ -49,8 +49,8 @@ def show():
             st.success("✅ File uploaded successfully!")
         except Exception as e:
             st.error(f"❌ File upload failed: {e}")
-    
-    # 数据质量检查
+
+    # Data quality check
     if st.session_state.uploaded_data is not None:
         st.markdown("### 📊 Data Quality Check")
 

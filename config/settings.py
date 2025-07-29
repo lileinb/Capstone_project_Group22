@@ -1,5 +1,5 @@
 """
-电商欺诈风险预测系统配置文件
+Behavioral Feature-Based E-commerce User Big Data Driven Risk Scoring Model System Configuration File
 """
 
 import os

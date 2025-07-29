@@ -12,32 +12,32 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-# 添加项目根目录到路径
+# Add project root directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-# 导入后端模块
+# Import backend modules
 from backend.feature_engineer.risk_features import RiskFeatureEngineer
 
 def show():
     """Display feature engineering page"""
     st.markdown('<div class="sub-header">🔧 Feature Engineering & Risk Feature Generation</div>', unsafe_allow_html=True)
 
-    # 检查是否有清理后的数据
+    # Check if cleaned data exists
     if 'cleaned_data' not in st.session_state or st.session_state.cleaned_data is None:
         st.warning("⚠️ Please upload and clean data first!")
         st.info("💡 Please complete data preparation on the '📁 Data Upload' page")
         return
 
-    # 初始化session state
+    # Initialize session state
     if 'engineered_features' not in st.session_state:
         st.session_state.engineered_features = None
     if 'feature_info' not in st.session_state:
         st.session_state.feature_info = None
 
-    # 获取清理后的数据
+    # Get cleaned data
     cleaned_data = st.session_state.cleaned_data
 
-    # 检查关键字段（使用更新后的列名）
+    # Check key fields (using updated column names)
     required_columns = ['customer_id', 'transaction_amount', 'payment_method', 'transaction_hour']
     missing_columns = [col for col in required_columns if col not in cleaned_data.columns]
     if missing_columns:
@@ -63,7 +63,7 @@ def show():
         categorical_cols = len(cleaned_data.select_dtypes(include=['object']).columns)
         st.metric("Categorical Features", f"{categorical_cols}")
 
-    # 特征工程区域
+    # Feature engineering area
     st.markdown("### 🔧 Risk Feature Engineering")
 
     st.markdown("""
@@ -74,7 +74,7 @@ def show():
     - **Account Behavior Features**: Account age risk assessment, transaction frequency analysis, payment method diversity
     """)
     
-    # 特征工程参数设置
+    # Feature engineering parameter settings
     st.markdown("#### ⚙️ Feature Engineering Parameters")
 
     col1, col2 = st.columns(2)

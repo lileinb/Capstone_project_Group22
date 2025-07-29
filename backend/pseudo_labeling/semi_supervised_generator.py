@@ -1,7 +1,7 @@
 """
-半监督四分类标签生成器
-利用原始欺诈标签作为锚点，生成四级风险分类标签
-专门针对电商场景优化
+Semi-supervised Four-class Label Generator
+Use original fraud labels as anchors to generate four-level risk classification labels
+Specifically optimized for e-commerce scenarios
 """
 
 import numpy as np
@@ -10,11 +10,11 @@ from typing import Dict, List, Optional, Any, Tuple
 import logging
 from datetime import datetime
 
-# 配置日志
+# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# 导入配置管理
+# Import configuration management
 try:
     from config.optimization_config import optimization_config
     CONFIG_AVAILABLE = True
@@ -24,10 +24,10 @@ except ImportError:
 
 
 class SemiSupervisedLabelGenerator:
-    """半监督四分类标签生成器"""
-    
+    """Semi-supervised Four-class Label Generator"""
+
     def __init__(self):
-        """初始化半监督标签生成器"""
+        """Initialize semi-supervised label generator"""
         self.target_classes = ['low', 'medium', 'high', 'extreme']
         self.class_mapping = {'low': 0, 'medium': 1, 'high': 2, 'extreme': 3}
         
@@ -44,10 +44,10 @@ class SemiSupervisedLabelGenerator:
             'low': 0.60, 'medium': 0.25, 'high': 0.12, 'extreme': 0.03
         })
         
-        logger.info("半监督四分类标签生成器初始化完成")
-    
+        logger.info("Semi-supervised four-class label generator initialization completed")
+
     def _load_config(self) -> Dict[str, Any]:
-        """加载配置"""
+        """Load configuration"""
         if CONFIG_AVAILABLE and optimization_config:
             return optimization_config.get_risk_scoring_config().get('label_generation', {})
         else:
@@ -64,28 +64,28 @@ class SemiSupervisedLabelGenerator:
                                  original_labels: Optional[pd.Series] = None,
                                  cluster_results: Optional[Dict] = None) -> Dict[str, Any]:
         """
-        生成四分类标签
-        
+        Generate four-class labels
+
         Args:
-            data: 输入数据
-            original_labels: 原始欺诈标签（1=欺诈，0=正常）
-            cluster_results: 聚类结果
-            
+            data: Input data
+            original_labels: Original fraud labels (1=fraud, 0=normal)
+            cluster_results: Clustering results
+
         Returns:
-            四分类标签生成结果
+            Four-class label generation results
         """
         try:
             if data is None or data.empty:
-                logger.error("输入数据为空")
+                logger.error("Input data is empty")
                 return self._empty_result()
-            
+
             start_time = datetime.now()
-            logger.info(f"开始生成四分类标签，数据量: {len(data)}")
-            
-            # 1. 检查原始标签
+            logger.info(f"Starting four-class label generation, data size: {len(data)}")
+
+            # 1. Check original labels
             if original_labels is None and 'is_fraudulent' in data.columns:
                 original_labels = data['is_fraudulent']
-                logger.info("使用数据中的is_fraudulent列作为原始标签")
+                logger.info("Using is_fraudulent column in data as original labels")
             
             # 2. 提取电商特征
             ecommerce_features = self._extract_ecommerce_features(data)
@@ -126,15 +126,15 @@ class SemiSupervisedLabelGenerator:
             generation_time = (datetime.now() - start_time).total_seconds()
             result['generation_time'] = generation_time
             
-            logger.info(f"四分类标签生成完成，耗时: {generation_time:.2f}秒")
+            logger.info(f"Four-class label generation completed, time taken: {generation_time:.2f} seconds")
             return result
-            
+
         except Exception as e:
-            logger.error(f"四分类标签生成失败: {e}")
+            logger.error(f"Four-class label generation failed: {e}")
             return self._empty_result()
     
     def _extract_ecommerce_features(self, data: pd.DataFrame) -> Dict[str, np.ndarray]:
-        """提取电商特定特征"""
+        """Extract e-commerce specific features"""
         try:
             features = {}
             
@@ -157,13 +157,13 @@ class SemiSupervisedLabelGenerator:
             return features
             
         except Exception as e:
-            logger.warning(f"电商特征提取失败: {e}")
+            logger.warning(f"E-commerce feature extraction failed: {e}")
             return {}
     
-    def _generate_labels_with_original(self, data: pd.DataFrame, 
+    def _generate_labels_with_original(self, data: pd.DataFrame,
                                      original_labels: pd.Series,
                                      features: Dict[str, np.ndarray]) -> np.ndarray:
-        """基于原始标签生成四分类标签"""
+        """Generate four-class labels based on original labels"""
         try:
             labels = np.zeros(len(data), dtype=int)
             
@@ -184,11 +184,11 @@ class SemiSupervisedLabelGenerator:
             return labels
             
         except Exception as e:
-            logger.warning(f"基于原始标签生成失败: {e}")
+            logger.warning(f"Generation based on original labels failed: {e}")
             return np.zeros(len(data), dtype=int)
     
     def _is_extreme_fraud_pattern(self, features: Dict[str, np.ndarray], idx: int) -> bool:
-        """识别极高风险的欺诈模式"""
+        """Identify extremely high-risk fraud patterns"""
         try:
             extreme_indicators = [
                 features['is_high_value'][idx] == 1,      # 大额交易

@@ -13,10 +13,10 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from typing import Dict, List, Any, Optional
 
-# 添加项目根目录到路径
+# Add project root directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-# 导入后端模块（使用安全导入）
+# Import backend modules (using safe import)
 try:
     from backend.prediction.individual_risk_predictor import IndividualRiskPredictor
     from backend.clustering.cluster_analyzer import ClusterAnalyzer
@@ -38,12 +38,12 @@ def _check_prerequisites():
     if 'clustering_results' not in st.session_state or st.session_state.clustering_results is None:
         st.warning("⚠️ It is recommended to complete clustering analysis first for more accurate risk assessment!")
         st.info("💡 Please complete clustering analysis on the '📊 Clustering Analysis' page")
-        # 不强制要求聚类结果，但会给出提示
+        # Clustering results not mandatory, but provide hints
 
     return True
 
 
-# 删除了所有旧的显示函数，使用新的风险预测显示组件
+# Removed all old display functions, using new risk prediction display components
 
 
 def _execute_individual_risk_prediction(engineered_data, clustering_results, use_clustering, risk_thresholds):
@@ -58,28 +58,28 @@ def _execute_individual_risk_prediction(engineered_data, clustering_results, use
 
     try:
         with st.spinner("Performing intelligent risk prediction..."):
-            # 准备数据
+            # Prepare data
             X = engineered_data.copy()
 
-            # 只保留数值特征
+            # Keep only numeric features
             numeric_cols = X.select_dtypes(include=[np.number]).columns
             X = X[numeric_cols]
 
-            # 处理缺失值和无穷值
+            # Handle missing values and infinite values
             X = X.fillna(0)
             X = X.replace([np.inf, -np.inf], 0)
             X = X.astype(float)
 
-            # 创建个体风险预测器
+            # Create individual risk predictor
             risk_predictor = IndividualRiskPredictor()
 
-            # 更新风险阈值
+            # Update risk thresholds
             if risk_thresholds:
                 risk_predictor.risk_thresholds = risk_thresholds
 
             st.info(f"✅ Starting analysis of {len(X)} individual risk samples")
 
-            # 执行个体风险预测
+            # Execute individual risk prediction
             clustering_data = clustering_results if use_clustering else None
             risk_results = risk_predictor.predict_individual_risks(
                 X,
@@ -87,20 +87,20 @@ def _execute_individual_risk_prediction(engineered_data, clustering_results, use
                 use_four_class_labels=True
             )
 
-            # 检查预测结果
+            # Check prediction results
             if risk_results.get('success', False):
-                # 保存结果到session state
+                # Save results to session state
                 st.session_state.individual_risk_results = risk_results
                 st.session_state.risk_stratification = risk_results.get('stratification_stats', {})
 
-                # 显示预测统计
+                # Display prediction statistics
                 total_samples = risk_results.get('total_samples', 0)
                 processing_time = risk_results.get('processing_time', 0)
 
                 st.success(f"✅ Individual risk prediction completed!")
                 st.info(f"📊 Successfully analyzed {total_samples} samples, time taken: {processing_time:.2f} seconds")
 
-                # 显示动态阈值信息
+                # Display dynamic threshold information
                 if 'dynamic_thresholds' in risk_results:
                     thresholds = risk_results['dynamic_thresholds']
                     st.info(f"🎚️ Dynamic Thresholds: Low Risk(<{thresholds.get('low', 40):.1f}) | "
@@ -108,7 +108,7 @@ def _execute_individual_risk_prediction(engineered_data, clustering_results, use
                            f"High Risk({thresholds.get('medium', 60):.1f}-{thresholds.get('high', 80):.1f}) | "
                            f"Critical Risk(>{thresholds.get('high', 80):.1f})")
 
-                # 显示风险分层统计
+                # Display risk stratification statistics
                 stratification_stats = risk_results.get('stratification_stats', {})
                 if stratification_stats:
                     col1, col2, col3, col4 = st.columns(4)
@@ -156,11 +156,11 @@ def show():
     """Show intelligent risk prediction page"""
     st.markdown('<div class="sub-header">🎯 Intelligent Risk Prediction & Individual Analysis</div>', unsafe_allow_html=True)
 
-    # 检查前置条件
+    # Check prerequisites
     if not _check_prerequisites():
         return
 
-    # 检查风险预测可用性
+    # Check risk prediction availability
     if not PREDICTION_AVAILABLE:
         st.error("❌ Risk prediction functionality unavailable")
         st.info("💡 Risk prediction module import failed, please check:")
@@ -180,13 +180,13 @@ ls backend/risk_scoring/
         return
 
 
-    # 初始化session state
+    # Initialize session state
     if 'individual_risk_results' not in st.session_state:
         st.session_state.individual_risk_results = None
     if 'risk_stratification' not in st.session_state:
         st.session_state.risk_stratification = None
 
-    # 获取特征工程数据和聚类结果
+    # Get feature engineering data and clustering results
     engineered_data = st.session_state.engineered_features
     clustering_results = st.session_state.get('clustering_results', None)
 
@@ -259,7 +259,7 @@ ls backend/risk_scoring/
                 'critical': 100
             }
         else:
-            # 使用标准阈值
+            # Use standard thresholds
             risk_thresholds = {
                 'low': 40,
                 'medium': 60,
@@ -268,7 +268,7 @@ ls backend/risk_scoring/
             }
             st.info("Using standard risk thresholds: Low(0-40), Medium(41-60), High(61-80), Critical(81-100)")
 
-        # 显示预期分布
+        # Display expected distribution
         st.markdown("**Expected Risk Distribution**")
         st.text("Low Risk: ~60%")
         st.text("Medium Risk: ~25%")

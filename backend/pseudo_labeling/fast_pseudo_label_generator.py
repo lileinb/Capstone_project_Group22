@@ -1,6 +1,6 @@
 """
-快速伪标签生成器
-使用向量化操作和缓存机制，大幅提升生成速度
+Fast Pseudo Label Generator
+Use vectorized operations and caching mechanisms to significantly improve generation speed
 """
 
 import pandas as pd
@@ -14,48 +14,48 @@ logger = logging.getLogger(__name__)
 
 
 class FastPseudoLabelGenerator:
-    """快速伪标签生成器"""
-    
+    """Fast Pseudo Label Generator"""
+
     def __init__(self):
-        """初始化快速伪标签生成器"""
+        """Initialize fast pseudo label generator"""
         self.confidence_threshold = 0.7
-        self.cache = {}  # 缓存机制
+        self.cache = {}  # Caching mechanism
         
     def generate_fast_pseudo_labels(self, data: pd.DataFrame,
                                   risk_results: Optional[Dict] = None,
                                   min_confidence: float = 0.8) -> Dict[str, Any]:
         """
-        快速生成伪标签
-        
+        Fast pseudo label generation
+
         Args:
-            data: 输入数据
-            risk_results: 风险评分结果（如果已有）
-            min_confidence: 最小置信度阈值
-            
+            data: Input data
+            risk_results: Risk scoring results (if available)
+            min_confidence: Minimum confidence threshold
+
         Returns:
-            伪标签生成结果
+            Pseudo label generation results
         """
         try:
             if data is None or data.empty:
-                logger.error("输入数据为空")
+                logger.error("Input data is empty")
                 return self._empty_result()
-                
+
             start_time = time.time()
-            logger.info(f"开始快速生成伪标签，数据量: {len(data)}")
-            
-            # 1. 使用现有风险评分结果或快速计算
+            logger.info(f"Starting fast pseudo label generation, data size: {len(data)}")
+
+            # 1. Use existing risk scoring results or fast calculation
             if risk_results is None:
                 risk_results = self._get_cached_risk_results(data)
-            
-            # 2. 向量化生成伪标签
+
+            # 2. Vectorized pseudo label generation
             labels, confidences = self._generate_labels_vectorized(data, risk_results)
-            
-            # 3. 筛选高质量标签
+
+            # 3. Filter high-quality labels
             high_quality_indices = np.where(np.array(confidences) >= min_confidence)[0].tolist()
             high_quality_labels = [labels[i] for i in high_quality_indices]
             high_quality_confidences = [confidences[i] for i in high_quality_indices]
-            
-            # 4. 生成简化质量报告
+
+            # 4. Generate simplified quality report
             quality_report = self._generate_fast_quality_report(
                 labels, confidences, high_quality_indices
             )
@@ -81,32 +81,32 @@ class FastPseudoLabelGenerator:
                 }
             }
             
-            logger.info(f"快速伪标签生成完成，耗时: {time.time() - start_time:.2f}秒")
+            logger.info(f"Fast pseudo label generation completed, time taken: {time.time() - start_time:.2f} seconds")
             return result
-            
+
         except Exception as e:
-            logger.error(f"快速伪标签生成失败: {e}")
+            logger.error(f"Fast pseudo label generation failed: {e}")
             return self._empty_result()
-    
+
     def _get_cached_risk_results(self, data: pd.DataFrame) -> Dict[str, Any]:
-        """获取缓存的风险评分结果或快速计算"""
+        """Get cached risk scoring results or fast calculation"""
         # 检查session state中是否有现成的风险评分结果
         try:
             import streamlit as st
             if hasattr(st, 'session_state') and hasattr(st.session_state, 'unsupervised_risk_results'):
                 risk_results = st.session_state.unsupervised_risk_results
                 if risk_results and 'results' in risk_results:
-                    logger.info("使用缓存的风险评分结果")
+                    logger.info("Using cached risk scoring results")
                     return risk_results
         except:
             pass
-        
-        # 如果没有缓存，使用快速风险评分
-        logger.info("使用快速风险评分")
+
+        # If no cache, use fast risk scoring
+        logger.info("Using fast risk scoring")
         return self._calculate_fast_risk_scores(data)
-    
+
     def _calculate_fast_risk_scores(self, data: pd.DataFrame) -> Dict[str, Any]:
-        """快速计算风险评分"""
+        """Fast risk score calculation"""
         # 向量化计算风险评分
         amounts = data.get('transaction_amount', pd.Series([0] * len(data))).values
         hours = data.get('transaction_hour', pd.Series([12] * len(data))).values
@@ -158,7 +158,7 @@ class FastPseudoLabelGenerator:
         }
     
     def _calculate_amount_scores_vectorized(self, amounts: np.ndarray) -> np.ndarray:
-        """向量化计算金额评分"""
+        """Vectorized amount score calculation"""
         scores = np.zeros_like(amounts, dtype=float)
         scores[amounts > 50000] = 90
         scores[(amounts > 20000) & (amounts <= 50000)] = 75
@@ -166,19 +166,19 @@ class FastPseudoLabelGenerator:
         scores[(amounts > 1000) & (amounts <= 5000)] = 35
         scores[(amounts > 100) & (amounts <= 1000)] = 20
         scores[(amounts > 0) & (amounts <= 100)] = 10
-        scores[amounts < 10] = 70  # 异常小额交易
+        scores[amounts < 10] = 70  # Abnormally small transactions
         return scores
     
     def _calculate_time_scores_vectorized(self, hours: np.ndarray) -> np.ndarray:
-        """向量化计算时间评分"""
-        scores = np.full_like(hours, 20.0, dtype=float)  # 默认评分
-        scores[(hours <= 2) | (hours >= 23)] = 80  # 深夜
-        scores[((hours <= 5) & (hours > 2)) | ((hours >= 22) & (hours < 23))] = 60  # 夜间
-        scores[(hours >= 9) & (hours <= 17)] = 10  # 工作时间
+        """Vectorized time score calculation"""
+        scores = np.full_like(hours, 20.0, dtype=float)  # Default score
+        scores[(hours <= 2) | (hours >= 23)] = 80  # Late night
+        scores[((hours <= 5) & (hours > 2)) | ((hours >= 22) & (hours < 23))] = 60  # Night
+        scores[(hours >= 9) & (hours <= 17)] = 10  # Business hours
         return scores
-    
+
     def _calculate_account_scores_vectorized(self, account_ages: np.ndarray) -> np.ndarray:
-        """向量化计算账户评分"""
+        """Vectorized account score calculation"""
         scores = np.zeros_like(account_ages, dtype=float)
         scores[account_ages < 1] = 80
         scores[(account_ages >= 1) & (account_ages < 7)] = 65
@@ -186,20 +186,20 @@ class FastPseudoLabelGenerator:
         scores[(account_ages >= 30) & (account_ages < 90)] = 25
         scores[account_ages >= 90] = 10
         return scores
-    
+
     def _calculate_age_scores_vectorized(self, customer_ages: np.ndarray) -> np.ndarray:
-        """向量化计算客户年龄评分"""
-        scores = np.full_like(customer_ages, 10.0, dtype=float)  # 默认评分
-        scores[(customer_ages < 18) | (customer_ages > 80)] = 40  # 异常年龄
-        scores[(customer_ages < 21) | (customer_ages > 70)] = 25  # 边界年龄
+        """Vectorized customer age score calculation"""
+        scores = np.full_like(customer_ages, 10.0, dtype=float)  # Default score
+        scores[(customer_ages < 18) | (customer_ages > 80)] = 40  # Abnormal age
+        scores[(customer_ages < 21) | (customer_ages > 70)] = 25  # Boundary age
         return scores
     
-    def _generate_labels_vectorized(self, data: pd.DataFrame, 
+    def _generate_labels_vectorized(self, data: pd.DataFrame,
                                   risk_results: Dict[str, Any]) -> Tuple[List[int], List[float]]:
-        """向量化生成伪标签"""
+        """Vectorized pseudo label generation"""
         results = risk_results.get('results', [])
         if not results:
-            logger.warning("风险评分结果为空")
+            logger.warning("Risk scoring results are empty")
             return [], []
         
         # 提取风险评分和等级
@@ -236,7 +236,7 @@ class FastPseudoLabelGenerator:
     
     def _generate_fast_quality_report(self, labels: List[int], confidences: List[float],
                                     high_quality_indices: List[int]) -> Dict[str, Any]:
-        """生成快速质量报告"""
+        """Generate fast quality report"""
         if not labels or not confidences:
             return {'quality_score': 0, 'quality_level': 'poor'}
         
@@ -279,7 +279,7 @@ class FastPseudoLabelGenerator:
         }
     
     def _empty_result(self) -> Dict[str, Any]:
-        """返回空结果"""
+        """Return empty result"""
         return {
             'strategy': 'fast_generation',
             'all_labels': [],

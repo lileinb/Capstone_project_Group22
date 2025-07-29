@@ -403,33 +403,33 @@ class ReportGenerator:
         }
     
     def _generate_recommendations(self, risk_data: Dict, clustering_data: Dict, attack_data: Dict) -> Dict:
-        """生成建议和行动项"""
+        """Generate recommendations and action items"""
         recommendations = []
         action_items = []
-        
-        # 基于风险分析的建议
+
+        # Recommendations based on risk analysis
         if risk_data.get('high_risk_percentage', 0) > 15:
             recommendations.append({
                 'category': 'risk_management',
                 'priority': 'high',
-                'description': '高风险交易比例较高，建议加强风险监控',
+                'description': 'High-risk transaction proportion is high, recommend strengthening risk monitoring',
                 'action_items': [
-                    '调整风险阈值设置',
-                    '增加人工审核流程',
-                    '加强实时监控'
+                    'Adjust risk threshold settings',
+                    'Add manual review process',
+                    'Strengthen real-time monitoring'
                 ]
             })
-        
-        # 基于攻击分析的建议
+
+        # Recommendations based on attack analysis
         if attack_data.get('attack_types'):
             recommendations.append({
                 'category': 'security_enhancement',
                 'priority': 'high',
-                'description': '检测到多种攻击类型，建议加强安全防护',
+                'description': 'Multiple attack types detected, recommend strengthening security protection',
                 'action_items': [
-                    '更新安全策略',
-                    '加强身份验证',
-                    '实施多层防护'
+                    'Update security policies',
+                    'Strengthen identity verification',
+                    'Implement multi-layer protection'
                 ]
             })
         

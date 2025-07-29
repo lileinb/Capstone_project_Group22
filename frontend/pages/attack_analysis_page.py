@@ -13,21 +13,21 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-# 添加项目根目录到路径
+# Add project root directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-# 导入后端模块
+# Import backend modules
 from backend.attack_classification.attack_classifier import AttackClassifier
 
 def _show_three_layer_architecture():
     """Display three-tier prediction architecture"""
     st.markdown("### 🏗️ Three-Tier Prediction Architecture")
 
-    # 创建流程图
+    # Create flow chart
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        # 检查第一层状态
+        # Check first layer status
         has_features = 'engineered_features' in st.session_state and st.session_state.engineered_features is not None
         if has_features:
             st.success("✅ **Layer 1: Fraud Detection**")
@@ -38,7 +38,7 @@ def _show_three_layer_architecture():
             st.markdown("- Need to complete feature engineering")
 
     with col2:
-        # 检查第二层状态
+        # Check second layer status
         has_risk_scoring = 'four_class_risk_results' in st.session_state and st.session_state.four_class_risk_results is not None
         if has_risk_scoring:
             st.success("✅ **Layer 2: Risk Grading**")
@@ -51,7 +51,7 @@ def _show_three_layer_architecture():
             st.markdown("- Need to complete four-class risk scoring")
 
     with col3:
-        # 第三层状态
+        # Third layer status
         has_attack_analysis = 'attack_results' in st.session_state and st.session_state.attack_results is not None
         if has_attack_analysis:
             st.success("✅ **Layer 3: Attack Analysis**")
@@ -60,7 +60,7 @@ def _show_three_layer_architecture():
             st.info("🎯 **Layer 3: Attack Analysis**")
             st.markdown("- Current page functionality")
 
-    # 显示数据流向
+    # Display data flow
     st.markdown("---")
     st.markdown("**🔄 Data Flow**: Raw Data → Feature Engineering → Clustering Analysis → Four-Class Risk Scoring → Attack Type Analysis → Comprehensive Threat Assessment")
 
@@ -70,10 +70,10 @@ def show():
     """Show attack analysis page"""
     st.markdown('<div class="sub-header">⚔️ Three-Tier Prediction Architecture: Attack Type Analysis</div>', unsafe_allow_html=True)
 
-    # 显示三层架构流程
+    # Display three-layer architecture flow
     _show_three_layer_architecture()
 
-    # 检查前置条件
+    # Check prerequisites
     has_features, has_risk_scoring = _show_three_layer_architecture()
 
     if not has_features:
@@ -85,16 +85,16 @@ def show():
         st.warning("⚠️ Please complete four-class risk scoring first!")
         st.info("💡 Please complete four-class risk scoring in the '🎯 Risk Scoring' page")
         return
-    
-    # 初始化session state
+
+    # Initialize session state
     if 'attack_results' not in st.session_state:
         st.session_state.attack_results = None
     if 'attack_analysis' not in st.session_state:
         st.session_state.attack_analysis = None
     if 'protection_advice' not in st.session_state:
         st.session_state.protection_advice = None
-    
-    # 获取特征工程数据
+
+    # Get feature engineering data
     engineered_data = st.session_state.engineered_features
     
     st.markdown("### 📊 Data Overview")
@@ -118,7 +118,7 @@ def show():
         else:
             st.metric("Fraud Rate", "N/A")
     
-    # 攻击类型说明
+    # Attack type description
     st.markdown("### 🎯 Attack Type Description")
 
     col1, col2 = st.columns(2)
@@ -145,56 +145,64 @@ def show():
         st.markdown("- **Severity**: Based on testing frequency and scope")
         st.markdown("- **Protection Measures**: Payment restrictions, verification codes, account review")
     
-    # 攻击检测配置
-    st.markdown("### ⚙️ 攻击检测配置")
-    
+    # Attack detection configuration
+    st.markdown("### ⚙️ Attack Detection Configuration")
+
     col1, col2 = st.columns(2)
-    
+
     with col1:
-        st.markdown("#### 🎯 检测参数")
-        
-        # 检测敏感度
+        st.markdown("#### 🎯 Detection Parameters")
+
+        # Detection sensitivity
         detection_sensitivity = st.slider(
-            "检测敏感度", 0.1, 2.0, 1.0, 0.1,
-            help="攻击检测的敏感度，越高越严格"
+            "Detection Sensitivity", 0.1, 2.0, 1.0, 0.1,
+            help="Attack detection sensitivity, higher values are more strict"
         )
-        
-        # 特征权重
-        device_weight = st.slider("设备特征权重", 0.1, 2.0, 1.0, 0.1)
-        time_weight = st.slider("时间特征权重", 0.1, 2.0, 1.0, 0.1)
-        amount_weight = st.slider("金额特征权重", 0.1, 2.0, 1.0, 0.1)
-        location_weight = st.slider("位置特征权重", 0.1, 2.0, 1.0, 0.1)
-    
+
+        # Feature weights
+        device_weight = st.slider("Device Feature Weight", 0.1, 2.0, 1.0, 0.1)
+        time_weight = st.slider("Time Feature Weight", 0.1, 2.0, 1.0, 0.1)
+        amount_weight = st.slider("Amount Feature Weight", 0.1, 2.0, 1.0, 0.1)
+        location_weight = st.slider("Location Feature Weight", 0.1, 2.0, 1.0, 0.1)
+
     with col2:
-        st.markdown("#### 📊 严重程度阈值")
-        
-        # 严重程度阈值
-        low_severity_threshold = st.slider("低危阈值", 1, 3, 1, help="低危攻击特征匹配数")
-        medium_severity_threshold = st.slider("中危阈值", 2, 4, 2, help="中危攻击特征匹配数")
-        high_severity_threshold = st.slider("高危阈值", 3, 5, 3, help="高危攻击特征匹配数")
-        
-        # 批量检测参数
-        batch_size_threshold = st.slider("批量大小阈值", 5, 50, 10, help="批量攻击的最小记录数")
-        time_window = st.slider("时间窗口(分钟)", 1, 60, 10, help="批量攻击的时间窗口")
+        st.markdown("#### 📊 Severity Thresholds")
+
+        # Severity thresholds
+        low_severity_threshold = st.slider("Low Risk Threshold", 1, 3, 1, help="Number of features matched for low risk attacks")
+        medium_severity_threshold = st.slider("Medium Risk Threshold", 2, 4, 2, help="Number of features matched for medium risk attacks")
+        high_severity_threshold = st.slider("High Risk Threshold", 3, 5, 3, help="Number of features matched for high risk attacks")
+
+        # Batch detection parameters
+        batch_size_threshold = st.slider("Batch Size Threshold", 5, 50, 10, help="Minimum number of records for batch attacks")
+        time_window = st.slider("Time Window (minutes)", 1, 60, 10, help="Time window for batch attacks")
     
-    # 执行攻击检测
-    if st.button("🚀 执行攻击检测", type="primary", help="基于当前配置进行攻击类型检测"):
+    # Execute attack detection
+    if st.button("🚀 Execute Attack Detection", type="primary", help="Perform attack type detection based on current configuration"):
         try:
-            with st.spinner("正在进行攻击检测..."):
-                # 创建攻击分类器
+            with st.spinner("Performing attack detection..."):
+                # Create attack classifier
                 attack_classifier = AttackClassifier()
 
-                # 执行攻击分类
-                attack_results = attack_classifier.classify_attacks(engineered_data)
+                # 获取聚类和风险评分结果（如果存在）
+                cluster_results = st.session_state.get('clustering_results', None)
+                risk_results = st.session_state.get('risk_results', None)
 
-                # 保存结果
+                # Execute attack classification with enhanced context
+                attack_results = attack_classifier.classify_attacks(
+                    engineered_data,
+                    cluster_results=cluster_results,
+                    risk_results=risk_results
+                )
+
+                # Save results
                 st.session_state.attack_results = attack_results
 
-                # 处理分类结果
+                # Process classification results
                 classification_results = attack_results.get('classification_results', [])
                 severity_distribution = {}
 
-                # 统计严重程度分布
+                # Count severity distribution
                 for result in classification_results:
                     risk_level = result.get('risk_level', 'UNKNOWN')
                     severity_distribution[risk_level] = severity_distribution.get(risk_level, 0) + 1
@@ -215,173 +223,204 @@ def show():
                         }
                     }
                 }
-                
-                st.success("✅ 攻击检测完成！")
-                
+
+                st.success("✅ Attack detection completed!")
+
         except Exception as e:
-            st.error(f"❌ 攻击检测失败: {e}")
+            st.error(f"❌ Attack detection failed: {e}")
             st.exception(e)
     
-    # 显示攻击检测结果
+    # Display attack detection results
     if st.session_state.attack_results is not None:
-        st.markdown("### 📈 攻击检测结果")
-        
+        st.markdown("### 📈 Attack Detection Results")
+
         attack_results = st.session_state.attack_results
         attack_analysis = st.session_state.attack_analysis
         protection_advice = st.session_state.protection_advice
-        
-        # 攻击统计
+
+        # Attack statistics
         col1, col2, col3, col4 = st.columns(4)
-        
+
         with col1:
-            st.metric("检测到攻击", f"{attack_analysis['total_attacks']:,}")
-        
+            st.metric("Detected Attacks", f"{attack_analysis['total_attacks']:,}")
+
         with col2:
             attack_types_count = len(attack_analysis['attack_types'])
-            st.metric("攻击类型数", f"{attack_types_count}")
-        
+            st.metric("Attack Types", f"{attack_types_count}")
+
         with col3:
             if attack_analysis['total_attacks'] > 0:
-                # 修正风险等级的键名
+                # Fix risk level key names
                 high_severity = (attack_analysis['severity_distribution'].get('CRITICAL', 0) +
                                attack_analysis['severity_distribution'].get('HIGH', 0))
                 high_severity_rate = (high_severity / attack_analysis['total_attacks'] * 100)
-                st.metric("高危攻击率", f"{high_severity_rate:.1f}%")
+                st.metric("High Risk Attack Rate", f"{high_severity_rate:.1f}%")
             else:
-                st.metric("高危攻击率", "0%")
+                st.metric("High Risk Attack Rate", "0%")
 
         with col4:
             if attack_analysis['total_attacks'] > 0:
                 classification_results = attack_analysis.get('classification_results', [])
                 if classification_results:
                     avg_confidence = np.mean([result.get('confidence', 0) for result in classification_results])
-                    st.metric("平均置信度", f"{avg_confidence:.3f}")
+                    st.metric("Average Confidence", f"{avg_confidence:.3f}")
                 else:
-                    st.metric("平均置信度", "N/A")
+                    st.metric("Average Confidence", "N/A")
             else:
-                st.metric("平均置信度", "N/A")
+                st.metric("Average Confidence", "N/A")
         
-        # 攻击类型分布
-        st.markdown("#### 📊 攻击类型分布")
+        # Attack type distribution
+        st.markdown("#### 📊 Attack Type Distribution")
 
         try:
             if attack_analysis['attack_types']:
-                # 创建攻击类型映射
+                # Create attack type mapping - 更新为8种攻击类型
                 attack_type_names = {
-                    'account_takeover': '账户接管攻击',
-                    'identity_theft': '身份盗用攻击',
-                    'bulk_fraud': '批量欺诈攻击',
-                    'testing_attack': '测试性攻击'
+                    'account_takeover': 'Account Takeover',
+                    'identity_theft': 'Identity Theft',
+                    'card_testing': 'Credit Card Testing',
+                    'bulk_fraud': 'Bulk Fraud',
+                    'velocity_attack': 'High Velocity Attack',
+                    'synthetic_identity': 'Synthetic Identity',
+                    'friendly_fraud': 'Friendly Fraud',
+                    'normal_behavior': 'Normal Behavior'
                 }
 
-                # 转换攻击类型名称
+                # Convert attack type names and filter out zero counts
                 attack_types_data = []
                 for attack_type, count in attack_analysis['attack_types'].items():
-                    attack_types_data.append({
-                        '攻击类型': attack_type_names.get(attack_type, attack_type),
-                        '数量': count
-                    })
+                    if count > 0:  # 只包含有实际数据的攻击类型
+                        attack_types_data.append({
+                            'Attack Type': attack_type_names.get(attack_type, attack_type),
+                            'Count': count
+                        })
 
                 attack_types_df = pd.DataFrame(attack_types_data)
 
                 if not attack_types_df.empty:
-                    # 攻击类型饼图
+                    # 按数量排序，便于显示
+                    attack_types_df = attack_types_df.sort_values('Count', ascending=False)
+
+                    # Attack type pie chart with enhanced styling
                     fig = px.pie(
                         attack_types_df,
-                        values='数量',
-                        names='攻击类型',
-                        title="攻击类型分布",
-                        color_discrete_sequence=px.colors.qualitative.Bold
+                        values='Count',
+                        names='Attack Type',
+                        title="Attack Type Distribution",
+                        color_discrete_sequence=px.colors.qualitative.Set3,
+                        hover_data=['Count']
                     )
-                    fig.update_traces(textposition='inside', textinfo='percent+label')
+
+                    # 优化图表显示
+                    fig.update_traces(
+                        textposition='inside',
+                        textinfo='percent+label',
+                        hovertemplate='<b>%{label}</b><br>Count: %{value}<br>Percentage: %{percent}<extra></extra>'
+                    )
+
+                    fig.update_layout(
+                        showlegend=True,
+                        legend=dict(
+                            orientation="v",
+                            yanchor="middle",
+                            y=0.5,
+                            xanchor="left",
+                            x=1.05
+                        ),
+                        margin=dict(l=20, r=150, t=50, b=20)
+                    )
+
                     st.plotly_chart(fig, use_container_width=True)
 
-                    # 攻击类型表格
+                    # Attack type table with percentage
+                    attack_types_df['Percentage'] = (attack_types_df['Count'] / attack_types_df['Count'].sum() * 100).round(1)
+                    attack_types_df['Percentage'] = attack_types_df['Percentage'].astype(str) + '%'
+
                     st.dataframe(attack_types_df, use_container_width=True)
                 else:
-                    st.info("📊 无攻击类型数据")
+                    st.info("📊 No attack type data")
             else:
-                st.info("📊 未检测到攻击类型")
+                st.info("📊 No attack types detected")
 
         except Exception as e:
-            st.error(f"❌ 攻击类型分布显示失败: {str(e)}")
-            st.info("📊 请尝试重新执行攻击检测")
+            st.error(f"❌ Attack type distribution display failed: {str(e)}")
+            st.info("📊 Please try re-executing attack detection")
         
-        # 风险等级分布
-        st.markdown("#### ⚠️ 风险等级分布")
+        # Risk level distribution
+        st.markdown("#### ⚠️ Risk Level Distribution")
 
         try:
             if attack_analysis.get('severity_distribution'):
-                # 风险等级名称映射
+                # Risk level name mapping
                 risk_level_names = {
-                    'CRITICAL': '极高风险',
-                    'HIGH': '高风险',
-                    'MEDIUM': '中等风险',
-                    'LOW': '低风险'
+                    'CRITICAL': 'Critical Risk',
+                    'HIGH': 'High Risk',
+                    'MEDIUM': 'Medium Risk',
+                    'LOW': 'Low Risk'
                 }
 
-                # 转换风险等级名称
+                # Convert risk level names
                 risk_data = []
                 for risk_level, count in attack_analysis['severity_distribution'].items():
                     risk_data.append({
-                        '风险等级': risk_level_names.get(risk_level, risk_level),
-                        '数量': count,
-                        '原始等级': risk_level
+                        'Risk Level': risk_level_names.get(risk_level, risk_level),
+                        'Count': count,
+                        'Original Level': risk_level
                     })
 
                 risk_df = pd.DataFrame(risk_data)
 
                 if not risk_df.empty:
-                    # 风险等级柱状图
+                    # Risk level bar chart
                     colors = {
-                        '极高风险': '#dc3545',
-                        '高风险': '#fd7e14',
-                        '中等风险': '#ffc107',
-                        '低风险': '#28a745'
+                        'Critical Risk': '#dc3545',
+                        'High Risk': '#fd7e14',
+                        'Medium Risk': '#ffc107',
+                        'Low Risk': '#28a745'
                     }
 
                     fig = px.bar(
                         risk_df,
-                        x='风险等级',
-                        y='数量',
-                        title="攻击风险等级分布",
-                        color='风险等级',
+                        x='Risk Level',
+                        y='Count',
+                        title="Attack Risk Level Distribution",
+                        color='Risk Level',
                         color_discrete_map=colors
                     )
                     fig.update_layout(height=400)
                     st.plotly_chart(fig, use_container_width=True)
 
-                    # 风险等级表格
-                    display_df = risk_df[['风险等级', '数量']]
+                    # Risk level table
+                    display_df = risk_df[['Risk Level', 'Count']]
                     st.dataframe(display_df, use_container_width=True)
                 else:
-                    st.info("📊 无风险等级数据")
+                    st.info("📊 No risk level data available")
             else:
-                st.info("📊 未检测到风险等级分布")
+                st.info("📊 No risk level distribution detected")
 
         except Exception as e:
-            st.error(f"❌ 风险等级分布显示失败: {str(e)}")
-            st.info("📊 请尝试重新执行攻击检测")
+            st.error(f"❌ Risk level distribution display failed: {str(e)}")
+            st.info("📊 Please try re-executing attack detection")
         
-        # 攻击详情分析
-        st.markdown("#### 🔍 攻击详情分析")
-        
-        # 选择要查看的攻击类型
+        # Attack detail analysis
+        st.markdown("#### 🔍 Attack Detail Analysis")
+
+        # Select attack type to view details
         if attack_analysis['attack_types']:
             selected_attack_type = st.selectbox(
-                "选择攻击类型查看详情", 
+                "Select attack type to view details",
                 list(attack_analysis['attack_types'].keys())
             )
-            
-            # 筛选该类型的攻击
+
+            # Filter attacks of this type
             classification_results = attack_results.get('classification_results', [])
             type_attacks = [result for result in classification_results if result.get('attack_type') == selected_attack_type]
-            
+
             if type_attacks:
-                # 攻击特征分析
-                st.markdown(f"**{selected_attack_type} 攻击特征分析**")
-                
-                # 统计特征频率
+                # Attack feature analysis
+                st.markdown(f"**{selected_attack_type} Attack Feature Analysis**")
+
+                # Count feature frequency
                 feature_counts = {}
                 for attack in type_attacks:
                     features = attack.get('detected_features', [])
@@ -389,150 +428,150 @@ def show():
                         if feature not in feature_counts:
                             feature_counts[feature] = 0
                         feature_counts[feature] += 1
-                
+
                 if feature_counts:
-                    feature_df = pd.DataFrame(list(feature_counts.items()), 
-                                           columns=['检测特征', '出现次数'])
-                    feature_df = feature_df.sort_values('出现次数', ascending=False)
-                    
+                    feature_df = pd.DataFrame(list(feature_counts.items()),
+                                           columns=['Detection Feature', 'Frequency'])
+                    feature_df = feature_df.sort_values('Frequency', ascending=False)
+
                     fig = px.bar(
                         feature_df,
-                        x='检测特征',
-                        y='出现次数',
-                        title=f"{selected_attack_type} 检测特征频率"
+                        x='Detection Feature',
+                        y='Frequency',
+                        title=f"{selected_attack_type} Detection Feature Frequency"
                     )
                     st.plotly_chart(fig, use_container_width=True)
                 
-                # 严重程度分布
+                # Severity distribution
                 severity_counts = {}
                 for attack in type_attacks:
                     severity = attack.get('severity', 'Unknown')
                     if severity not in severity_counts:
                         severity_counts[severity] = 0
                     severity_counts[severity] += 1
-                
+
                 if severity_counts:
-                    severity_df = pd.DataFrame(list(severity_counts.items()), 
-                                           columns=['严重程度', '数量'])
-                    
+                    severity_df = pd.DataFrame(list(severity_counts.items()),
+                                           columns=['Severity Level', 'Count'])
+
                     fig = px.pie(
                         severity_df,
-                        values='数量',
-                        names='严重程度',
-                        title=f"{selected_attack_type} 严重程度分布"
+                        values='Count',
+                        names='Severity Level',
+                        title=f"{selected_attack_type} Severity Distribution"
                     )
                     st.plotly_chart(fig, use_container_width=True)
         
-        # 防护建议
-        st.markdown("#### 🛡️ 防护建议")
+        # Protection recommendations
+        st.markdown("#### 🛡️ Protection Recommendations")
 
         pattern_analysis = attack_analysis.get('pattern_analysis', {})
         if pattern_analysis and 'recommendations' in pattern_analysis:
-            st.markdown("**基于攻击模式的防护建议**")
+            st.markdown("**Protection Recommendations Based on Attack Patterns**")
 
             for advice in pattern_analysis['recommendations']:
                 st.markdown(f"- {advice}")
 
-        # 主要攻击类型信息
+        # Main attack type information
         if pattern_analysis and 'dominant_attack_type' in pattern_analysis:
             dominant_type = pattern_analysis['dominant_attack_type']
-            st.markdown(f"**主要攻击类型**: {dominant_type}")
+            st.markdown(f"**Main Attack Type**: {dominant_type}")
 
-            # 显示攻击模式特征
+            # Show attack pattern features
             if 'time_patterns' in pattern_analysis:
                 time_patterns = pattern_analysis['time_patterns']
                 if time_patterns:
-                    st.markdown("**时间模式特征**:")
+                    st.markdown("**Time Pattern Features**:")
                     if 'peak_hours' in time_patterns:
-                        st.markdown(f"- 高峰时段: {time_patterns['peak_hours']}")
+                        st.markdown(f"- Peak hours: {time_patterns['peak_hours']}")
                     if 'night_transactions' in time_patterns:
-                        st.markdown(f"- 夜间交易数量: {time_patterns['night_transactions']}")
+                        st.markdown(f"- Night transaction count: {time_patterns['night_transactions']}")
 
             if 'amount_patterns' in pattern_analysis:
                 amount_patterns = pattern_analysis['amount_patterns']
                 if amount_patterns:
-                    st.markdown("**金额模式特征**:")
+                    st.markdown("**Amount Pattern Features**:")
                     if 'avg_amount' in amount_patterns:
-                        st.markdown(f"- 平均金额: {amount_patterns['avg_amount']}")
+                        st.markdown(f"- Average amount: {amount_patterns['avg_amount']}")
                     if 'large_amounts' in amount_patterns:
-                        st.markdown(f"- 大额交易数量: {amount_patterns['large_amounts']}")
+                        st.markdown(f"- Large transaction count: {amount_patterns['large_amounts']}")
                     if 'small_amounts' in amount_patterns:
-                        st.markdown(f"- 小额交易数量: {amount_patterns['small_amounts']}")
+                        st.markdown(f"- Small transaction count: {amount_patterns['small_amounts']}")
         
-        # 攻击记录详情
-        st.markdown("#### 📋 攻击记录详情")
+        # Attack record details
+        st.markdown("#### 📋 Attack Record Details")
 
-        # 选择要查看的记录
+        # Select record to view
         classification_results = st.session_state.attack_results.get('classification_results', [])
         if classification_results:
             selected_index = st.selectbox(
-                "选择攻击记录查看详情",
+                "Select attack record to view details",
                 range(len(classification_results)),
-                format_func=lambda x: f"记录 {x+1}: {classification_results[x].get('attack_type', 'Unknown')} - {classification_results[x].get('risk_level', 'Unknown')}"
+                format_func=lambda x: f"Record {x+1}: {classification_results[x].get('attack_type', 'Unknown')} - {classification_results[x].get('risk_level', 'Unknown')}"
             )
-            
+
             if 0 <= selected_index < len(classification_results):
                 attack_record = classification_results[selected_index]
 
-                # 显示攻击记录详情
+                # Show attack record details
                 col1, col2 = st.columns(2)
 
                 with col1:
-                    st.markdown("**攻击信息**")
-                    st.markdown(f"- 交易ID: {attack_record.get('transaction_id', 'Unknown')}")
-                    st.markdown(f"- 客户ID: {attack_record.get('customer_id', 'Unknown')}")
-                    st.markdown(f"- 攻击类型: {attack_record.get('attack_type', 'Unknown')}")
-                    st.markdown(f"- 风险等级: {attack_record.get('risk_level', 'Unknown')}")
-                    st.markdown(f"- 置信度: {attack_record.get('confidence', 0):.3f}")
+                    st.markdown("**Attack Information**")
+                    st.markdown(f"- Transaction ID: {attack_record.get('transaction_id', 'Unknown')}")
+                    st.markdown(f"- Customer ID: {attack_record.get('customer_id', 'Unknown')}")
+                    st.markdown(f"- Attack Type: {attack_record.get('attack_type', 'Unknown')}")
+                    st.markdown(f"- Risk Level: {attack_record.get('risk_level', 'Unknown')}")
+                    st.markdown(f"- Confidence: {attack_record.get('confidence', 0):.3f}")
 
                 with col2:
-                    st.markdown("**攻击特征**")
+                    st.markdown("**Attack Features**")
                     characteristics = attack_record.get('characteristics', [])
                     if characteristics:
                         for feature in characteristics:
                             st.markdown(f"- {feature}")
                     else:
-                        st.markdown("- 无特殊特征")
+                        st.markdown("- No special features")
         
-        # 下一步按钮
+        # Next step button
         st.markdown("---")
         col1, col2, col3 = st.columns([1, 1, 1])
-        
+
         with col2:
-            if st.button("🚀 进入分析报告", type="primary", use_container_width=True):
-                st.success("✅ 攻击分类完成，可以进入分析报告页面！")
-                st.info("💡 请在侧边栏选择'📋 分析报告'页面继续")
-    
+            if st.button("🚀 Enter Analysis Report", type="primary", use_container_width=True):
+                st.success("✅ Attack classification completed, ready to enter analysis report page!")
+                st.info("💡 Please select '📋 Analysis Report' page in the sidebar to continue")
+
     else:
-        # 显示攻击分类说明
-        st.markdown("### 📝 攻击分类说明")
-        
+        # Show attack classification description
+        st.markdown("### 📝 Attack Classification Description")
+
         st.markdown("""
-        **四大攻击类型：**
-        
-        1. **账户接管攻击 (Account Takeover)**
-           - 攻击者获取合法用户的账户访问权限
-           - 使用被盗账户进行欺诈交易
-           - 通常涉及设备异常、时间异常等特征
-        
-        2. **身份盗用攻击 (Identity Theft)**
-           - 攻击者伪造或盗用他人身份信息
-           - 创建虚假账户或修改现有账户信息
-           - 涉及地址不匹配、年龄不符等特征
-        
-        3. **批量欺诈攻击 (Bulk Fraud)**
-           - 短时间内大量创建虚假账户或交易
-           - 使用相似IP地址、相似交易模式
-           - 通常有明确的批量特征和时间模式
-        
-        4. **测试性攻击 (Testing Attack)**
-           - 攻击者测试系统安全机制
-           - 使用小额交易测试支付流程
-           - 涉及多种支付方式、快速连续交易
-        
-        **检测方法：**
-        - 基于规则的特征匹配
-        - 机器学习模式识别
-        - 行为异常检测
-        - 时间序列分析
-        """) 
+        **Four Major Attack Types:**
+
+        1. **Account Takeover Attack**
+           - Attackers gain access to legitimate user accounts
+           - Use compromised accounts for fraudulent transactions
+           - Usually involves device anomalies, time anomalies and other features
+
+        2. **Identity Theft Attack**
+           - Attackers forge or steal others' identity information
+           - Create fake accounts or modify existing account information
+           - Involves address mismatches, age inconsistencies and other features
+
+        3. **Bulk Fraud Attack**
+           - Large-scale creation of fake accounts or transactions in short time
+           - Use similar IP addresses and similar transaction patterns
+           - Usually have clear bulk features and time patterns
+
+        4. **Testing Attack**
+           - Attackers test system security mechanisms
+           - Use small transactions to test payment processes
+           - Involves multiple payment methods and rapid consecutive transactions
+
+        **Detection Methods:**
+        - Rule-based feature matching
+        - Machine learning pattern recognition
+        - Behavioral anomaly detection
+        - Time series analysis
+        """)

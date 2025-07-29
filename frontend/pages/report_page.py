@@ -13,10 +13,10 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from datetime import datetime
 
-# 添加项目根目录到路径
+# Add project root directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-# 导入后端模块
+# Import backend modules
 from backend.explainer.shap_explainer import SHAPExplainer
 from backend.explainer.lime_explainer import LIMEExplainer
 from backend.analysis_reporting.report_generator import ReportGenerator
@@ -25,21 +25,21 @@ def show():
     """Display analysis report page"""
     st.markdown('<div class="sub-header">📋 Comprehensive Analysis Report & Explainability Analysis</div>', unsafe_allow_html=True)
 
-    # 检查是否有特征工程数据
+    # Check if feature engineering data exists
     if 'engineered_features' not in st.session_state or st.session_state.engineered_features is None:
         st.warning("⚠️ Please complete feature engineering first!")
         st.info("💡 Please complete feature generation on the '🔧 Feature Engineering' page")
         return
-    
-    # 初始化session state
+
+    # Initialize session state
     if 'shap_analysis' not in st.session_state:
         st.session_state.shap_analysis = None
     if 'lime_analysis' not in st.session_state:
         st.session_state.lime_analysis = None
     if 'report_data' not in st.session_state:
         st.session_state.report_data = None
-    
-    # 获取特征工程数据
+
+    # Get feature engineering data
     engineered_data = st.session_state.engineered_features
     
     st.markdown("### 📊 Data Overview")
@@ -63,7 +63,7 @@ def show():
         else:
             st.metric("Fraud Rate", "N/A")
 
-    # 报告配置
+    # Report configuration
     st.markdown("### ⚙️ Report Configuration")
 
     col1, col2 = st.columns(2)
@@ -71,7 +71,7 @@ def show():
     with col1:
         st.markdown("#### 📋 Report Content Selection")
 
-        # 报告内容选择
+        # Report content selection
         include_data_analysis = st.checkbox("Data Analysis Report", value=True)
         include_model_performance = st.checkbox("Model Performance Report", value=True)
         include_risk_assessment = st.checkbox("Risk Assessment Report", value=True)
@@ -82,23 +82,23 @@ def show():
     with col2:
         st.markdown("#### 🎯 Explainability Analysis")
 
-        # 可解释性分析选择
+        # Explainability analysis selection
         include_shap_analysis = st.checkbox("SHAP Analysis", value=True)
         include_lime_analysis = st.checkbox("LIME Analysis", value=True)
 
-        # 分析样本数
+        # Analysis sample size
         analysis_sample_size = st.slider(
             "Analysis Sample Size", 100, 1000, 500,
             help="Number of samples for explainability analysis"
         )
 
-        # 特征重要性阈值
+        # Feature importance threshold
         feature_importance_threshold = st.slider(
             "Feature Importance Threshold", 0.01, 0.1, 0.05, 0.01,
             help="Minimum threshold for displaying feature importance"
         )
     
-    # 报告格式选择
+    # Report format selection
     st.markdown("#### 📄 Report Format")
 
     col1, col2, col3 = st.columns(3)
@@ -112,11 +112,11 @@ def show():
     with col3:
         export_html = st.checkbox("HTML Format", value=True)
 
-    # 执行分析
+    # Execute analysis
     if st.button("🚀 Generate Analysis Report", type="primary", help="Generate comprehensive analysis report based on current configuration"):
         try:
             with st.spinner("Generating analysis report..."):
-                # 准备数据
+                # Prepare data
                 X = engineered_data.select_dtypes(include=['number'])
                 if 'is_fraudulent' in X.columns:
                     y = X['is_fraudulent']
@@ -126,10 +126,10 @@ def show():
                     y = None
                     has_labels = False
 
-                # 处理缺失值
+                # Handle missing values
                 X = X.fillna(0)
 
-                # SHAP分析
+                # SHAP analysis
                 if include_shap_analysis and has_labels:
                     try:
                         shap_explainer = SHAPExplainer()
@@ -139,7 +139,7 @@ def show():
                     except Exception as e:
                         st.warning(f"⚠️ SHAP analysis failed: {e}")
 
-                # LIME分析
+                # LIME analysis
                 if include_lime_analysis and has_labels:
                     try:
                         lime_explainer = LIMEExplainer()
@@ -148,8 +148,8 @@ def show():
                         st.success("✅ LIME analysis completed")
                     except Exception as e:
                         st.warning(f"⚠️ LIME analysis failed: {e}")
-                
-                # 生成报告数据
+
+                # Generate report data
                 report_data = {
                     'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     'total_samples': len(engineered_data),
@@ -180,161 +180,159 @@ def show():
                     }
                 }
                 
-                # 添加其他分析结果
+                # Add other analysis results
                 if 'clustering_results' in st.session_state:
                     report_data['clustering_results'] = st.session_state.clustering_results
-                
+
                 if 'risk_scores' in st.session_state:
                     report_data['risk_analysis'] = st.session_state.risk_analysis
-                
+
                 if 'model_predictions' in st.session_state:
                     report_data['model_performance'] = st.session_state.model_performance
-                
+
                 if 'attack_results' in st.session_state:
                     report_data['attack_analysis'] = st.session_state.attack_analysis
-                
+
                 st.session_state.report_data = report_data
-                
-                st.success("✅ 分析报告生成完成！")
-                
+
+                st.success("✅ Analysis report generation completed!")
+
         except Exception as e:
-            st.error(f"❌ 分析报告生成失败: {e}")
+            st.error(f"❌ Analysis report generation failed: {e}")
             st.exception(e)
     
-    # 显示分析结果
+    # Display analysis results
     if st.session_state.report_data is not None:
-        st.markdown("### 📈 分析结果")
-        
+        st.markdown("### 📈 Analysis Results")
+
         report_data = st.session_state.report_data
-        
-        # 报告概览
+
+        # Report overview
         col1, col2, col3, col4 = st.columns(4)
-        
+
         with col1:
-            st.metric("分析时间", report_data['timestamp'])
-        
+            st.metric("Analysis Time", report_data['timestamp'])
+
         with col2:
-            st.metric("记录数", f"{report_data['data_info']['total_records']:,}")
-        
+            st.metric("Total Records", f"{report_data['total_samples']:,}")
+
         with col3:
-            st.metric("特征数", report_data['data_info']['total_features'])
-        
+            st.metric("Fraud Records", f"{report_data['fraud_samples']:,}")
+
         with col4:
-            if report_data['data_info']['fraud_rate'] is not None:
-                st.metric("欺诈率", f"{report_data['data_info']['fraud_rate']}%")
-            else:
-                st.metric("欺诈率", "N/A")
+            fraud_rate = (report_data['fraud_samples'] / report_data['total_samples'] * 100) if report_data['total_samples'] > 0 else 0
+            st.metric("Fraud Rate", f"{fraud_rate:.2f}%")
         
-        # SHAP分析结果
+        # SHAP analysis results
         if st.session_state.shap_analysis is not None:
-            st.markdown("#### 🎯 SHAP可解释性分析")
-            
+            st.markdown("#### 🎯 SHAP Interpretability Analysis")
+
             shap_analysis = st.session_state.shap_analysis
-            
-            # 特征重要性
+
+            # Feature importance
             if 'feature_importance' in shap_analysis:
                 importance_df = pd.DataFrame(shap_analysis['feature_importance'])
                 importance_df = importance_df.sort_values('importance', ascending=False)
-                
-                # 显示前10个重要特征
+
+                # Show top 10 important features
                 top_features = importance_df.head(10)
-                
+
                 fig = px.bar(
                     top_features,
                     x='feature',
                     y='importance',
-                    title="SHAP特征重要性排序",
-                    labels={'feature': '特征', 'importance': '重要性'}
+                    title="SHAP Feature Importance Ranking",
+                    labels={'feature': 'Feature', 'importance': 'Importance'}
                 )
                 st.plotly_chart(fig, use_container_width=True)
-                
-                # 特征重要性表格
+
+                # Feature importance table
                 st.dataframe(top_features, use_container_width=True)
             
-            # 特征贡献分析
+            # Feature contribution analysis
             if 'feature_contributions' in shap_analysis:
-                st.markdown("**特征贡献分析**")
-                
-                # 选择要分析的样本
+                st.markdown("**Feature Contribution Analysis**")
+
+                # Select sample to analyze
                 if len(shap_analysis['feature_contributions']) > 0:
                     sample_index = st.selectbox(
-                        "选择样本查看SHAP贡献",
+                        "Select sample to view SHAP contributions",
                         range(len(shap_analysis['feature_contributions'])),
-                        format_func=lambda x: f"样本 {x+1}"
+                        format_func=lambda x: f"Sample {x+1}"
                     )
-                    
+
                     if 0 <= sample_index < len(shap_analysis['feature_contributions']):
                         sample_contributions = shap_analysis['feature_contributions'][sample_index]
-                        
-                        # 创建瀑布图
+
+                        # Create waterfall chart
                         contrib_df = pd.DataFrame(sample_contributions)
                         contrib_df = contrib_df.sort_values('contribution', ascending=False)
-                        
+
                         fig = px.bar(
                             contrib_df,
                             x='feature',
                             y='contribution',
-                            title=f"样本 {sample_index+1} SHAP特征贡献",
-                            labels={'feature': '特征', 'contribution': '贡献值'},
+                            title=f"Sample {sample_index+1} SHAP Feature Contributions",
+                            labels={'feature': 'Feature', 'contribution': 'Contribution Value'},
                             color='contribution',
                             color_continuous_scale='RdBu'
                         )
                         st.plotly_chart(fig, use_container_width=True)
         
-        # LIME分析结果
+        # LIME analysis results
         if st.session_state.lime_analysis is not None:
-            st.markdown("#### 🔍 LIME局部解释分析")
-            
+            st.markdown("#### 🔍 LIME Local Explanation Analysis")
+
             lime_analysis = st.session_state.lime_analysis
-            
-            # 局部解释
+
+            # Local explanations
             if 'local_explanations' in lime_analysis:
-                st.markdown("**局部解释分析**")
-                
-                # 选择要分析的样本
+                st.markdown("**Local Explanation Analysis**")
+
+                # Select sample to analyze
                 if len(lime_analysis['local_explanations']) > 0:
                     lime_sample_index = st.selectbox(
-                        "选择样本查看LIME解释",
+                        "Select sample to view LIME explanation",
                         range(len(lime_analysis['local_explanations'])),
-                        format_func=lambda x: f"样本 {x+1}"
+                        format_func=lambda x: f"Sample {x+1}"
                     )
-                    
+
                     if 0 <= lime_sample_index < len(lime_analysis['local_explanations']):
                         local_explanation = lime_analysis['local_explanations'][lime_sample_index]
-                        
-                        # 显示局部解释
-                        st.markdown(f"**样本 {lime_sample_index+1} 的LIME解释**")
-                        
+
+                        # Show local explanation
+                        st.markdown(f"**LIME Explanation for Sample {lime_sample_index+1}**")
+
                         if 'feature_weights' in local_explanation:
                             weights_df = pd.DataFrame(local_explanation['feature_weights'])
                             weights_df = weights_df.sort_values('weight', ascending=False)
-                            
+
                             fig = px.bar(
                                 weights_df,
                                 x='feature',
                                 y='weight',
-                                title=f"样本 {lime_sample_index+1} LIME特征权重",
-                                labels={'feature': '特征', 'weight': '权重'},
+                                title=f"Sample {lime_sample_index+1} LIME Feature Weights",
+                                labels={'feature': 'Feature', 'weight': 'Weight'},
                                 color='weight',
                                 color_continuous_scale='RdBu'
                             )
                             st.plotly_chart(fig, use_container_width=True)
         
-        # 综合分析
-        st.markdown("#### 📊 综合分析")
-        
-        # 创建综合分析图表
+        # Comprehensive analysis
+        st.markdown("#### 📊 Comprehensive Analysis")
+
+        # Create comprehensive analysis charts
         analysis_summary = []
-        
-        # 数据质量分析
+
+        # Data quality analysis
         if 'data_info' in report_data:
             data_info = report_data['data_info']
             analysis_summary.append({
-                '分析项目': '数据质量',
-                '记录数': data_info['total_records'],
-                '特征数': data_info['total_features'],
-                '数值特征': data_info['numeric_features'],
-                '欺诈率': data_info['fraud_rate']
+                'Analysis Item': 'Data Quality',
+                'Record Count': data_info['total_records'],
+                'Feature Count': data_info['total_features'],
+                'Numeric Features': data_info['numeric_features'],
+                'Fraud Rate': data_info['fraud_rate']
             })
         
         # 聚类分析
@@ -406,12 +404,12 @@ def show():
                 'Average Confidence': f"{avg_confidence:.3f}"
             })
         
-        # 显示综合分析表格
+        # Show comprehensive analysis table
         if analysis_summary:
             summary_df = pd.DataFrame(analysis_summary)
             st.dataframe(summary_df, use_container_width=True)
         
-        # 报告导出
+        # Report export
         st.markdown("#### 📄 Report Export")
 
         col1, col2, col3 = st.columns(3)
@@ -426,7 +424,7 @@ def show():
                         pdf_path = report_generator.generate_pdf_report(report_data)
                         st.success(f"✅ PDF report generated: {pdf_path}")
 
-                        # 提供下载链接
+                        # Provide download link
                         if os.path.exists(pdf_path):
                             with open(pdf_path, "rb") as file:
                                 st.download_button(
@@ -451,7 +449,7 @@ def show():
                         excel_path = report_generator.generate_excel_report(report_data)
                         st.success(f"✅ Excel report generated: {excel_path}")
 
-                        # 提供下载链接
+                        # Provide download link
                         if os.path.exists(excel_path):
                             with open(excel_path, "rb") as file:
                                 st.download_button(
@@ -461,33 +459,33 @@ def show():
                                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                                 )
                         else:
-                            st.warning("⚠️ Excel文件生成失败")
+                            st.warning("⚠️ Excel file generation failed")
                     except Exception as e:
-                        st.error(f"❌ Excel报告生成失败: {str(e)}")
+                        st.error(f"❌ Excel report generation failed: {str(e)}")
 
         with col3:
-            if st.button("📊 导出HTML报告", type="primary", use_container_width=True):
+            if st.button("📊 Export HTML Report", type="primary", use_container_width=True):
                 if report_data is None:
-                    st.error("❌ 请先生成分析报告")
+                    st.error("❌ Please generate analysis report first")
                 else:
                     try:
                         report_generator = ReportGenerator()
                         html_path = report_generator.generate_html_report(report_data)
-                        st.success(f"✅ HTML报告已生成: {html_path}")
+                        st.success(f"✅ HTML report generated: {html_path}")
 
-                        # 提供下载链接
+                        # Provide download link
                         if os.path.exists(html_path):
                             with open(html_path, "r", encoding="utf-8") as file:
                                 st.download_button(
-                                    label="📥 下载HTML报告",
+                                    label="📥 Download HTML Report",
                                     data=file.read(),
                                     file_name="fraud_detection_report.html",
                                     mime="text/html"
                                 )
                         else:
-                            st.warning("⚠️ HTML文件生成失败")
+                            st.warning("⚠️ HTML file generation failed")
                     except Exception as e:
-                        st.error(f"❌ HTML报告生成失败: {str(e)}")
+                        st.error(f"❌ HTML report generation failed: {str(e)}")
         
         # 报告完成
         st.markdown("---")
@@ -512,7 +510,7 @@ def show():
         """)
     
     else:
-        # 显示分析报告说明
+        # Show analysis report description
         st.markdown("### 📝 Analysis Report Description")
         
         st.markdown("""
