@@ -124,7 +124,7 @@ class PseudoLabelGenerator:
             risk_level = result.get('risk_level', 'low')
             risk_factors = result.get('risk_factors', [])
 
-            # 基于无监督风险评分生成二分类标签
+            # 基于无监督风险评分生成二分类标签 (降低阈值，增加欺诈检出率)
             if risk_level == 'critical':
                 label = 1  # 极高风险 -> 欺诈
                 confidence = min(0.95, 0.85 + (risk_score - 75) / 100)
@@ -132,16 +132,21 @@ class PseudoLabelGenerator:
                 label = 1  # 高风险 -> 欺诈
                 confidence = min(0.90, 0.70 + (risk_score - 50) / 100)
             elif risk_level == 'medium':
-                # 中风险区间，基于具体评分决定
-                if risk_score >= 60:
+                # 中风险区间，降低阈值，更多标记为欺诈
+                if risk_score >= 45:  # 从60降低到45
                     label = 1
-                    confidence = 0.60 + (risk_score - 50) / 200
+                    confidence = 0.55 + (risk_score - 40) / 200
                 else:
                     label = 0
-                    confidence = 0.55 + (50 - risk_score) / 200
+                    confidence = 0.60 + (45 - risk_score) / 200
             else:  # low risk
-                label = 0  # 低风险 -> 正常
-                confidence = min(0.90, 0.70 + (50 - risk_score) / 100)
+                # 即使是低风险，如果评分较高也可能是欺诈
+                if risk_score >= 35:  # 新增：低风险但评分较高的情况
+                    label = 1
+                    confidence = 0.50 + (risk_score - 30) / 300
+                else:
+                    label = 0  # 低风险 -> 正常
+                    confidence = min(0.85, 0.65 + (35 - risk_score) / 100)
 
             # 基于风险因素数量调整置信度
             risk_factor_count = len(risk_factors)
@@ -273,56 +278,87 @@ class PseudoLabelGenerator:
         labels = []
         confidences = []
         rule_matches = []
-        
+
+        # 获取实际的列名（支持原始格式和清理后格式）
+        amount_col = self._get_column_name(data, ['transaction_amount', 'Transaction Amount'])
+        hour_col = self._get_column_name(data, ['transaction_hour', 'Transaction Hour'])
+        age_days_col = self._get_column_name(data, ['account_age_days', 'Account Age Days'])
+        customer_age_col = self._get_column_name(data, ['customer_age', 'Customer Age'])
+        quantity_col = self._get_column_name(data, ['quantity', 'Quantity'])
+
+        logger.info(f"规则生成使用的列名: amount={amount_col}, hour={hour_col}, age_days={age_days_col}")
+
         for idx, row in data.iterrows():
             label = 0
             confidence = 0.5
             matched_rules = []
-            
-            # Rule 1: Large amount night transactions
-            if (row.get('transaction_amount', 0) > 1000 and
-                row.get('transaction_hour', 12) in [0, 1, 2, 3, 4, 5, 22, 23]):
+
+            # 获取实际值，使用安全的默认值
+            amount = row.get(amount_col, 0) if amount_col else 0
+            hour = row.get(hour_col, 12) if hour_col else 12
+            age_days = row.get(age_days_col, 365) if age_days_col else 365
+            customer_age = row.get(customer_age_col, 30) if customer_age_col else 30
+            quantity = row.get(quantity_col, 1) if quantity_col else 1
+
+            # Rule 1: Large amount night transactions (降低阈值)
+            if (amount > 500 and hour in [0, 1, 2, 3, 4, 5, 22, 23]):
                 label = 1
                 confidence += 0.3
                 matched_rules.append('Large amount night transaction')
 
-            # Rule 2: New account large transactions
-            if (row.get('account_age_days', 365) < 30 and
-                row.get('transaction_amount', 0) > 500):
+            # Rule 2: New account large transactions (降低阈值)
+            if (age_days < 30 and amount > 200):
                 label = 1
                 confidence += 0.25
                 matched_rules.append('New account large transaction')
 
-            # Rule 3: Abnormal age + high-risk products
-            if (row.get('customer_age', 30) < 18 or row.get('customer_age', 30) > 70) and \
-               row.get('product_category', '') == 'electronics':
+            # Rule 3: Abnormal age + high-risk products (使用正确列名，降低阈值)
+            product_col = self._get_column_name(data, ['product_category', 'Product Category'])
+            product_category = row.get(product_col, '') if product_col else ''
+            if ((customer_age < 18 or customer_age > 70) and product_category == 'electronics'):
                 label = 1
                 confidence += 0.2
                 matched_rules.append('Abnormal age high-risk product')
 
-            # Rule 4: Mobile device + bank transfer + large amount
-            if (row.get('device_used', '') == 'mobile' and
-                row.get('payment_method', '') == 'bank transfer' and
-                row.get('transaction_amount', 0) > 300):
+            # Rule 4: Mobile device + bank transfer + large amount (使用正确列名，降低阈值)
+            device_col = self._get_column_name(data, ['device_used', 'Device Used'])
+            payment_col = self._get_column_name(data, ['payment_method', 'Payment Method'])
+            device = row.get(device_col, '') if device_col else ''
+            payment = row.get(payment_col, '') if payment_col else ''
+            if (device == 'mobile' and payment == 'bank transfer' and amount > 150):
                 label = 1
                 confidence += 0.2
                 matched_rules.append('Mobile device bank transfer')
 
-            # Rule 5: Address mismatch + large transaction
-            shipping_addr = str(row.get('shipping_address', ''))
-            billing_addr = str(row.get('billing_address', ''))
-            if (shipping_addr != billing_addr and
-                row.get('transaction_amount', 0) > 200):
+            # Rule 5: 基于工程特征的高风险模式
+            # 使用时间风险特征
+            if 'time_risk_score' in row and row.get('time_risk_score', 1) >= 3:
                 label = 1
-                confidence += 0.15
-                matched_rules.append('Address mismatch large transaction')
+                confidence += 0.25
+                matched_rules.append('High time risk score')
 
-            # Normal transaction rules
+            # 使用金额风险特征
+            if 'amount_risk_score' in row and row.get('amount_risk_score', 1) >= 3:
+                label = 1
+                confidence += 0.3
+                matched_rules.append('High amount risk score')
+
+            # 使用账户风险特征
+            if 'account_age_risk_score' in row and row.get('account_age_risk_score', 1) >= 3:
+                label = 1
+                confidence += 0.25
+                matched_rules.append('High account age risk score')
+
+            # Rule 6: 夜间交易 + 新账户
+            if ('is_night_transaction' in row and row.get('is_night_transaction', 0) == 1 and age_days < 60):
+                label = 1
+                confidence += 0.2
+                matched_rules.append('Night transaction new account')
+
+            # Normal transaction rules (更宽松的条件)
             if not matched_rules:
                 # Small amount + normal time + old account
-                if (row.get('transaction_amount', 0) < 100 and
-                    9 <= row.get('transaction_hour', 12) <= 21 and
-                    row.get('account_age_days', 0) > 90):
+                if (amount < 50 and 9 <= hour <= 21 and age_days > 90):
                     confidence = 0.8
                     matched_rules.append('Normal transaction pattern')
             
@@ -502,6 +538,13 @@ class PseudoLabelGenerator:
             'label_distribution': pd.Series(pseudo_labels).value_counts().to_dict(),
             'positive_rate': sum(pseudo_labels) / len(pseudo_labels)
         }
+
+    def _get_column_name(self, data: pd.DataFrame, possible_names: List[str]) -> str:
+        """获取实际存在的列名"""
+        for name in possible_names:
+            if name in data.columns:
+                return name
+        return None
 
     def _empty_result(self) -> Dict[str, Any]:
         """Return empty result"""

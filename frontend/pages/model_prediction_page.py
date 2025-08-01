@@ -29,16 +29,42 @@ except ImportError as e:
     ClusterAnalyzer = None
 
 def _check_prerequisites():
-    """Check prerequisites"""
+    """Check prerequisites with enhanced dependency validation"""
+    # 必需的依赖
     if 'engineered_features' not in st.session_state or st.session_state.engineered_features is None:
         st.warning("⚠️ Please complete feature engineering first!")
         st.info("💡 Please complete feature generation on the '🔧 Feature Engineering' page")
         return False
 
+    # 检查可选但推荐的依赖
+    missing_recommended = []
     if 'clustering_results' not in st.session_state or st.session_state.clustering_results is None:
-        st.warning("⚠️ It is recommended to complete clustering analysis first for more accurate risk assessment!")
-        st.info("💡 Please complete clustering analysis on the '📊 Clustering Analysis' page")
-        # Clustering results not mandatory, but provide hints
+        missing_recommended.append("📊 Clustering Analysis")
+    if 'pseudo_labels' not in st.session_state or st.session_state.pseudo_labels is None:
+        if 'high_quality_labels' not in st.session_state or st.session_state.high_quality_labels is None:
+            missing_recommended.append("🏷️ Pseudo Labeling")
+    if 'four_class_risk_results' not in st.session_state or st.session_state.four_class_risk_results is None:
+        missing_recommended.append("🎯 Risk Scoring")
+
+    if missing_recommended:
+        st.info("💡 **Enhanced Prediction Available**: For better model performance, consider completing:")
+        for item in missing_recommended:
+            st.info(f"   • {item}")
+        st.info("🚀 **Current Mode**: Basic prediction (using engineered features only)")
+
+        # 显示可用的增强功能
+        with st.expander("🔧 Available Enhancements", expanded=False):
+            if 'pseudo_labels' in st.session_state or 'high_quality_labels' in st.session_state:
+                st.success("✅ Pseudo labels available - Enhanced training enabled")
+            else:
+                st.info("🏷️ Pseudo labels: Improve model training with generated labels")
+
+            if 'four_class_risk_results' in st.session_state:
+                st.success("✅ Risk scoring available - Risk-aware prediction enabled")
+            else:
+                st.info("🎯 Risk scoring: Enable risk-stratified predictions")
+    else:
+        st.success("✅ All dependencies available - Full enhanced mode enabled!")
 
     return True
 

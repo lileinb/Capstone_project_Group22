@@ -765,8 +765,19 @@ class FourClassRiskCalculator:
             # 生成详细结果列表
             detailed_results = []
             for i in range(len(risk_scores)):
+                # 尝试从原始数据获取ID信息
+                transaction_id = f'tx_{i}'
+                customer_id = f'customer_{i}'
+
+                if hasattr(data, 'iloc') and i < len(data):
+                    row = data.iloc[i]
+                    transaction_id = row.get('transaction_id', f'tx_{i}')
+                    customer_id = row.get('customer_id', f'customer_{i}')
+
                 detailed_results.append({
                     'index': i,
+                    'transaction_id': transaction_id,
+                    'customer_id': customer_id,
                     'risk_score': float(risk_scores[i]),
                     'risk_level': risk_levels[i],
                     'risk_class': self.class_mapping[risk_levels[i]]

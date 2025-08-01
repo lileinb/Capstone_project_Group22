@@ -39,7 +39,7 @@ def load_and_preprocess_data():
     
     # 数据清理
     cleaner = DataCleaner()
-    cleaned_data = cleaner.comprehensive_cleaning(data)
+    cleaned_data = cleaner.clean_data(data)
     logger.info(f"数据清理完成: {cleaned_data.shape}")
     
     # 特征工程
@@ -56,32 +56,75 @@ def prepare_training_data(data):
     # 选择数值型特征作为训练特征
     numeric_columns = data.select_dtypes(include=[np.number]).columns.tolist()
     
-    # 排除一些不需要的特征
-    exclude_features = ['transaction_id', 'user_id', 'composite_risk_score', 'normalized_risk_score']
+    # 排除目标变量、ID列和其他不需要的特征
+    exclude_features = [
+        'transaction_id', 'user_id', 'composite_risk_score', 'normalized_risk_score',
+        'is_fraudulent', 'Is Fraudulent', 'fraud', 'is_fraud',  # 所有可能的目标变量
+        'customer_id', 'Customer ID', 'transaction_id', 'Transaction ID'  # ID列
+    ]
+
     feature_columns = [col for col in numeric_columns if col not in exclude_features]
+
+    logger.info(f"排除的列: {[col for col in exclude_features if col in data.columns]}")
+    logger.info(f"选择的特征列: {feature_columns}")
     
-    # 如果有目标列，使用它；否则创建一个模拟的目标列
-    if 'fraud' in data.columns:
-        target_column = 'fraud'
-    elif 'is_fraud' in data.columns:
-        target_column = 'is_fraud'
-    else:
-        # 创建模拟目标列（基于风险评分）
-        if 'composite_risk_score' in data.columns:
-            data['target'] = np.where(data['composite_risk_score'] > 20, 1, 0)
-        else:
-            # 随机生成目标列用于演示
-            np.random.seed(42)
-            data['target'] = np.random.choice([0, 1], size=len(data), p=[0.95, 0.05])
-        target_column = 'target'
+    # 查找目标列（支持多种可能的列名）
+    possible_target_columns = [
+        'is_fraudulent',  # 数据清理后的标准名称
+        'Is Fraudulent',  # 原始数据集名称
+        'fraud',          # 其他可能的名称
+        'is_fraud'        # 其他可能的名称
+    ]
+
+    target_column = None
+    for col in possible_target_columns:
+        if col in data.columns:
+            target_column = col
+            logger.info(f"找到目标列: {col}")
+            break
+
+    if target_column is None:
+        logger.error("未找到有效的目标列！")
+        logger.error(f"可用列: {list(data.columns)}")
+        raise ValueError("数据集中没有找到欺诈标签列")
     
-    X = data[feature_columns].fillna(0)
+    # 验证目标变量不在特征中
+    if target_column in feature_columns:
+        logger.error(f"目标变量 {target_column} 仍在特征列表中！这会导致数据泄露！")
+        feature_columns.remove(target_column)
+        logger.info(f"已从特征中移除目标变量: {target_column}")
+
+    # 准备特征数据，处理缺失值和无穷值
+    X = data[feature_columns].copy()
+
+    # 处理缺失值
+    X = X.fillna(0)
+
+    # 处理无穷值
+    X = X.replace([np.inf, -np.inf], 0)
+
+    # 确保所有值都是有限的
+    for col in X.columns:
+        if X[col].dtype in ['float64', 'int64']:
+            if not np.isfinite(X[col]).all():
+                logger.warning(f"列 {col} 包含非有限值，已替换为0")
+                X[col] = X[col].replace([np.inf, -np.inf, np.nan], 0)
+
     y = data[target_column]
-    
+
+    # 详细的数据验证和统计
     logger.info(f"训练特征数量: {len(feature_columns)}")
     logger.info(f"目标列: {target_column}")
+    logger.info(f"数据形状: X={X.shape}, y={y.shape}")
+    logger.info(f"正样本数量: {y.sum()}")
+    logger.info(f"负样本数量: {len(y) - y.sum()}")
     logger.info(f"正样本比例: {y.mean():.3f}")
-    
+    logger.info(f"数据不平衡比例: 1:{(len(y) - y.sum()) / y.sum():.1f}")
+
+    # 检查是否有足够的正样本
+    if y.sum() < 10:
+        logger.warning(f"正样本数量过少 ({y.sum()})，可能影响模型训练效果")
+
     return X, y, feature_columns
 
 def train_catboost_model(X, y, feature_columns):
@@ -94,15 +137,22 @@ def train_catboost_model(X, y, feature_columns):
         # 获取模型参数
         params = MODEL_CONFIG["catboost"]["params"]
         
-        # 创建模型
+        # 计算类别权重以处理数据不平衡
+        pos_weight = (len(y) - y.sum()) / y.sum()  # 负样本数 / 正样本数
+
+        # 创建模型，添加处理不平衡数据的参数
         model = CatBoostClassifier(
             iterations=params["iterations"],
             learning_rate=params["learning_rate"],
             depth=params["depth"],
             l2_leaf_reg=params["l2_leaf_reg"],
             random_seed=params["random_seed"],
+            scale_pos_weight=pos_weight,  # 处理数据不平衡
+            eval_metric='AUC',  # 使用AUC作为评估指标
             verbose=100
         )
+
+        logger.info(f"CatBoost模型参数: scale_pos_weight={pos_weight:.2f}")
         
         # 训练模型
         model.fit(X, y)
@@ -136,7 +186,10 @@ def train_xgboost_model(X, y, feature_columns):
         # 获取模型参数
         params = MODEL_CONFIG["xgboost"]["params"]
         
-        # 创建模型
+        # 计算类别权重以处理数据不平衡
+        pos_weight = (len(y) - y.sum()) / y.sum()  # 负样本数 / 正样本数
+
+        # 创建模型，添加处理不平衡数据的参数
         model = xgb.XGBClassifier(
             n_estimators=params["n_estimators"],
             max_depth=params["max_depth"],
@@ -144,8 +197,12 @@ def train_xgboost_model(X, y, feature_columns):
             subsample=params["subsample"],
             colsample_bytree=params["colsample_bytree"],
             random_state=params["random_state"],
+            scale_pos_weight=pos_weight,  # 处理数据不平衡
+            eval_metric='auc',  # 使用AUC作为评估指标
             verbosity=1
         )
+
+        logger.info(f"XGBoost模型参数: scale_pos_weight={pos_weight:.2f}")
         
         # 训练模型
         model.fit(X, y)
@@ -169,64 +226,30 @@ def train_xgboost_model(X, y, feature_columns):
         logger.error(f"XGBoost模型训练失败: {e}")
         return None
 
-def train_randomforest_model(X, y, feature_columns):
-    """训练Random Forest模型"""
-    logger.info("开始训练Random Forest模型...")
-    
-    try:
-        from sklearn.ensemble import RandomForestClassifier
-        
-        # 获取模型参数
-        params = MODEL_CONFIG["randomforest"]["params"]
-        
-        # 创建模型
-        model = RandomForestClassifier(
-            n_estimators=params["n_estimators"],
-            max_depth=params["max_depth"],
-            min_samples_split=params["min_samples_split"],
-            min_samples_leaf=params["min_samples_leaf"],
-            random_state=params["random_state"],
-            n_jobs=-1
-        )
-        
-        # 训练模型
-        model.fit(X, y)
-        
-        # 保存模型
-        model_path = PRETRAINED_MODELS_DIR / MODEL_CONFIG["randomforest"]["filename"]
-        joblib.dump(model, model_path)
-        
-        # 保存特征列信息
-        feature_info = {
-            "feature_columns": feature_columns,
-            "model_type": "Random Forest",
-            "training_params": params
-        }
-        joblib.dump(feature_info, PRETRAINED_MODELS_DIR / "randomforest_feature_info.pkl")
-        
-        logger.info(f"Random Forest模型训练完成，保存到: {model_path}")
-        return model
-        
-    except Exception as e:
-        logger.error(f"Random Forest模型训练失败: {e}")
-        return None
 
-def create_ensemble_model(catboost_model, xgboost_model, randomforest_model, X, y, feature_columns):
-    """创建集成模型"""
-    logger.info("开始创建集成模型...")
-    
+
+def create_ensemble_model(catboost_model, xgboost_model, X, y, feature_columns):
+    """创建集成模型（CatBoost + XGBoost）"""
+    logger.info("开始创建集成模型（CatBoost + XGBoost）...")
+
     try:
         from sklearn.ensemble import VotingClassifier
-        
-        # 创建投票分类器
+
+        # 验证模型是否有效
+        if catboost_model is None or xgboost_model is None:
+            logger.error("无法创建集成模型：基础模型为空")
+            return None
+
+        # 创建投票分类器（只使用CatBoost和XGBoost）
         ensemble = VotingClassifier(
             estimators=[
                 ('catboost', catboost_model),
-                ('xgboost', xgboost_model),
-                ('randomforest', randomforest_model)
+                ('xgboost', xgboost_model)
             ],
             voting='soft'  # 使用概率投票
         )
+
+        logger.info("集成模型组成: CatBoost + XGBoost")
         
         # 训练集成模型
         ensemble.fit(X, y)
@@ -303,24 +326,21 @@ def main():
     catboost_model = train_catboost_model(X, y, feature_columns)
     if catboost_model:
         models['CatBoost'] = catboost_model
-    
+
     # XGBoost
     xgboost_model = train_xgboost_model(X, y, feature_columns)
     if xgboost_model:
         models['XGBoost'] = xgboost_model
-    
-    # Random Forest
-    randomforest_model = train_randomforest_model(X, y, feature_columns)
-    if randomforest_model:
-        models['Random Forest'] = randomforest_model
-    
-    # 4. 创建集成模型
-    if len(models) >= 2:
+
+    # 4. 创建集成模型（只要有CatBoost和XGBoost就可以创建）
+    if catboost_model and xgboost_model:
         ensemble_model = create_ensemble_model(
-            catboost_model, xgboost_model, randomforest_model, X, y, feature_columns
+            catboost_model, xgboost_model, X, y, feature_columns
         )
         if ensemble_model:
             models['Ensemble'] = ensemble_model
+    else:
+        logger.warning("无法创建集成模型：需要CatBoost和XGBoost都训练成功")
     
     # 5. 评估模型性能
     if models:

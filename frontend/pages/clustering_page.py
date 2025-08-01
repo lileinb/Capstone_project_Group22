@@ -538,7 +538,10 @@ def show():
             st.markdown("#### 🎯 Cluster-Fraud Relationship Analysis")
 
             # Calculate fraud rate for each cluster
-            fraud_by_cluster = engineered_data.groupby(cluster_labels)['is_fraudulent'].agg(['count', 'sum', 'mean'])
+            # 创建临时DataFrame避免pandas警告
+            temp_df = engineered_data.copy()
+            temp_df['cluster'] = cluster_labels
+            fraud_by_cluster = temp_df.groupby('cluster')['is_fraudulent'].agg(['count', 'sum', 'mean'])
             fraud_by_cluster.columns = ['Total Records', 'Fraud Records', 'Fraud Rate']
             fraud_by_cluster['Fraud Rate (%)'] = (fraud_by_cluster['Fraud Rate'] * 100).round(2)
 

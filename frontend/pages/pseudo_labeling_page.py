@@ -25,6 +25,10 @@ def show():
     # Initialize session state
     _initialize_session_state()
 
+    # Check prerequisites with enhanced validation
+    if not _check_prerequisites():
+        return
+
     engineered_data = st.session_state.engineered_features
 
     # Show system description
@@ -41,7 +45,7 @@ def show():
     button_text = "🔍 Generate High-Quality Pseudo Labels (Standard Mode)" if mode == "standard" else "⚡ Quick Generate Pseudo Labels (Fast Mode)"
     button_help = "Multi-strategy integration, high-quality labels, completed in 2-3 minutes" if mode == "standard" else "Simplified algorithm, quick generation, completed within 30 seconds"
 
-    if st.button(button_text, type="primary", help=button_help):
+    if st.button(button_text, type="primary", help=button_help, key="main_generate_button"):
         _execute_pseudo_label_generation(engineered_data)
 
     # Show pseudo label results
@@ -56,11 +60,40 @@ def show():
 
 
 def _check_prerequisites():
-    """Check prerequisites"""
+    """Check prerequisites with enhanced dependency validation"""
+    # 必需的依赖
     if 'engineered_features' not in st.session_state or st.session_state.engineered_features is None:
         st.warning("⚠️ Please complete feature engineering first!")
         st.info("💡 Please complete feature generation on the '🔧 Feature Engineering' page")
         return False
+
+    # 可选但推荐的依赖
+    missing_optional = []
+    if 'clustering_results' not in st.session_state or st.session_state.clustering_results is None:
+        missing_optional.append("📊 Clustering Analysis")
+    if 'four_class_risk_results' not in st.session_state or st.session_state.four_class_risk_results is None:
+        missing_optional.append("🎯 Risk Scoring")
+
+    if missing_optional:
+        st.info("💡 **Enhanced Mode Available**: For higher quality pseudo labels, consider completing:")
+        for item in missing_optional:
+            st.info(f"   • {item}")
+        st.info("🚀 **Current Mode**: Fast generation (using feature-based scoring)")
+
+        # 显示模式选择
+        with st.expander("🔧 Generation Mode Selection", expanded=False):
+            st.markdown("**🟢 Fast Mode (Current)**")
+            st.markdown("- Uses feature-based risk scoring")
+            st.markdown("- Quick generation (30 seconds)")
+            st.markdown("- Good quality labels")
+
+            st.markdown("**🟡 Enhanced Mode (Recommended)**")
+            st.markdown("- Uses clustering + risk scoring results")
+            st.markdown("- Higher quality labels")
+            st.markdown("- Better fraud detection accuracy")
+    else:
+        st.success("✅ All dependencies available - Enhanced mode enabled!")
+
     return True
 
 
@@ -140,12 +173,12 @@ def _show_generation_config():
 
     with col_mode1:
         if st.button("🔍 Standard Mode", use_container_width=True,
-                    help="Complete strategy integration, high-quality labels, completed in 2-3 minutes"):
+                    help="Complete strategy integration, high-quality labels, completed in 2-3 minutes", key="mode_standard"):
             st.session_state.label_generation_mode = "standard"
 
     with col_mode2:
         if st.button("⚡ Fast Mode", use_container_width=True,
-                    help="Simplified algorithm, quick generation, completed within 30 seconds"):
+                    help="Simplified algorithm, quick generation, completed within 30 seconds", key="mode_fast"):
             st.session_state.label_generation_mode = "fast"
 
     # Show current mode
@@ -165,7 +198,7 @@ def _show_generation_config():
             "Minimum Confidence Threshold",
             min_value=0.5,
             max_value=0.95,
-            value=0.8,
+            value=0.65,  # 进一步降低默认值到0.65
             step=0.05,
             help="Only retain pseudo labels with confidence above this threshold"
         )
@@ -267,10 +300,10 @@ def _show_generation_config():
     col1, col2 = st.columns([3, 1])
 
     with col1:
-        generate_labels = st.button("🚀 Generate Pseudo Labels", type="primary", help="Generate pseudo labels based on selected strategy")
+        generate_labels = st.button("🚀 Generate Pseudo Labels", type="primary", help="Generate pseudo labels based on selected strategy", key="generate_labels_standard")
 
     with col2:
-        if st.button("🗑️ Clear Results", help="Clear previous generation results"):
+        if st.button("🗑️ Clear Results", help="Clear previous generation results", key="clear_results"):
             st.session_state.pseudo_labels = None
             st.success("✅ Results cleared!")
             st.rerun()
@@ -383,10 +416,13 @@ def _show_generation_config():
         st.markdown("#### 🎯 Label Quality Assessment")
 
         # If true labels exist, calculate accuracy metrics
+        engineered_data = st.session_state.engineered_features
         if 'is_fraudulent' in engineered_data.columns:
             true_labels = engineered_data['is_fraudulent'].tolist()
             # Compatible with different mode label fields
             all_labels = pseudo_results.get('all_labels', pseudo_results.get('labels', []))
+
+
 
             if all_labels and len(all_labels) == len(true_labels):
                 try:
@@ -432,7 +468,7 @@ def _show_generation_config():
         col1, col2, col3 = st.columns([1, 1, 1])
 
         with col2:
-            if st.button("🤖 Next: Model Training", type="primary", use_container_width=True):
+            if st.button("🤖 Next: Model Training", type="primary", use_container_width=True, key="next_model_training_1"):
                 st.success("✅ Pseudo label generation completed, ready for model training!")
                 st.info("💡 Please select '🤖 Model Training' page in the sidebar to continue")
 
@@ -475,28 +511,44 @@ def _execute_pseudo_label_generation(engineered_data):
             st.session_state.pseudo_labels = label_results
             st.session_state.high_quality_labels = label_results
 
-            if label_results and label_results.get('high_quality_labels'):
+            # 检查是否有标签生成（即使高质量标签很少也显示结果）
+            if label_results and (label_results.get('high_quality_labels') or label_results.get('all_labels')):
                 total_labels = len(label_results.get('all_labels', []))
                 hq_labels = len(label_results.get('high_quality_labels', []))
 
-                success_msg = f"✅ {mode_icon} {mode_text} pseudo label generation completed!"
-                success_msg += f" Filtered {hq_labels} high-quality labels from {total_labels} samples, time taken: {generation_time:.2f} seconds"
-                st.success(success_msg)
+                if hq_labels > 0:
+                    success_msg = f"✅ {mode_icon} {mode_text} pseudo label generation completed!"
+                    success_msg += f" Filtered {hq_labels} high-quality labels from {total_labels} samples, time taken: {generation_time:.2f} seconds"
+                    st.success(success_msg)
+                else:
+                    warning_msg = f"⚠️ {mode_icon} {mode_text} pseudo label generation completed with low confidence!"
+                    warning_msg += f" Generated {total_labels} labels but none met the high-quality threshold. Consider lowering the confidence threshold."
+                    st.warning(warning_msg)
 
                 # Show basic statistics
                 col1, col2, col3, col4 = st.columns(4)
 
                 with col1:
-                    hq_rate = label_results['metadata']['high_quality_rate']
+                    hq_rate = label_results['metadata'].get('high_quality_rate', 0)
                     st.metric("High Quality Ratio", f"{hq_rate:.1%}")
 
                 with col2:
-                    avg_conf_hq = label_results['metadata']['avg_confidence_hq']
-                    st.metric("Average Confidence", f"{avg_conf_hq:.3f}")
+                    # 如果没有高质量标签，显示所有标签的平均置信度
+                    if hq_labels > 0:
+                        avg_conf = label_results['metadata'].get('avg_confidence_hq', 0)
+                        st.metric("Avg Confidence (HQ)", f"{avg_conf:.3f}")
+                    else:
+                        avg_conf = label_results['metadata'].get('avg_confidence_all', 0)
+                        st.metric("Avg Confidence (All)", f"{avg_conf:.3f}")
 
                 with col3:
-                    fraud_rate_hq = label_results['metadata']['fraud_rate_hq']
-                    st.metric("Pseudo Label Fraud Rate", f"{fraud_rate_hq:.1%}")
+                    # 如果没有高质量标签，显示所有标签的欺诈率
+                    if hq_labels > 0:
+                        fraud_rate = label_results['metadata'].get('fraud_rate_hq', 0)
+                        st.metric("Fraud Rate (HQ)", f"{fraud_rate:.1%}")
+                    else:
+                        fraud_rate = label_results['metadata'].get('fraud_rate_all', 0)
+                        st.metric("Fraud Rate (All)", f"{fraud_rate:.1%}")
 
                 with col4:
                     quality_score = label_results['quality_report'].get('quality_score', 0)
@@ -509,7 +561,15 @@ def _execute_pseudo_label_generation(engineered_data):
                     st.warning("⚠️ Calibration not successfully applied, using default thresholds")
 
             else:
-                st.error("❌ Failed to generate sufficient high-quality pseudo labels, please lower confidence threshold")
+                # 提供更详细的错误信息
+                if label_results:
+                    total_labels = len(label_results.get('all_labels', []))
+                    if total_labels > 0:
+                        st.error(f"❌ Generated {total_labels} labels but failed quality checks. Please lower confidence threshold or check data quality.")
+                    else:
+                        st.error("❌ No labels were generated. Please check your data and configuration.")
+                else:
+                    st.error("❌ Pseudo label generation failed completely. Please check logs for details.")
 
     except Exception as e:
         st.error(f"❌ Pseudo label generation failed: {str(e)}")
@@ -684,7 +744,7 @@ def _show_label_export():
             st.write(f"Report sample count: {export_count:,}")
 
     # Generate export data
-    if st.button("📥 Generate Export File", type="secondary"):
+    if st.button("📥 Generate Export File", type="secondary", key="generate_export_file"):
         try:
             if export_option == "High Quality Labels Only":
                 export_data = _prepare_high_quality_export(label_results, engineered_data, include_features, include_confidence)
@@ -715,7 +775,7 @@ def _show_label_export():
     col1, col2, col3 = st.columns([1, 1, 1])
 
     with col2:
-        if st.button("🤖 Next: Model Training", type="primary", use_container_width=True):
+        if st.button("🤖 Next: Model Training", type="primary", use_container_width=True, key="next_model_training_2"):
             st.success("✅ High-quality pseudo label generation completed, ready for model training!")
             st.info("💡 Please select '🤖 Model Training' page in the sidebar to continue")
 

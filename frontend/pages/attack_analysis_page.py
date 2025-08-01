@@ -186,7 +186,30 @@ def show():
 
                 # 获取聚类和风险评分结果（如果存在）
                 cluster_results = st.session_state.get('clustering_results', None)
-                risk_results = st.session_state.get('risk_results', None)
+
+                # 优先使用四分类风险评分结果，其次是个人风险预测结果
+                risk_results = None
+                if st.session_state.get('four_class_risk_results') is not None:
+                    risk_results = st.session_state.four_class_risk_results
+                    st.info("🎯 使用四分类风险评分结果进行攻击分析")
+                elif st.session_state.get('individual_risk_results') is not None:
+                    # 转换个人风险预测结果为标准格式
+                    individual_results = st.session_state.individual_risk_results
+                    if individual_results.get('success') and 'detailed_results' in individual_results:
+                        risk_results = individual_results
+                        st.info("📊 使用个人风险预测结果进行攻击分析")
+
+                if risk_results is None:
+                    st.warning("⚠️ 未找到风险评分结果，将使用基于特征的攻击分类")
+
+                # 调试信息
+                with st.expander("🔍 调试信息", expanded=False):
+                    st.write("聚类结果存在:", cluster_results is not None)
+                    st.write("风险评分结果存在:", risk_results is not None)
+                    if cluster_results:
+                        st.write("聚类详情数量:", len(cluster_results.get('cluster_details', [])))
+                    if risk_results:
+                        st.write("风险评分详情数量:", len(risk_results.get('detailed_results', [])))
 
                 # Execute attack classification with enhanced context
                 attack_results = attack_classifier.classify_attacks(
