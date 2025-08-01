@@ -387,13 +387,16 @@ class AttackClassifier:
 
                 row = data.iloc[idx] if idx < len(data) else pd.Series()
 
+                # 统一风险级别格式为大写
+                normalized_risk_level = risk_level.upper() if isinstance(risk_level, str) else 'LOW'
+
                 classification_results.append({
                     'transaction_id': row.get('transaction_id', f'tx_{idx}'),
                     'customer_id': row.get('customer_id', f'customer_{idx}'),
                     'attack_type': attack_type,
                     'risk_score': risk_score,
                     'confidence': min(0.9, risk_score / 100) if attack_type != 'normal_behavior' else 0.6,
-                    'risk_level': risk_level,
+                    'risk_level': normalized_risk_level,
                     'characteristics': []
                 })
 

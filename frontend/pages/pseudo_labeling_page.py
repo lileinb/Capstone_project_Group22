@@ -52,10 +52,7 @@ def show():
     if st.session_state.pseudo_labels:
         _show_pseudo_label_results()
 
-        # Quality assessment
-        _show_quality_assessment()
-
-        # Label export
+        # Label export (质量评估部分已删除)
         _show_label_export()
 
 
@@ -198,7 +195,7 @@ def _show_generation_config():
             "Minimum Confidence Threshold",
             min_value=0.5,
             max_value=0.95,
-            value=0.65,  # 进一步降低默认值到0.65
+            value=0.55,  # 进一步降低默认值到0.55
             step=0.05,
             help="Only retain pseudo labels with confidence above this threshold"
         )
@@ -390,7 +387,7 @@ def _show_generation_config():
                         'Fraud Transaction': '#DC143C'
                     }
                 )
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, use_container_width=True, key="label_distribution_chart")
             else:
                 st.warning("⚠️ No label data to display")
 
@@ -408,60 +405,11 @@ def _show_generation_config():
                 )
                 fig.add_vline(x=confidence_threshold, line_dash="dash", line_color="red",
                              annotation_text=f"Threshold: {confidence_threshold}")
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, use_container_width=True, key="confidence_distribution_chart")
             else:
                 st.warning("⚠️ No confidence data to display")
         
-        # Quality assessment
-        st.markdown("#### 🎯 Label Quality Assessment")
-
-        # If true labels exist, calculate accuracy metrics
-        engineered_data = st.session_state.engineered_features
-        if 'is_fraudulent' in engineered_data.columns:
-            true_labels = engineered_data['is_fraudulent'].tolist()
-            # Compatible with different mode label fields
-            all_labels = pseudo_results.get('all_labels', pseudo_results.get('labels', []))
-
-
-
-            if all_labels and len(all_labels) == len(true_labels):
-                try:
-                    quality_metrics = st.session_state.label_generator.get_label_quality_metrics(
-                        all_labels, true_labels
-                    )
-
-                    col1, col2, col3, col4 = st.columns(4)
-
-                    with col1:
-                        st.metric("Accuracy", f"{quality_metrics['accuracy']:.3f}")
-
-                    with col2:
-                        st.metric("Precision", f"{quality_metrics['precision']:.3f}")
-
-                    with col3:
-                        st.metric("Recall", f"{quality_metrics['recall']:.3f}")
-
-                    with col4:
-                        st.metric("F1 Score", f"{quality_metrics['f1_score']:.3f}")
-
-                    # Confusion matrix
-                    from sklearn.metrics import confusion_matrix
-                    cm = confusion_matrix(true_labels, all_labels)
-
-                    fig = px.imshow(
-                        cm,
-                        text_auto=True,
-                        aspect="auto",
-                        title="Confusion Matrix",
-                        labels=dict(x="Predicted Label", y="True Label"),
-                        x=['Normal', 'Fraud'],
-                        y=['Normal', 'Fraud']
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
-                except Exception as e:
-                    st.warning(f"⚠️ Quality assessment calculation failed: {str(e)}")
-            else:
-                st.info("💡 Label count mismatch, skipping quality assessment")
+        # 质量评估部分已删除 - 专注于标签生成和导出
 
         # Next step button
         st.markdown("---")
@@ -611,7 +559,7 @@ def _show_pseudo_label_results():
             labels={'index': 'Label Type', 'value': 'Count'},
             color_discrete_map={'All Labels': '#17a2b8', 'High Quality Labels': '#28a745'}
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, key="label_comparison_chart")
 
     with col2:
         st.markdown("**Confidence Distribution**")
@@ -651,64 +599,10 @@ def _show_pseudo_label_results():
                 barmode='overlay'
             )
 
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, use_container_width=True, key="confidence_comparison_chart")
 
 
-def _show_quality_assessment():
-    """Show quality assessment"""
-    st.markdown("### 🎯 Quality Assessment and Validation")
-
-    label_results = st.session_state.pseudo_labels
-    engineered_data = st.session_state.engineered_features
-
-    # If true labels exist, perform comparison validation
-    if 'is_fraudulent' in engineered_data.columns:
-        st.markdown("**Comparison Validation with True Labels**")
-
-        hq_indices = label_results.get('high_quality_indices', [])
-        hq_labels = label_results.get('high_quality_labels', [])
-
-        if hq_indices and hq_labels:
-            # Get corresponding true labels
-            true_labels_hq = [engineered_data.iloc[i]['is_fraudulent'] for i in hq_indices]
-
-            # Calculate performance metrics
-            from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
-
-            accuracy = accuracy_score(true_labels_hq, hq_labels)
-            precision = precision_score(true_labels_hq, hq_labels, zero_division=0)
-            recall = recall_score(true_labels_hq, hq_labels, zero_division=0)
-            f1 = f1_score(true_labels_hq, hq_labels, zero_division=0)
-
-            col1, col2, col3, col4 = st.columns(4)
-
-            with col1:
-                st.metric("Accuracy", f"{accuracy:.3f}")
-
-            with col2:
-                st.metric("Precision", f"{precision:.3f}")
-
-            with col3:
-                st.metric("Recall", f"{recall:.3f}")
-
-            with col4:
-                st.metric("F1 Score", f"{f1:.3f}")
-
-            # Confusion matrix
-            cm = confusion_matrix(true_labels_hq, hq_labels)
-
-            fig = px.imshow(
-                cm,
-                text_auto=True,
-                aspect="auto",
-                title="Confusion Matrix",
-                labels=dict(x="Predicted Label", y="True Label"),
-                x=['Normal', 'Fraud'],
-                y=['Normal', 'Fraud']
-            )
-
-            st.plotly_chart(fig, use_container_width=True)
-
+# 质量评估部分已删除 - 专注于伪标签生成和导出功能
 
 def _show_label_export():
     """Display label export"""

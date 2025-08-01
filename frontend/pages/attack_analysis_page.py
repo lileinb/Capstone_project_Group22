@@ -184,32 +184,32 @@ def show():
                 # Create attack classifier
                 attack_classifier = AttackClassifier()
 
-                # 获取聚类和风险评分结果（如果存在）
+                # Get clustering and risk scoring results (if available)
                 cluster_results = st.session_state.get('clustering_results', None)
 
-                # 优先使用四分类风险评分结果，其次是个人风险预测结果
+                # Prioritize four-class risk scoring results, then individual risk prediction results
                 risk_results = None
                 if st.session_state.get('four_class_risk_results') is not None:
                     risk_results = st.session_state.four_class_risk_results
-                    st.info("🎯 使用四分类风险评分结果进行攻击分析")
+                    st.info("🎯 Using four-class risk scoring results for attack analysis")
                 elif st.session_state.get('individual_risk_results') is not None:
-                    # 转换个人风险预测结果为标准格式
+                    # Convert individual risk prediction results to standard format
                     individual_results = st.session_state.individual_risk_results
                     if individual_results.get('success') and 'detailed_results' in individual_results:
                         risk_results = individual_results
-                        st.info("📊 使用个人风险预测结果进行攻击分析")
+                        st.info("📊 Using individual risk prediction results for attack analysis")
 
                 if risk_results is None:
-                    st.warning("⚠️ 未找到风险评分结果，将使用基于特征的攻击分类")
+                    st.warning("⚠️ Risk scoring results not found, will use feature-based attack classification")
 
-                # 调试信息
-                with st.expander("🔍 调试信息", expanded=False):
-                    st.write("聚类结果存在:", cluster_results is not None)
-                    st.write("风险评分结果存在:", risk_results is not None)
+                # Debug information
+                with st.expander("🔍 Debug Information", expanded=False):
+                    st.write("Clustering results available:", cluster_results is not None)
+                    st.write("Risk scoring results available:", risk_results is not None)
                     if cluster_results:
-                        st.write("聚类详情数量:", len(cluster_results.get('cluster_details', [])))
+                        st.write("Cluster details count:", len(cluster_results.get('cluster_details', [])))
                     if risk_results:
-                        st.write("风险评分详情数量:", len(risk_results.get('detailed_results', [])))
+                        st.write("Risk scoring details count:", len(risk_results.get('detailed_results', [])))
 
                 # Execute attack classification with enhanced context
                 attack_results = attack_classifier.classify_attacks(
@@ -268,14 +268,19 @@ def show():
             st.metric("Detected Attacks", f"{attack_analysis['total_attacks']:,}")
 
         with col2:
-            attack_types_count = len(attack_analysis['attack_types'])
+            # Count only attack types with actual occurrences
+            attack_types_with_data = {k: v for k, v in attack_analysis['attack_types'].items() if v > 0}
+            attack_types_count = len(attack_types_with_data)
             st.metric("Attack Types", f"{attack_types_count}")
 
         with col3:
             if attack_analysis['total_attacks'] > 0:
-                # Fix risk level key names
-                high_severity = (attack_analysis['severity_distribution'].get('CRITICAL', 0) +
-                               attack_analysis['severity_distribution'].get('HIGH', 0))
+                # Fix risk level key names - check both uppercase and lowercase
+                severity_dist = attack_analysis['severity_distribution']
+                high_severity = (
+                    severity_dist.get('CRITICAL', 0) + severity_dist.get('critical', 0) +
+                    severity_dist.get('HIGH', 0) + severity_dist.get('high', 0)
+                )
                 high_severity_rate = (high_severity / attack_analysis['total_attacks'] * 100)
                 st.metric("High Risk Attack Rate", f"{high_severity_rate:.1f}%")
             else:
@@ -312,7 +317,7 @@ def show():
                 # Convert attack type names and filter out zero counts
                 attack_types_data = []
                 for attack_type, count in attack_analysis['attack_types'].items():
-                    if count > 0:  # 只包含有实际数据的攻击类型
+                    if count > 0:  # Only include attack types with actual data
                         attack_types_data.append({
                             'Attack Type': attack_type_names.get(attack_type, attack_type),
                             'Count': count
@@ -334,7 +339,7 @@ def show():
                         hover_data=['Count']
                     )
 
-                    # 优化图表显示
+                    # Optimize chart display
                     fig.update_traces(
                         textposition='inside',
                         textinfo='percent+label',
