@@ -1,6 +1,6 @@
 """
-攻击模式分析器
-分析攻击模式、趋势和关联性
+Attack Pattern Analyzer
+Analyze attack patterns, trends and correlations
 """
 
 import numpy as np
@@ -12,41 +12,41 @@ import json
 import os
 from collections import defaultdict, Counter
 
-# 配置日志
+# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 class AttackPatternAnalyzer:
-    """攻击模式分析器"""
-    
+    """Attack pattern analyzer"""
+
     def __init__(self, data_dir: str = "data"):
         """
-        初始化攻击模式分析器
+        Initialize attack pattern analyzer
 
         Args:
-            data_dir: 数据目录
+            data_dir: Data directory
         """
         self.data_dir = data_dir
         self.attack_records = []
         self.pattern_cache = {}
         self.trend_data = defaultdict(list)
-        self.cluster_patterns = {}  # 存储基于聚类的攻击模式
+        self.cluster_patterns = {}  # Store cluster-based attack patterns
         self._load_attack_records()
-    
+
     def _load_attack_records(self):
-        """加载攻击记录"""
+        """Load attack records"""
         try:
             records_file = os.path.join(self.data_dir, 'attack_records.json')
             if os.path.exists(records_file):
                 with open(records_file, 'r', encoding='utf-8') as f:
                     self.attack_records = json.load(f)
-                logger.info(f"加载了 {len(self.attack_records)} 条攻击记录")
+                logger.info(f"Loaded {len(self.attack_records)} attack records")
         except Exception as e:
-            logger.error(f"加载攻击记录时出错: {e}")
-    
+            logger.error(f"Error loading attack records: {e}")
+
     def _save_attack_records(self):
-        """保存攻击记录"""
+        """Save attack records"""
         try:
             os.makedirs(self.data_dir, exist_ok=True)
             records_file = os.path.join(self.data_dir, 'attack_records.json')
@@ -427,9 +427,9 @@ class AttackPatternAnalyzer:
         return recommendations
     
     def get_attack_statistics(self) -> Dict:
-        """获取攻击统计信息"""
+        """Get attack statistics"""
         if not self.attack_records:
-            return {'message': '没有攻击记录'}
+            return {'message': 'No attack records'}
         
         total_records = len(self.attack_records)
         attack_types = Counter([r.get('attack_type', 'unknown') for r in self.attack_records])

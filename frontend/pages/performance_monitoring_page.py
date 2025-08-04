@@ -53,7 +53,7 @@ def _show_system_overview():
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        # 检查各模块状态
+        # Check module status
         modules_status = _check_modules_status()
         active_modules = sum(modules_status.values())
         total_modules = len(modules_status)
@@ -95,16 +95,16 @@ def _check_modules_status():
     """Check module status"""
     status = {}
 
-    # 检查特征工程
+    # Check feature engineering
     status['feature_engineering'] = 'engineered_features' in st.session_state and st.session_state.engineered_features is not None
 
-    # 检查聚类分析
+    # Check clustering analysis
     status['clustering'] = 'clustering_results' in st.session_state and st.session_state.clustering_results is not None
 
-    # 检查风险评分
+    # Check risk scoring
     status['risk_scoring'] = 'four_class_risk_results' in st.session_state and st.session_state.four_class_risk_results is not None
 
-    # 检查攻击分析
+    # Check attack analysis
     status['attack_analysis'] = 'attack_results' in st.session_state and st.session_state.attack_results is not None
 
     return status

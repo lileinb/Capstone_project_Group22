@@ -1,7 +1,7 @@
 """
-四分类预测流水线
-端到端的四级风险分类预测系统
-集成聚类、半监督标签生成、模型预测和动态阈值
+Four-Class Prediction Pipeline
+End-to-end four-level risk classification prediction system
+Integrates clustering, semi-supervised label generation, model prediction and dynamic thresholds
 """
 
 import numpy as np
@@ -10,47 +10,47 @@ from typing import Dict, List, Optional, Any
 import logging
 from datetime import datetime
 
-# 配置日志
+# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 class FourClassPredictionPipeline:
-    """四分类预测流水线"""
-    
+    """Four-class prediction pipeline"""
+
     def __init__(self):
-        """初始化四分类预测流水线"""
+        """Initialize four-class prediction pipeline"""
         self.target_classes = ['low', 'medium', 'high', 'critical']
         self.class_mapping = {'low': 0, 'medium': 1, 'high': 2, 'critical': 3}
-        
-        # 初始化组件
+
+        # Initialize components
         self._initialize_components()
-        
-        logger.info("四分类预测流水线初始化完成")
+
+        logger.info("Four-class prediction pipeline initialization completed")
     
     def _initialize_components(self):
-        """初始化各个组件"""
+        """Initialize all components"""
         try:
-            # 聚类分析器
+            # Clustering analyzer
             from backend.clustering.cluster_analyzer import ClusterAnalyzer
             self.cluster_analyzer = ClusterAnalyzer()
-            
-            # 半监督标签生成器
+
+            # Semi-supervised label generator
             from backend.pseudo_labeling.semi_supervised_generator import SemiSupervisedLabelGenerator
             self.label_generator = SemiSupervisedLabelGenerator()
-            
-            # 四分类模型管理器
+
+            # Four-class model manager
             from backend.ml_models.four_class_model_manager import FourClassModelManager
             self.model_manager = FourClassModelManager()
-            
-            # 四分类风险计算器
+
+            # Four-class risk calculator
             from backend.risk_scoring.four_class_risk_calculator import FourClassRiskCalculator
             self.risk_calculator = FourClassRiskCalculator(enable_dynamic_thresholds=True)
-            
-            logger.info("所有组件初始化成功")
-            
+
+            logger.info("All components initialized successfully")
+
         except Exception as e:
-            logger.error(f"组件初始化失败: {e}")
+            logger.error(f"Component initialization failed: {e}")
             raise
     
     def predict_risk_levels(self, data: pd.DataFrame, 
@@ -97,29 +97,29 @@ class FourClassPredictionPipeline:
             )
             
             if not label_results['success']:
-                logger.warning("四分类标签生成失败，使用基础方法")
+                logger.warning("Four-class label generation failed, using fallback method")
                 label_results = self._generate_fallback_labels(data)
-            
-            # 第三步：模型预测（可选）
+
+            # Step 3: Model prediction (optional)
             model_predictions = None
             if use_models and self.model_manager.get_available_models():
-                logger.info("执行模型预测...")
-                
-                # 准备特征数据
+                logger.info("Executing model prediction...")
+
+                # Prepare feature data
                 feature_data = self._prepare_feature_data(data)
-                
+
                 if feature_data is not None:
                     model_predictions = self.model_manager.predict_four_class(
                         feature_data, use_ensemble=True
                     )
-                    
+
                     if model_predictions.get('predictions'):
-                        logger.info("模型预测完成")
+                        logger.info("Model prediction completed")
                     else:
-                        logger.warning("模型预测失败")
+                        logger.warning("Model prediction failed")
                         model_predictions = None
                 else:
-                    logger.warning("特征数据准备失败，跳过模型预测")
+                    logger.warning("Feature data preparation failed, skipping model prediction")
             
             # 第四步：风险评分计算
             logger.info("计算风险评分...")

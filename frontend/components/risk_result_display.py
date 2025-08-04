@@ -19,19 +19,19 @@ def display_risk_prediction_results(risk_results: Dict[str, Any]):
 
     st.markdown("### 📈 Individual Risk Analysis Results")
 
-    # 1. 总体统计
+    # 1. Overall statistics
     _display_overall_statistics(risk_results)
 
-    # 2. 风险分层分析
+    # 2. Risk stratification analysis
     _display_risk_stratification(risk_results)
 
-    # 3. 攻击类型分析
+    # 3. Attack type analysis
     _display_attack_type_analysis(risk_results)
 
-    # 4. 个体详细分析
+    # 4. Individual detailed analysis
     _display_individual_analysis(risk_results)
 
-    # 5. 防护建议
+    # 5. Protection recommendations
     _display_protection_recommendations(risk_results)
 
 def _display_overall_statistics(risk_results: Dict[str, Any]):
@@ -49,14 +49,14 @@ def _display_overall_statistics(risk_results: Dict[str, Any]):
     with col2:
         st.metric("Processing Time", f"{processing_time:.2f}s")
 
-    # 计算平均风险评分
+    # Calculate average risk score
     risk_scores = risk_results.get('risk_scores', [])
     if risk_scores:
         avg_risk_score = np.mean(risk_scores)
         with col3:
             st.metric("Average Risk Score", f"{avg_risk_score:.1f}")
 
-        # 计算高风险比例
+        # Calculate high risk ratio
         high_risk_count = sum(1 for score in risk_scores if score >= 60)
         high_risk_percentage = high_risk_count / len(risk_scores) * 100
         with col4:
@@ -81,16 +81,16 @@ def _display_risk_stratification(risk_results: Dict[str, Any]):
     col1, col2 = st.columns([1, 1])
 
     with col1:
-        # 风险分层饼图
+        # Risk stratification pie chart
         labels = []
         values = []
         colors = []
 
         color_map = {
-            'low': '#28a745',      # 绿色
-            'medium': '#ffc107',   # 黄色
-            'high': '#fd7e14',     # 橙色
-            'critical': '#dc3545'  # 红色
+            'low': '#28a745',      # Green
+            'medium': '#ffc107',   # Yellow
+            'high': '#fd7e14',     # Orange
+            'critical': '#dc3545'  # Red
         }
 
         name_map = {
@@ -165,13 +165,13 @@ def _display_attack_type_analysis(risk_results: Dict[str, Any]):
         attack_counts[attack_type] = attack_counts.get(attack_type, 0) + 1
         attack_names[attack_type] = attack_name
 
-    # 创建两列布局
+    # Create two-column layout
     col1, col2 = st.columns([1, 1])
 
     with col1:
-        # 攻击类型分布图
+        # Attack type distribution chart
         if attack_counts:
-            # 过滤掉'none'类型
+            # Filter out 'none' type
             filtered_counts = {k: v for k, v in attack_counts.items() if k != 'none' and v > 0}
 
             if filtered_counts:
@@ -221,7 +221,7 @@ def _display_individual_analysis(risk_results: Dict[str, Any]):
         st.warning("⚠️ No individual analysis data")
         return
 
-    # 显示高风险用户
+    # Display high risk users
     high_risk_users = [
         analysis for analysis in individual_analyses
         if analysis.get('risk_level') in ['high', 'critical']
@@ -230,7 +230,7 @@ def _display_individual_analysis(risk_results: Dict[str, Any]):
     if high_risk_users:
         st.markdown("**🚨 High Risk User Details**")
 
-        # 限制显示数量
+        # Limit display count
         display_count = min(10, len(high_risk_users))
 
         for i, analysis in enumerate(high_risk_users[:display_count]):
@@ -304,7 +304,7 @@ def display_risk_score_distribution(risk_results: Dict[str, Any]):
         st.warning("⚠️ No risk score data available")
         return
 
-    # 创建风险评分分布直方图
+    # Create risk score distribution histogram
     fig_hist = px.histogram(
         x=risk_scores,
         nbins=20,
@@ -313,7 +313,7 @@ def display_risk_score_distribution(risk_results: Dict[str, Any]):
         color_discrete_sequence=['#1f77b4']
     )
 
-    # 添加风险阈值线
+    # Add risk threshold lines
     fig_hist.add_vline(x=40, line_dash="dash", line_color="green", annotation_text="Low Risk Threshold")
     fig_hist.add_vline(x=60, line_dash="dash", line_color="orange", annotation_text="Medium Risk Threshold")
     fig_hist.add_vline(x=80, line_dash="dash", line_color="red", annotation_text="High Risk Threshold")
@@ -321,7 +321,7 @@ def display_risk_score_distribution(risk_results: Dict[str, Any]):
     fig_hist.update_layout(height=400)
     st.plotly_chart(fig_hist, use_container_width=True)
 
-    # 显示统计信息
+    # Display statistical information
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:

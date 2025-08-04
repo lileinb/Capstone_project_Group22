@@ -566,12 +566,12 @@ class PseudoLabelGenerator:
             labels = []
             confidences = []
 
-            # 简单的基于规则的标签生成
+            # Simple rule-based label generation
             for _, row in data.iterrows():
                 label = 0
                 confidence = 0.6
 
-                # 基于交易金额的简单规则
+                # Simple rules based on transaction amount
                 amount = row.get('transaction_amount', 0)
                 if amount > 2000:
                     label = 1

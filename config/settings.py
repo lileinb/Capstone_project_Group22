@@ -5,48 +5,48 @@ Behavioral Feature-Based E-commerce User Big Data Driven Risk Scoring Model Syst
 import os
 from pathlib import Path
 
-# 项目根目录
+# Project root directory
 PROJECT_ROOT = Path(__file__).parent.parent
 
-# 数据目录
+# Data directories
 DATA_DIR = PROJECT_ROOT / "data"
 RAW_DATA_DIR = DATA_DIR / "raw"
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
 SAMPLE_DATA_DIR = DATA_DIR / "sample"
 
-# 模型目录
+# Model directories
 MODELS_DIR = PROJECT_ROOT / "models"
 PRETRAINED_MODELS_DIR = MODELS_DIR / "pretrained"
 USER_TRAINED_MODELS_DIR = MODELS_DIR / "user_trained"
 
-# 报告目录
+# Report directories
 REPORTS_DIR = PROJECT_ROOT / "reports"
 TEMPLATES_DIR = REPORTS_DIR / "templates"
 GENERATED_REPORTS_DIR = REPORTS_DIR / "generated"
 
-# 创建必要的目录
+# Create necessary directories
 for dir_path in [DATA_DIR, RAW_DATA_DIR, PROCESSED_DATA_DIR, SAMPLE_DATA_DIR,
                  MODELS_DIR, PRETRAINED_MODELS_DIR, USER_TRAINED_MODELS_DIR,
                  REPORTS_DIR, TEMPLATES_DIR, GENERATED_REPORTS_DIR]:
     dir_path.mkdir(parents=True, exist_ok=True)
 
-# 数据集配置
+# Dataset configuration
 DATASET_CONFIG = {
     "dataset1": {
         "name": "Fraudulent_E-Commerce_Transaction_Data_sampled_50000.csv",
         "path": "Dataset/Fraudulent_E-Commerce_Transaction_Data_sampled_50000.csv",
         "records": 50000,
-        "purpose": "预训练模型"
+        "purpose": "Pre-training models"
     },
     "dataset2": {
-        "name": "Fraudulent_E-Commerce_Transaction_Data_2_sampled_50000.csv", 
+        "name": "Fraudulent_E-Commerce_Transaction_Data_2_sampled_50000.csv",
         "path": "Dataset/Fraudulent_E-Commerce_Transaction_Data_2_sampled_50000.csv",
         "records": 23634,
-        "purpose": "验证和测试"
+        "purpose": "Validation and testing"
     }
 }
 
-# 模型配置
+# Model configuration
 MODEL_CONFIG = {
     "catboost": {
         "name": "CatBoost",
@@ -61,7 +61,7 @@ MODEL_CONFIG = {
         "expected_accuracy": "85-90%"
     },
     "xgboost": {
-        "name": "XGBoost", 
+        "name": "XGBoost",
         "filename": "xgboost_model.pkl",
         "params": {
             "n_estimators": 1000,
@@ -82,43 +82,43 @@ MODEL_CONFIG = {
     }
 }
 
-# 风险等级配置
+# Risk level configuration
 RISK_LEVELS = {
-    "low": {"min": 0, "max": 30, "label": "低风险", "color": "green"},
-    "medium": {"min": 31, "max": 60, "label": "中风险", "color": "yellow"},
-    "high": {"min": 61, "max": 80, "label": "高风险", "color": "orange"},
-    "very_high": {"min": 81, "max": 100, "label": "极高风险", "color": "red"}
+    "low": {"min": 0, "max": 30, "label": "Low Risk", "color": "green"},
+    "medium": {"min": 31, "max": 60, "label": "Medium Risk", "color": "yellow"},
+    "high": {"min": 61, "max": 80, "label": "High Risk", "color": "orange"},
+    "very_high": {"min": 81, "max": 100, "label": "Very High Risk", "color": "red"}
 }
 
-# 攻击类型配置
+# Attack type configuration
 ATTACK_TYPES = {
     "account_takeover": {
-        "name": "账户接管攻击",
+        "name": "Account Takeover Attack",
         "english_name": "Account Takeover",
-        "severity_levels": ["高危", "中危", "低危"],
-        "detection_features": ["新设备", "老账户", "大额交易", "异常时间"]
+        "severity_levels": ["High", "Medium", "Low"],
+        "detection_features": ["New Device", "Old Account", "Large Transaction", "Abnormal Time"]
     },
     "identity_theft": {
-        "name": "身份盗用攻击", 
+        "name": "Identity Theft Attack",
         "english_name": "Identity Theft",
-        "severity_levels": ["高危", "中危", "低危"],
-        "detection_features": ["地址不匹配", "异常支付", "年龄不符", "IP异常"]
+        "severity_levels": ["High", "Medium", "Low"],
+        "detection_features": ["Address Mismatch", "Abnormal Payment", "Age Mismatch", "IP Anomaly"]
     },
     "bulk_fraud": {
-        "name": "批量欺诈攻击",
-        "english_name": "Bulk Fraud", 
-        "severity_levels": ["高危", "中危", "低危"],
-        "detection_features": ["相似IP", "短时间多笔", "相似模式", "批量注册"]
+        "name": "Bulk Fraud Attack",
+        "english_name": "Bulk Fraud",
+        "severity_levels": ["High", "Medium", "Low"],
+        "detection_features": ["Similar IP", "Multiple Transactions in Short Time", "Similar Pattern", "Bulk Registration"]
     },
     "testing_attack": {
-        "name": "测试性攻击",
+        "name": "Testing Attack",
         "english_name": "Testing Attack",
-        "severity_levels": ["高危", "中危", "低危"], 
-        "detection_features": ["小额多笔", "多种支付", "快速连续", "新账户"]
+        "severity_levels": ["High", "Medium", "Low"],
+        "detection_features": ["Small Multiple Transactions", "Multiple Payment Methods", "Rapid Succession", "New Account"]
     }
 }
 
-# 聚类配置
+# Clustering configuration
 CLUSTERING_CONFIG = {
     "kmeans": {
         "name": "K-means",
@@ -126,7 +126,7 @@ CLUSTERING_CONFIG = {
         "random_state": 42
     },
     "dbscan": {
-        "name": "DBSCAN", 
+        "name": "DBSCAN",
         "eps": 0.5,
         "min_samples": 5
     },
@@ -137,19 +137,19 @@ CLUSTERING_CONFIG = {
     }
 }
 
-# 特征工程配置
+# Feature engineering configuration
 FEATURE_ENGINEERING_CONFIG = {
     "original_features": 16,
     "target_risk_features": 20,
     "feature_categories": [
-        "时间风险特征",
-        "金额风险特征", 
-        "设备地理特征",
-        "账户行为特征"
+        "Time Risk Features",
+        "Amount Risk Features",
+        "Device Geographic Features",
+        "Account Behavior Features"
     ]
 }
 
-# 评分权重配置
+# Risk scoring weight configuration
 RISK_WEIGHTS = {
     "amount_weight": 0.3,
     "time_weight": 0.2,
@@ -158,12 +158,12 @@ RISK_WEIGHTS = {
     "geographic_weight": 0.15
 }
 
-# 页面配置
+# Page configuration
 PAGE_CONFIG = {
-    "upload_page": "数据上传与预处理",
-    "feature_analysis_page": "特征工程与聚类分析", 
-    "risk_scoring_page": "风险评分与等级划分",
-    "model_prediction_page": "模型预测与结果展示",
-    "attack_analysis_page": "攻击类型分析与防护建议",
-    "report_page": "分析报告与可解释性"
-} 
+    "upload_page": "Data Upload and Preprocessing",
+    "feature_analysis_page": "Feature Engineering and Clustering Analysis",
+    "risk_scoring_page": "Risk Scoring and Level Classification",
+    "model_prediction_page": "Model Prediction and Result Display",
+    "attack_analysis_page": "Attack Type Analysis and Protection Recommendations",
+    "report_page": "Analysis Report and Explainability"
+}

@@ -1,7 +1,7 @@
 """
-四分类风险评分计算器
-专门用于四级风险分类的评分计算
-集成半监督学习和动态阈值管理
+Four-Class Risk Score Calculator
+Specialized for four-level risk classification scoring
+Integrates semi-supervised learning and dynamic threshold management
 """
 
 import numpy as np
@@ -15,23 +15,23 @@ import pickle
 import os
 import time
 
-# 抑制NumPy运行时警告
+# Suppress NumPy runtime warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning, module="numpy")
 warnings.filterwarnings("ignore", message="invalid value encountered in subtract")
 warnings.filterwarnings("ignore", message="invalid value encountered in divide")
 warnings.filterwarnings("ignore", message="invalid value encountered in multiply")
 
-# 配置日志
+# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# 导入依赖
+# Import dependencies
 try:
     from .dynamic_threshold_manager import DynamicThresholdManager
     DYNAMIC_THRESHOLD_AVAILABLE = True
 except ImportError:
     DYNAMIC_THRESHOLD_AVAILABLE = False
-    logger.warning("动态阈值管理器不可用")
+    logger.warning("Dynamic threshold manager not available")
 
 try:
     from config.optimization_config import optimization_config
@@ -42,22 +42,22 @@ except ImportError:
 
 
 class FourClassRiskCalculator:
-    """四分类风险评分计算器"""
-    
+    """Four-class risk score calculator"""
+
     def __init__(self, enable_dynamic_thresholds: bool = True):
         """
-        初始化四分类风险计算器
-        
+        Initialize four-class risk calculator
+
         Args:
-            enable_dynamic_thresholds: 是否启用动态阈值
+            enable_dynamic_thresholds: Whether to enable dynamic thresholds
         """
         self.target_classes = ['low', 'medium', 'high', 'critical']
         self.class_mapping = {'low': 0, 'medium': 1, 'high': 2, 'critical': 3}
-        
-        # 加载配置
+
+        # Load configuration
         self.config = self._load_config()
-        
-        # 风险评分权重
+
+        # Risk scoring weights
         self.risk_weights = self.config.get('weights', {
             'cluster_anomaly_score': 0.25,
             'feature_deviation_score': 0.30,
@@ -65,55 +65,55 @@ class FourClassRiskCalculator:
             'statistical_outlier_score': 0.15,
             'pattern_consistency_score': 0.05
         })
-        
-        # 默认阈值 - 优化极高风险识别
+
+        # Default thresholds - optimize critical risk identification
         self.default_thresholds = self.config.get('default_thresholds', {
-            'low': 30,      # 0-30: 低风险
-            'medium': 50,   # 31-50: 中风险
-            'high': 70,     # 51-70: 高风险
-            'critical': 100 # 71-100: 极高风险 (降低门槛)
+            'low': 30,      # 0-30: Low risk
+            'medium': 50,   # 31-50: Medium risk
+            'high': 70,     # 51-70: High risk
+            'critical': 100 # 71-100: Critical risk (lower threshold)
         })
-        
-        # 动态阈值管理
+
+        # Dynamic threshold management
         self.enable_dynamic_thresholds = enable_dynamic_thresholds and DYNAMIC_THRESHOLD_AVAILABLE
         if self.enable_dynamic_thresholds:
             self.threshold_manager = DynamicThresholdManager()
-            logger.info("动态阈值管理已启用")
+            logger.info("Dynamic threshold management enabled")
         else:
             self.threshold_manager = None
-            logger.info("使用固定阈值")
+            logger.info("Using fixed thresholds")
 
-        # 缓存机制 - 提升重复计算性能
+        # Cache mechanism - improve repeated calculation performance
         self.cache_dir = "cache/four_class_risk"
         self.cache_enabled = True
-        self.cache_ttl = 3600  # 缓存1小时
+        self.cache_ttl = 3600  # Cache for 1 hour
         self._ensure_cache_dir()
 
-        # 采样优化配置
+        # Sampling optimization configuration
         self.sampling_config = {
-            'large_dataset_threshold': 20000,  # 大数据集阈值
-            'sample_ratio': 0.3,               # 采样比例
-            'min_samples': 5000,               # 最小样本数
-            'preserve_distribution': True      # 保持分布
+            'large_dataset_threshold': 20000,  # Large dataset threshold
+            'sample_ratio': 0.3,               # Sampling ratio
+            'min_samples': 5000,               # Minimum samples
+            'preserve_distribution': True      # Preserve distribution
         }
 
-        logger.info("四分类风险计算器初始化完成")
-    
+        logger.info("Four-class risk calculator initialization completed")
+
     def _load_config(self) -> Dict[str, Any]:
-        """加载配置"""
+        """Load configuration"""
         if CONFIG_AVAILABLE and optimization_config:
             return optimization_config.get_risk_scoring_config()
         else:
             return {}
 
     def _ensure_cache_dir(self):
-        """确保缓存目录存在"""
+        """Ensure cache directory exists"""
         if not os.path.exists(self.cache_dir):
             os.makedirs(self.cache_dir, exist_ok=True)
 
     def _get_cache_key(self, data: pd.DataFrame, cluster_results: Optional[Dict] = None) -> str:
-        """生成缓存键"""
-        # 基于数据特征生成唯一键
+        """Generate cache key"""
+        # Generate unique key based on data features
         data_hash = hashlib.md5(str(data.shape).encode()).hexdigest()
         cluster_hash = hashlib.md5(str(cluster_results).encode()).hexdigest() if cluster_results else "none"
         return f"risk_scores_{data_hash}_{cluster_hash}"
@@ -178,75 +178,75 @@ class FourClassRiskCalculator:
                     result = pd.concat(sampled_data, ignore_index=True)
                     return result.drop('_cluster', axis=1)
 
-            # 简单随机采样
+            # Simple random sampling
             return data.sample(n=min(sample_size, len(data)), random_state=42)
 
         except Exception as e:
-            logger.warning(f"采样失败，使用原始数据: {e}")
+            logger.warning(f"Sampling failed, using original data: {e}")
             return data
-    
+
     def calculate_four_class_risk_scores(self, data: pd.DataFrame,
                                        cluster_results: Optional[Dict] = None,
                                        model_predictions: Optional[Dict] = None) -> Dict[str, Any]:
         """
-        计算四分类风险评分
-        
+        Calculate four-class risk scores
+
         Args:
-            data: 输入数据
-            cluster_results: 聚类结果
-            model_predictions: 模型预测结果
-            
+            data: Input data
+            cluster_results: Clustering results
+            model_predictions: Model prediction results
+
         Returns:
-            四分类风险评分结果
+            Four-class risk scoring results
         """
         try:
             if data is None or data.empty:
-                logger.error("输入数据为空")
+                logger.error("Input data is empty")
                 return self._empty_result()
 
             start_time = datetime.now()
             original_size = len(data)
-            logger.info(f"开始四分类风险评分，数据量: {original_size}")
+            logger.info(f"Starting four-class risk scoring, data size: {original_size}")
 
-            # 检查缓存
+            # Check cache
             cache_key = self._get_cache_key(data, cluster_results)
             cached_result = self._get_cache(cache_key)
             if cached_result:
-                logger.info("使用缓存结果，跳过计算")
+                logger.info("Using cached results, skipping calculation")
                 return cached_result
 
-            # 采样优化 - 对大数据集使用智能采样
+            # Sampling optimization - use intelligent sampling for large datasets
             if self._should_use_sampling(data):
-                logger.info(f"数据量大({original_size})，启用采样优化")
+                logger.info(f"Large dataset ({original_size}), enabling sampling optimization")
                 sampled_data = self._stratified_sampling(data, cluster_results)
-                logger.info(f"采样后数据量: {len(sampled_data)} (采样率: {len(sampled_data)/original_size:.2%})")
+                logger.info(f"Data size after sampling: {len(sampled_data)} (sampling rate: {len(sampled_data)/original_size:.2%})")
                 processing_data = sampled_data
             else:
                 processing_data = data
 
-            # 1. 特征工程和预处理
+            # 1. Feature engineering and preprocessing
             processed_data = self._preprocess_data(processing_data)
-            
-            # 2. 计算基础风险评分
+
+            # 2. Calculate base risk scores
             base_scores = self._calculate_base_risk_scores(processed_data, cluster_results)
-            
-            # 3. 集成模型预测结果
+
+            # 3. Integrate model prediction results
             if model_predictions is not None:
                 integrated_scores = self._integrate_model_predictions(
                     base_scores, model_predictions
                 )
             else:
                 integrated_scores = base_scores
-            
-            # 4. 应用动态阈值
+
+            # 4. Apply dynamic thresholds
             if self.enable_dynamic_thresholds and self.threshold_manager:
                 final_results = self._apply_dynamic_thresholds(
                     integrated_scores, processed_data
                 )
             else:
                 final_results = self._apply_fixed_thresholds(integrated_scores)
-            
-            # 5. 生成详细结果
+
+            # 5. Generate detailed results
             result = self._generate_detailed_result(
                 final_results, integrated_scores, processed_data
             )
@@ -356,37 +356,37 @@ class FourClassRiskCalculator:
             logger.warning(f"分类数据处理失败: {e}")
             return data
     
-    def _calculate_base_risk_scores(self, data: pd.DataFrame, 
+    def _calculate_base_risk_scores(self, data: pd.DataFrame,
                                   cluster_results: Optional[Dict] = None) -> np.ndarray:
-        """计算基础风险评分"""
+        """Calculate base risk scores"""
         try:
             n_samples = len(data)
-            risk_scores = np.zeros(n_samples, dtype=np.float64)  # 明确指定浮点类型
+            risk_scores = np.zeros(n_samples, dtype=np.float64)  # Explicitly specify float type
 
-            # 1. 聚类异常度评分
+            # 1. Cluster anomaly scoring
             if cluster_results is not None:
                 cluster_scores = self._calculate_cluster_anomaly_scores(data, cluster_results)
                 risk_scores += cluster_scores * self.risk_weights['cluster_anomaly_score']
 
-            # 2. 特征偏离度评分
+            # 2. Feature deviation scoring
             feature_scores = self._calculate_feature_deviation_scores(data)
             risk_scores += feature_scores * self.risk_weights['feature_deviation_score']
 
-            # 3. 业务规则评分
+            # 3. Business rule scoring
             business_scores = self._calculate_business_rule_scores(data)
             risk_scores += business_scores * self.risk_weights['business_rule_score']
 
-            # 4. 统计异常值评分
+            # 4. Statistical outlier scoring
             outlier_scores = self._calculate_statistical_outlier_scores(data)
             risk_scores += outlier_scores * self.risk_weights['statistical_outlier_score']
 
-            # 5. 模式一致性评分
+            # 5. Pattern consistency scoring
             pattern_scores = self._calculate_pattern_consistency_scores(data)
             risk_scores += pattern_scores * self.risk_weights['pattern_consistency_score']
 
-            # 归一化到0-100
+            # Normalize to 0-100
             risk_scores = np.clip(risk_scores, 0.0, 100.0)
-            
+
             return risk_scores
             
         except Exception as e:
@@ -413,23 +413,23 @@ class FourClassRiskCalculator:
                 cluster_info = cluster_risk_mapping.get(cluster_id, {})
                 risk_level = cluster_info.get('risk_level', 'low')
 
-                # 基于聚类风险等级给分 - 极高风险增强
+                # Score based on cluster risk level - critical risk enhancement
                 if risk_level == 'critical':
-                    scores[i] = 90 + np.random.normal(0, 3)  # 90±3 (提高基础分)
+                    scores[i] = 90 + np.random.normal(0, 3)  # 90±3 (increase base score)
                 elif risk_level == 'high':
-                    scores[i] = 70 + np.random.normal(0, 4)  # 70±4 (提高基础分)
+                    scores[i] = 70 + np.random.normal(0, 4)  # 70±4 (increase base score)
                 elif risk_level == 'medium':
                     scores[i] = 45 + np.random.normal(0, 5)  # 45±5
                 else:  # low
                     scores[i] = 25 + np.random.normal(0, 5)  # 25±5
 
-                # 确保分数在合理范围内
+                # Ensure scores are within reasonable range
                 scores[i] = np.clip(scores[i], 10, 100)
 
             return scores
-            
+
         except Exception as e:
-            logger.warning(f"聚类异常度评分失败: {e}")
+            logger.warning(f"Cluster anomaly scoring failed: {e}")
             return np.zeros(len(data), dtype=np.float64)
     
     def _calculate_feature_deviation_scores(self, data: pd.DataFrame) -> np.ndarray:
@@ -458,25 +458,25 @@ class FourClassRiskCalculator:
             return np.clip(scores.values, 0, 100)
             
         except Exception as e:
-            logger.warning(f"特征偏离度评分失败: {e}")
+            logger.warning(f"Feature deviation scoring failed: {e}")
             return np.zeros(len(data), dtype=np.float64)
-    
+
     def _calculate_business_rule_scores(self, data: pd.DataFrame) -> np.ndarray:
-        """计算业务规则评分"""
+        """Calculate business rule scores"""
         try:
             n_samples = len(data)
             scores = np.zeros(n_samples, dtype=np.float64)
 
-            # 电商业务规则 - 向量化优化版本 (性能提升10-50倍)
-            scores = np.full(n_samples, 15.0, dtype=np.float64)  # 降低基础分数
+            # E-commerce business rules - vectorized optimized version (10-50x performance improvement)
+            scores = np.full(n_samples, 15.0, dtype=np.float64)  # Lower base score
 
-            # 规则1：大额交易 (向量化) - 极高风险增强
+            # Rule 1: Large amount transactions (vectorized) - critical risk enhancement
             amount = data.get('transaction_amount', pd.Series([100] * n_samples))
-            scores += np.where(amount > 5000, 60,    # 超大额交易
-                      np.where(amount > 2000, 45,    # 大额交易
-                      np.where(amount > 1000, 30,    # 中大额交易
-                      np.where(amount > 500, 20,     # 中等交易
-                      np.where(amount > 200, 10, 0)))))  # 小额交易
+            scores += np.where(amount > 5000, 60,    # Super large transactions
+                      np.where(amount > 2000, 45,    # Large transactions
+                      np.where(amount > 1000, 30,    # Medium-large transactions
+                      np.where(amount > 500, 20,     # Medium transactions
+                      np.where(amount > 200, 10, 0)))))  # Small transactions
 
             # 规则2：新账户 (向量化) - 极高风险增强
             account_age = data.get('account_age_days', pd.Series([365] * n_samples))
@@ -506,35 +506,35 @@ class FourClassRiskCalculator:
             scores += np.where(extreme_age, 30,         # 极端年龄高风险
                       np.where(unusual_age, 15, 0))     # 异常年龄中风险
 
-            # 规则6：欺诈标签加权 (向量化) - 极高风险增强
+            # Rule 6: Fraud label weighting (vectorized) - critical risk enhancement
             if 'is_fraudulent' in data.columns:
                 is_fraud = data['is_fraudulent']
-                scores += np.where(is_fraud == 1, 70, 0)  # 已知欺诈极高权重
+                scores += np.where(is_fraud == 1, 70, 0)  # Known fraud critical weight
 
-            # 规则7：极高风险特征组合检测
-            # 组合1：大额+新账户+深夜
+            # Rule 7: Critical risk feature combination detection
+            # Combination 1: Large amount + new account + deep night
             combo1 = (amount > 2000) & (account_age < 30) & deep_night
-            scores += np.where(combo1, 50, 0)  # 三重高风险组合
+            scores += np.where(combo1, 50, 0)  # Triple high-risk combination
 
-            # 组合2：超大额+超新账户
+            # Combination 2: Super large amount + super new account
             combo2 = (amount > 5000) & (account_age < 7)
-            scores += np.where(combo2, 40, 0)  # 双重极高风险组合
+            scores += np.where(combo2, 40, 0)  # Double critical risk combination
 
-            # 组合3：大量购买+异常年龄+夜间
+            # Combination 3: Large quantity + abnormal age + night
             combo3 = (quantity > 10) & extreme_age & late_night
-            scores += np.where(combo3, 35, 0)  # 异常行为组合
+            scores += np.where(combo3, 35, 0)  # Abnormal behavior combination
 
-            # 规则8：随机风险因子 (减少随机性，更精确识别)
-            random_factor = np.random.normal(0, 5, n_samples)  # 减少随机性±5分
+            # Rule 8: Random risk factor (reduce randomness, more precise identification)
+            random_factor = np.random.normal(0, 5, n_samples)  # Reduce randomness ±5 points
             scores += random_factor
 
-            # 限制最大值
+            # Limit maximum value
             scores = np.clip(scores, 5, 100)
 
             return scores
-            
+
         except Exception as e:
-            logger.warning(f"业务规则评分失败: {e}")
+            logger.warning(f"Business rule scoring failed: {e}")
             return np.zeros(len(data), dtype=np.float64)
     
     def _calculate_statistical_outlier_scores(self, data: pd.DataFrame) -> np.ndarray:
@@ -560,21 +560,21 @@ class FourClassRiskCalculator:
                     lower_bound = Q1 - 1.5 * IQR
                     upper_bound = Q3 + 1.5 * IQR
 
-                    # 计算异常程度 - 增加敏感度
+                    # Calculate anomaly degree - increase sensitivity
                     outlier_scores = np.where(
                         (values < lower_bound) | (values > upper_bound),
                         np.minimum(
-                            np.abs(values - values.median()) / (IQR + 1e-8) * 40,  # 增加系数
+                            np.abs(values - values.median()) / (IQR + 1e-8) * 40,  # Increase coefficient
                             80.0
                         ),
-                        5.0  # 正常值也给一些分数
+                        5.0  # Give some score to normal values too
                     )
 
-                    # 确保outlier_scores是浮点类型
+                    # Ensure outlier_scores is float type
                     outlier_scores = outlier_scores.astype(np.float64)
-                    scores = scores + outlier_scores  # 使用显式加法避免类型问题
+                    scores = scores + outlier_scores  # Use explicit addition to avoid type issues
 
-            # 归一化
+            # Normalize
             scores = np.clip(scores / max(len(numeric_columns), 1), 0.0, 100.0)
 
             return scores
@@ -630,31 +630,31 @@ class FourClassRiskCalculator:
 
     def _integrate_model_predictions(self, base_scores: np.ndarray,
                                    model_predictions: Dict) -> np.ndarray:
-        """集成模型预测结果"""
+        """Integrate model prediction results"""
         try:
             integrated_scores = base_scores.copy()
 
-            # 如果有四分类模型预测结果
+            # If there are four-class model prediction results
             if 'probabilities' in model_predictions:
                 model_probs = model_predictions['probabilities']
 
-                # 使用最佳模型的预测结果
+                # Use best model's prediction results
                 best_model = 'ensemble' if 'ensemble' in model_probs else list(model_probs.keys())[0]
 
                 if best_model in model_probs:
                     probs = np.array(model_probs[best_model])
 
-                    # 将概率转换为风险评分
+                    # Convert probabilities to risk scores
                     model_scores = (
-                        probs[:, 0] * 20 +    # low: 20分
-                        probs[:, 1] * 50 +    # medium: 50分
-                        probs[:, 2] * 80 +    # high: 80分
-                        probs[:, 3] * 95      # critical: 95分
+                        probs[:, 0] * 20 +    # low: 20 points
+                        probs[:, 1] * 50 +    # medium: 50 points
+                        probs[:, 2] * 80 +    # high: 80 points
+                        probs[:, 3] * 95      # critical: 95 points
                     )
 
-                    # 加权融合
-                    model_weight = 0.4  # 模型预测权重
-                    base_weight = 0.6   # 基础评分权重
+                    # Weighted fusion
+                    model_weight = 0.4  # Model prediction weight
+                    base_weight = 0.6   # Base score weight
 
                     integrated_scores = (base_scores * base_weight +
                                        model_scores * model_weight)
@@ -667,14 +667,14 @@ class FourClassRiskCalculator:
 
     def _apply_dynamic_thresholds(self, risk_scores: np.ndarray,
                                 data: pd.DataFrame) -> Dict[str, Any]:
-        """应用动态阈值"""
+        """Apply dynamic thresholds"""
         try:
-            # 使用动态阈值管理器优化阈值
+            # Use dynamic threshold manager to optimize thresholds
             dynamic_thresholds = self.threshold_manager.optimize_thresholds_iteratively(
                 risk_scores.tolist()
             )
 
-            # 应用阈值分类
+            # Apply threshold classification
             risk_levels = []
             for score in risk_scores:
                 if score <= dynamic_thresholds['low']:
@@ -686,7 +686,7 @@ class FourClassRiskCalculator:
                 else:
                     risk_levels.append('critical')
 
-            # 分析分布质量
+            # Analyze distribution quality
             distribution_analysis = self.threshold_manager.analyze_distribution(
                 risk_scores.tolist(), dynamic_thresholds
             )
@@ -838,6 +838,6 @@ class FourClassRiskCalculator:
 
     def get_risk_class_from_score(self, risk_score: float,
                                  thresholds: Optional[Dict[str, float]] = None) -> int:
-        """根据风险评分获取风险类别（0-3）"""
+        """Get risk class from risk score (0-3)"""
         risk_level = self.get_risk_level_from_score(risk_score, thresholds)
         return self.class_mapping[risk_level]

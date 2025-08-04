@@ -326,16 +326,16 @@ class RiskFeatureEngineer:
         category_field = self._get_field_name(df, 'Product Category', 'product_category')
         customer_field = self._get_field_name(df, 'Customer ID', 'customer_id')
 
-        # 1. 支付方式风险评分
+        # 1. Payment method risk scoring
         if payment_field:
             payment_risk_mapping = {
-                'credit card': 1,      # 信用卡风险较低
-                'debit card': 1,       # 借记卡风险较低
-                'bank transfer': 2,    # 银行转账风险中等
-                'PayPal': 2           # PayPal风险中等
+                'credit card': 1,      # Credit card lower risk
+                'debit card': 1,       # Debit card lower risk
+                'bank transfer': 2,    # Bank transfer medium risk
+                'PayPal': 2           # PayPal medium risk
             }
             df['payment_risk_score'] = df[payment_field].map(payment_risk_mapping).fillna(3)
-            self.feature_categories["支付行为特征"].append('payment_risk_score')
+            self.feature_categories["Payment Behavior Features"].append('payment_risk_score')
 
         # 2. 支付方式编码 (使用正确的列名)
         if payment_field:
@@ -459,21 +459,21 @@ class RiskFeatureEngineer:
         for category in self.feature_categories:
             self.feature_categories[category] = []
 
-        # 执行各类特征工程
+        # Execute various feature engineering
         df = self.create_time_risk_features(data)
         df = self.create_amount_risk_features(df)
         df = self.create_device_geographic_features(df)
         df = self.create_account_behavior_features(df)
 
-        # 简化版本，暂时跳过复杂特征
+        # Simplified version, temporarily skip complex features
         # df = self.create_payment_behavior_features(df)
         # df = self.create_address_consistency_features(df)
 
-        # 记录新创建的特征
+        # Record newly created features
         self.risk_features = [col for col in df.columns if col not in self.original_features]
 
-        logger.info(f"特征工程完成: 原始特征{len(self.original_features)}个, 新增风险特征{len(self.risk_features)}个")
-        logger.info(f"特征分类统计: {[(k, len(v)) for k, v in self.feature_categories.items()]}")
+        logger.info(f"Feature engineering completed: {len(self.original_features)} original features, {len(self.risk_features)} new risk features added")
+        logger.info(f"Feature category statistics: {[(k, len(v)) for k, v in self.feature_categories.items()]}")
 
         return df
 
@@ -488,18 +488,18 @@ class RiskFeatureEngineer:
         }
 
     def calculate_feature_importance(self, data: pd.DataFrame, target_column: str = 'Is Fraudulent') -> Dict[str, float]:
-        """计算特征重要性"""
+        """Calculate feature importance"""
         if data is None or data.empty or target_column not in data.columns:
             return {}
 
-        # 只计算数值特征的重要性
+        # Only calculate importance for numeric features
         numeric_columns = data.select_dtypes(include=[np.number]).columns
         numeric_columns = [col for col in numeric_columns if col != target_column]
 
         if len(numeric_columns) == 0:
             return {}
 
-        # 计算与目标变量的相关性
+        # Calculate correlation with target variable
         correlations = data[numeric_columns].corrwith(data[target_column]).abs()
         self.feature_importance = correlations.to_dict()
 

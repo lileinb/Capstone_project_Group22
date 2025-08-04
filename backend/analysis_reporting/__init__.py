@@ -1,6 +1,6 @@
 """
-分析报告模块
-提供综合分析报告生成和导出功能
+Analysis Reporting Module
+Provides comprehensive analysis report generation and export functions
 """
 
 from .report_generator import ReportGenerator

@@ -1,6 +1,6 @@
 """
-报告生成器
-生成综合分析报告，包括风险分析、攻击模式、趋势分析等
+Report Generator
+Generate comprehensive analysis reports, including risk analysis, attack patterns, trend analysis, etc.
 """
 
 import pandas as pd
@@ -12,62 +12,62 @@ import os
 import logging
 from collections import defaultdict
 
-# 配置日志
+# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 class ReportGenerator:
-    """报告生成器"""
-    
+    """Report Generator"""
+
     def __init__(self, reports_dir: str = "reports"):
         """
-        初始化报告生成器
-        
+        Initialize report generator
+
         Args:
-            reports_dir: 报告输出目录
+            reports_dir: Report output directory
         """
         self.reports_dir = reports_dir
         self.report_templates = self._load_report_templates()
         os.makedirs(reports_dir, exist_ok=True)
-    
+
     def _load_report_templates(self) -> Dict:
-        """加载报告模板"""
+        """Load report templates"""
         return {
             'executive_summary': {
-                'title': '执行摘要',
+                'title': 'Executive Summary',
                 'sections': ['overview', 'key_findings', 'risk_metrics', 'recommendations']
             },
             'detailed_analysis': {
-                'title': '详细分析',
+                'title': 'Detailed Analysis',
                 'sections': ['risk_analysis', 'attack_patterns', 'trend_analysis', 'anomaly_detection']
             },
             'technical_report': {
-                'title': '技术报告',
+                'title': 'Technical Report',
                 'sections': ['model_performance', 'feature_analysis', 'clustering_results', 'threshold_analysis']
             },
             'dashboard_report': {
-                'title': '仪表板报告',
+                'title': 'Dashboard Report',
                 'sections': ['metrics_overview', 'visualizations', 'alerts_summary', 'action_items']
             }
         }
     
-    def generate_comprehensive_report(self, 
+    def generate_comprehensive_report(self,
                                    risk_data: Dict,
                                    clustering_data: Dict,
                                    attack_data: Dict,
                                    time_window: str = '7d') -> Dict:
         """
-        生成综合报告
-        
+        Generate comprehensive report
+
         Args:
-            risk_data: 风险分析数据
-            clustering_data: 聚类分析数据
-            attack_data: 攻击分析数据
-            time_window: 时间窗口
-            
+            risk_data: Risk analysis data
+            clustering_data: Clustering analysis data
+            attack_data: Attack analysis data
+            time_window: Time window
+
         Returns:
-            综合报告字典
+            Comprehensive report dictionary
         """
         try:
             report = {
@@ -77,37 +77,37 @@ class ReportGenerator:
                 'report_type': 'comprehensive',
                 'sections': {}
             }
-            
-            # 生成执行摘要
+
+            # Generate executive summary
             report['sections']['executive_summary'] = self._generate_executive_summary(
                 risk_data, clustering_data, attack_data
             )
-            
-            # 生成风险分析
+
+            # Generate risk analysis
             report['sections']['risk_analysis'] = self._generate_risk_analysis(risk_data)
-            
-            # 生成聚类分析
+
+            # Generate clustering analysis
             report['sections']['clustering_analysis'] = self._generate_clustering_analysis(clustering_data)
-            
-            # 生成攻击分析
+
+            # Generate attack analysis
             report['sections']['attack_analysis'] = self._generate_attack_analysis(attack_data)
-            
-            # 生成趋势分析
+
+            # Generate trend analysis
             report['sections']['trend_analysis'] = self._generate_trend_analysis(
                 risk_data, attack_data
             )
             
-            # 生成异常检测
+            # Generate anomaly detection
             report['sections']['anomaly_detection'] = self._generate_anomaly_detection(
                 risk_data, attack_data
             )
-            
-            # 生成建议和行动项
+
+            # Generate recommendations and action items
             report['sections']['recommendations'] = self._generate_recommendations(
                 risk_data, clustering_data, attack_data
             )
-            
-            # 生成关键指标
+
+            # Generate key metrics
             report['sections']['key_metrics'] = self._generate_key_metrics(
                 risk_data, clustering_data, attack_data
             )
@@ -115,100 +115,100 @@ class ReportGenerator:
             return report
 
         except Exception as e:
-            logger.error(f"综合报告生成失败: {e}")
+            logger.error(f"Comprehensive report generation failed: {e}")
             raise
 
     def generate_pdf_report(self, report_data: Dict) -> str:
         """
-        生成PDF报告
+        Generate PDF report
 
         Args:
-            report_data: 报告数据
+            report_data: Report data
 
         Returns:
-            PDF文件路径
+            PDF file path
         """
         try:
             import os
             from datetime import datetime
 
-            # 创建报告目录
+            # Create reports directory
             reports_dir = "reports"
             os.makedirs(reports_dir, exist_ok=True)
 
-            # 生成文件名
+            # Generate filename
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             pdf_path = os.path.join(reports_dir, f"fraud_analysis_report_{timestamp}.pdf")
 
-            # 这里应该使用PDF生成库，暂时创建一个占位文件
+            # Should use PDF generation library, temporarily create a placeholder file
             with open(pdf_path, "w", encoding="utf-8") as f:
-                f.write("PDF报告生成功能正在开发中...")
+                f.write("PDF report generation feature is under development...")
 
             return pdf_path
 
         except Exception as e:
-            logger.error(f"PDF报告生成失败: {e}")
+            logger.error(f"PDF report generation failed: {e}")
             raise
 
     def generate_excel_report(self, report_data: Dict) -> str:
         """
-        生成Excel报告
+        Generate Excel report
 
         Args:
-            report_data: 报告数据
+            report_data: Report data
 
         Returns:
-            Excel文件路径
+            Excel file path
         """
         try:
             import os
             from datetime import datetime
 
-            # 创建报告目录
+            # Create reports directory
             reports_dir = "reports"
             os.makedirs(reports_dir, exist_ok=True)
 
-            # 生成文件名
+            # Generate filename
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             excel_path = os.path.join(reports_dir, f"fraud_analysis_report_{timestamp}.xlsx")
 
-            # 使用pandas创建Excel报告
+            # Use pandas to create Excel report
             with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
-                # 写入概览数据
+                # Write overview data
                 if 'overview' in report_data:
                     overview_df = pd.DataFrame([report_data['overview']])
-                    overview_df.to_excel(writer, sheet_name='概览', index=False)
+                    overview_df.to_excel(writer, sheet_name='Overview', index=False)
 
-                # 写入详细数据
+                # Write detailed data
                 if 'details' in report_data:
                     details_df = pd.DataFrame(report_data['details'])
-                    details_df.to_excel(writer, sheet_name='详细数据', index=False)
+                    details_df.to_excel(writer, sheet_name='Details', index=False)
 
             return excel_path
 
         except Exception as e:
-            logger.error(f"Excel报告生成失败: {e}")
+            logger.error(f"Excel report generation failed: {e}")
             raise
 
     def generate_html_report(self, report_data: Dict) -> str:
         """
-        生成HTML报告
+        Generate HTML report
 
         Args:
-            report_data: 报告数据
+            report_data: Report data
 
         Returns:
-            HTML文件路径
+            HTML file path
         """
         try:
             import os
             from datetime import datetime
 
-            # 创建报告目录
+            # Create reports directory
             reports_dir = "reports"
             os.makedirs(reports_dir, exist_ok=True)
 
-            # 生成文件名
+            # Generate filename
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             html_path = os.path.join(reports_dir, f"fraud_analysis_report_{timestamp}.html")
 
@@ -267,9 +267,9 @@ class ReportGenerator:
             return {'error': str(e)}
     
     def _generate_executive_summary(self, risk_data: Dict, clustering_data: Dict, attack_data: Dict) -> Dict:
-        """生成执行摘要"""
+        """Generate executive summary"""
         summary = {
-            'title': '执行摘要',
+            'title': 'Executive Summary',
             'overview': {
                 'total_transactions': risk_data.get('total_transactions', 0),
                 'high_risk_transactions': risk_data.get('high_risk_count', 0),
@@ -280,28 +280,28 @@ class ReportGenerator:
             'key_findings': [],
             'risk_level': 'LOW'
         }
-        
-        # 确定整体风险等级
+
+        # Determine overall risk level
         avg_risk = risk_data.get('average_risk_score', 0.0)
         if avg_risk >= 0.7:
             summary['risk_level'] = 'HIGH'
         elif avg_risk >= 0.4:
             summary['risk_level'] = 'MEDIUM'
-        
-        # 生成关键发现
+
+        # Generate key findings
         if risk_data.get('high_risk_count', 0) > 0:
             summary['key_findings'].append(
-                f"发现 {risk_data['high_risk_count']} 笔高风险交易"
+                f"Found {risk_data['high_risk_count']} high-risk transactions"
             )
-        
+
         if attack_data.get('attack_types'):
             summary['key_findings'].append(
-                f"识别出 {len(attack_data['attack_types'])} 种攻击类型"
+                f"Identified {len(attack_data['attack_types'])} attack types"
             )
-        
+
         if clustering_data.get('anomaly_clusters'):
             summary['key_findings'].append(
-                f"发现 {len(clustering_data['anomaly_clusters'])} 个异常聚类"
+                f"Discovered {len(clustering_data['anomaly_clusters'])} anomalous clusters"
             )
         
         return summary
@@ -328,9 +328,9 @@ class ReportGenerator:
         return analysis
     
     def _generate_clustering_analysis(self, clustering_data: Dict) -> Dict:
-        """生成聚类分析"""
+        """Generate clustering analysis"""
         analysis = {
-            'title': '聚类分析',
+            'title': 'Clustering Analysis',
             'cluster_summary': {
                 'total_clusters': clustering_data.get('cluster_count', 0),
                 'anomaly_clusters': len(clustering_data.get('anomaly_clusters', [])),
@@ -340,26 +340,26 @@ class ReportGenerator:
             'anomaly_analysis': clustering_data.get('anomaly_analysis', {}),
             'feature_importance': clustering_data.get('feature_importance', {})
         }
-        
+
         return analysis
-    
+
     def _generate_attack_analysis(self, attack_data: Dict) -> Dict:
-        """生成攻击分析"""
+        """Generate attack analysis"""
         analysis = {
-            'title': '攻击分析',
+            'title': 'Attack Analysis',
             'attack_types': attack_data.get('attack_types', []),
             'attack_distribution': attack_data.get('attack_distribution', {}),
             'attack_trends': attack_data.get('attack_trends', {}),
             'pattern_analysis': attack_data.get('pattern_analysis', {}),
             'recommended_actions': attack_data.get('recommended_actions', [])
         }
-        
+
         return analysis
     
     def _generate_trend_analysis(self, risk_data: Dict, attack_data: Dict) -> Dict:
-        """生成趋势分析"""
+        """Generate trend analysis"""
         analysis = {
-            'title': '趋势分析',
+            'title': 'Trend Analysis',
             'risk_trends': {
                 'trend_direction': self._determine_trend_direction(risk_data.get('risk_trends', [])),
                 'trend_strength': self._calculate_trend_strength(risk_data.get('risk_trends', [])),
@@ -368,35 +368,35 @@ class ReportGenerator:
             'attack_trends': attack_data.get('attack_trends', {}),
             'seasonal_patterns': self._analyze_seasonal_patterns(risk_data, attack_data)
         }
-        
+
         return analysis
     
     def _generate_anomaly_detection(self, risk_data: Dict, attack_data: Dict) -> Dict:
-        """生成异常检测"""
+        """Generate anomaly detection"""
         anomalies = []
-        
-        # 检测高风险异常
+
+        # Detect high-risk anomalies
         if risk_data.get('high_risk_percentage', 0) > 20:
             anomalies.append({
                 'type': 'high_risk_concentration',
                 'severity': 'high',
-                'description': f'高风险交易占比过高 ({risk_data["high_risk_percentage"]:.1f}%)',
-                'recommendation': '建议加强风险监控和防护措施'
+                'description': f'High-risk transaction proportion is too high ({risk_data["high_risk_percentage"]:.1f}%)',
+                'recommendation': 'Recommend strengthening risk monitoring and protection measures'
             })
-        
-        # 检测攻击异常
+
+        # Detect attack anomalies
         if attack_data.get('attack_types'):
             for attack_type, stats in attack_data.get('attack_distribution', {}).items():
                 if stats.get('percentage', 0) > 50:
                     anomalies.append({
                         'type': 'attack_type_concentration',
                         'severity': 'medium',
-                        'description': f'攻击类型 {attack_type} 占比过高 ({stats["percentage"]:.1f}%)',
-                        'recommendation': f'建议加强对 {attack_type} 攻击的防护'
+                        'description': f'Attack type {attack_type} proportion is too high ({stats["percentage"]:.1f}%)',
+                        'recommendation': f'Recommend strengthening protection against {attack_type} attacks'
                     })
-        
+
         return {
-            'title': '异常检测',
+            'title': 'Anomaly Detection',
             'anomalies_detected': len(anomalies),
             'anomaly_list': anomalies,
             'anomaly_severity_distribution': self._calculate_anomaly_severity(anomalies)
@@ -454,9 +454,9 @@ class ReportGenerator:
         }
     
     def _generate_key_metrics(self, risk_data: Dict, clustering_data: Dict, attack_data: Dict) -> Dict:
-        """生成关键指标"""
+        """Generate key metrics"""
         metrics = {
-            'title': '关键指标',
+            'title': 'Key Metrics',
             'risk_metrics': {
                 'total_transactions': risk_data.get('total_transactions', 0),
                 'fraud_detection_rate': risk_data.get('fraud_detection_rate', 0.0),
@@ -467,7 +467,7 @@ class ReportGenerator:
                 'attack_types_detected': len(attack_data.get('attack_types', [])),
                 'anomalies_detected': len(clustering_data.get('anomaly_clusters', [])),
                 'response_time': risk_data.get('average_response_time', 0.0),
-                'system_uptime': 99.9  # 示例值
+                'system_uptime': 99.9  # Example value
             },
             'performance_metrics': {
                 'model_accuracy': risk_data.get('model_accuracy', 0.0),
@@ -521,17 +521,17 @@ class ReportGenerator:
         return patterns
     
     def _detect_daily_pattern(self, data: List[float]) -> Optional[Dict]:
-        """检测每日模式"""
+        """Detect daily patterns"""
         if len(data) < 24:
             return None
-        
-        # 计算每小时的均值
+
+        # Calculate hourly averages
         hourly_means = []
         for hour in range(24):
             hour_data = [data[i] for i in range(hour, len(data), 24)]
             if hour_data:
                 hourly_means.append(np.mean(hour_data))
-        
+
         if len(hourly_means) == 24:
             peak_hour = np.argmax(hourly_means)
             return {
@@ -539,11 +539,11 @@ class ReportGenerator:
                 'peak_hour': peak_hour,
                 'pattern_strength': np.std(hourly_means)
             }
-        
+
         return None
-    
+
     def _analyze_seasonal_patterns(self, risk_data: Dict, attack_data: Dict) -> Dict:
-        """分析季节性模式"""
+        """Analyze seasonal patterns"""
         return {
             'weekly_patterns': {},
             'monthly_patterns': {},
@@ -571,26 +571,26 @@ class ReportGenerator:
         return dict(priority_counts)
     
     def save_report(self, report: Dict, filename: Optional[str] = None) -> str:
-        """保存报告到文件"""
+        """Save report to file"""
         try:
             if filename is None:
                 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                 filename = f"comprehensive_report_{timestamp}.json"
-            
+
             filepath = os.path.join(self.reports_dir, filename)
-            
+
             with open(filepath, 'w', encoding='utf-8') as f:
                 json.dump(report, f, indent=2, ensure_ascii=False)
-            
-            logger.info(f"报告已保存到: {filepath}")
+
+            logger.info(f"Report saved to: {filepath}")
             return filepath
-            
+
         except Exception as e:
-            logger.error(f"保存报告时出错: {e}")
+            logger.error(f"Error saving report: {e}")
             return ""
     
     def generate_report_summary(self, report: Dict) -> Dict:
-        """生成报告摘要"""
+        """Generate report summary"""
         summary = {
             'report_id': report.get('report_id', ''),
             'generated_at': report.get('generated_at', ''),
@@ -599,17 +599,17 @@ class ReportGenerator:
             'critical_issues': [],
             'recommendations_count': 0
         }
-        
-        # 提取关键亮点
+
+        # Extract key highlights
         sections = report.get('sections', {})
-        
+
         if 'executive_summary' in sections:
             exec_summary = sections['executive_summary']
             summary['key_highlights'].append(
-                f"风险等级: {exec_summary.get('risk_level', 'UNKNOWN')}"
+                f"Risk Level: {exec_summary.get('risk_level', 'UNKNOWN')}"
             )
             summary['key_highlights'].append(
-                f"高风险交易: {exec_summary.get('overview', {}).get('high_risk_transactions', 0)}"
+                f"High Risk Transactions: {exec_summary.get('overview', {}).get('high_risk_transactions', 0)}"
             )
         
         if 'anomaly_detection' in sections:

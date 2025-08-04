@@ -119,11 +119,12 @@ class FastPseudoLabelGenerator:
                 st.session_state.four_class_risk_results is not None):
 
                 risk_results = st.session_state.four_class_risk_results
-                if risk_results.get('success') and 'detailed_results' in risk_results:
+                if (risk_results and isinstance(risk_results, dict) and
+                    risk_results.get('success') and 'detailed_results' in risk_results):
                     logger.info("✅ Using cached four-class risk scoring results")
                     return self._convert_four_class_to_risk_format(risk_results)
 
-            # 检查无监督风险评分结果
+            # Check unsupervised risk scoring results
             if (hasattr(st.session_state, 'unsupervised_risk_results') and
                 st.session_state.unsupervised_risk_results is not None):
 
@@ -132,9 +133,9 @@ class FastPseudoLabelGenerator:
                     logger.info("✅ Using cached unsupervised risk scoring results")
                     return risk_results
 
-            # 如果没有任何风险评分结果，抛出依赖错误
-            logger.error("❌ 快速模式需要先完成风险评分步骤")
-            raise ValueError("快速伪标签生成需要先完成风险评分。请先在'🎯 Risk Scoring'页面完成风险评分。")
+            # If no risk scoring results available, raise dependency error
+            logger.error("❌ Fast mode requires risk scoring to be completed first")
+            raise ValueError("Fast pseudo label generation requires risk scoring to be completed first. Please complete risk scoring in the '🎯 Risk Scoring' page.")
 
         except ValueError:
             # 重新抛出依赖错误

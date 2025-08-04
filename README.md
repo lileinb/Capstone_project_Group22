@@ -1,397 +1,397 @@
-# 🛡️ 电商用户行为风险评分系统
+# E-commerce User Behavioral Risk Scoring System
 
-## 📋 项目概述
+## Project Overview
 
-基于行为特征和大数据分析的智能电商用户风险评估系统。该系统采用先进的机器学习技术和三层预测架构，为电商平台提供全面的欺诈检测和风险评估解决方案。
+An intelligent e-commerce user risk assessment system based on behavioral features and big data analysis. The system employs advanced machine learning technologies and a three-layer prediction architecture to provide comprehensive fraud detection and risk assessment solutions for e-commerce platforms.
 
-### 🎯 核心特性
+### Core Features
 
-- **🧠 智能风险预测**: 基于用户行为特征的多维度风险评估
-- **🏗️ 三层架构**: 欺诈检测 → 四分类风险评级 → 攻击类型分析
-- **⚡ 实时监控**: 动态阈值管理和实时风险分布监控
-- **🔍 可解释AI**: 使用SHAP和LIME进行模型解释
-- **🔄 端到端自动化**: 从数据预处理到模型部署的完整自动化工作流
-- **📊 丰富可视化**: 交互式图表和实时数据展示
-- **🎯 精准分类**: 8种攻击类型智能识别
-- **📈 动态优化**: 自适应聚类和风险阈值优化
+- **Intelligent Risk Prediction**: Multi-dimensional risk assessment based on user behavioral features
+- **Three-Layer Architecture**: Fraud Detection → Four-Class Risk Classification → Attack Type Analysis
+- **Real-time Monitoring**: Dynamic threshold management and real-time risk distribution monitoring
+- **Explainable AI**: Model interpretation using SHAP and LIME
+- **End-to-End Automation**: Complete automated workflow from data preprocessing to model deployment
+- **Rich Visualization**: Interactive charts and real-time data display
+- **Precise Classification**: Intelligent identification of 8 attack types
+- **Dynamic Optimization**: Adaptive clustering and risk threshold optimization
 
-### 🏗️ 系统架构
+### System Architecture
 
 ```
 Capstone_test/
-├── backend/                          # 后端核心模块
-│   ├── prediction/                   # 🤖 风险预测模块
-│   │   ├── risk_predictor.py        # 主预测器
-│   │   ├── model_trainer.py         # 模型训练器
-│   │   └── prediction_validator.py  # 预测验证器
-│   ├── risk_scoring/                 # 🎯 风险评分模块
-│   │   ├── four_class_risk_calculator.py  # 四分类风险计算器
-│   │   ├── dynamic_threshold_manager.py   # 动态阈值管理器
-│   │   └── risk_distribution_analyzer.py # 风险分布分析器
-│   ├── clustering/                   # 📊 聚类分析模块
-│   │   ├── cluster_analyzer.py      # 聚类分析器
-│   │   ├── intelligent_cluster_optimizer.py # 智能聚类优化器
-│   │   └── cluster_risk_mapper.py   # 聚类风险映射器
-│   ├── feature_engineer/             # 🔧 特征工程模块
-│   │   ├── feature_creator.py       # 特征创建器
-│   │   ├── feature_selector.py      # 特征选择器
-│   │   └── data_preprocessor.py     # 数据预处理器
-│   ├── ml_models/                    # 🧠 机器学习模型
-│   │   ├── ensemble_model.py        # 集成模型
-│   │   ├── catboost_model.py        # CatBoost模型
-│   │   └── xgboost_model.py         # XGBoost模型
-│   ├── pseudo_labeling/              # 🏷️ 伪标签模块
-│   │   ├── pseudo_labeler.py        # 伪标签生成器
-│   │   └── label_quality_assessor.py # 标签质量评估器
-│   ├── attack_classification/        # ⚔️ 攻击分类模块
-│   │   └── attack_classifier.py     # 攻击分类器
-│   └── analysis_reporting/           # 📋 分析报告模块
-│       ├── report_generator.py      # 报告生成器
-│       └── visualization_creator.py # 可视化创建器
-├── frontend/                         # 🖥️ 前端界面
-│   ├── pages/                        # 页面组件
-│   │   ├── data_upload_page.py      # 📁 数据上传页面
-│   │   ├── feature_engineering_page.py # 🔧 特征工程页面
-│   │   ├── clustering_page.py       # 📊 聚类分析页面
-│   │   ├── risk_scoring_page.py     # 🎯 风险评分页面
-│   │   ├── pseudo_labeling_page.py  # 🏷️ 伪标签页面
-│   │   ├── model_prediction_page.py # 🤖 模型预测页面
-│   │   ├── attack_analysis_page.py  # ⚔️ 攻击分析页面
-│   │   └── analysis_report_page.py  # 📋 分析报告页面
-│   └── components/                   # 通用组件
-├── config/                           # ⚙️ 配置文件
-│   ├── settings.py                  # 系统设置
-│   ├── optimization_settings.json   # 优化配置
-│   └── risk_thresholds.json        # 风险阈值配置
-├── data/                            # 📂 数据目录
-├── models/                          # 🗃️ 模型存储
-├── reports/                         # 📄 生成报告
-└── main.py                          # 🚀 主应用入口
+├── backend/                          # Backend Core Modules
+│   ├── prediction/                   # Risk Prediction Module
+│   │   ├── risk_predictor.py        # Main Predictor
+│   │   ├── model_trainer.py         # Model Trainer
+│   │   └── prediction_validator.py  # Prediction Validator
+│   ├── risk_scoring/                 # Risk Scoring Module
+│   │   ├── four_class_risk_calculator.py  # Four-Class Risk Calculator
+│   │   ├── dynamic_threshold_manager.py   # Dynamic Threshold Manager
+│   │   └── risk_distribution_analyzer.py # Risk Distribution Analyzer
+│   ├── clustering/                   # Clustering Analysis Module
+│   │   ├── cluster_analyzer.py      # Cluster Analyzer
+│   │   ├── intelligent_cluster_optimizer.py # Intelligent Cluster Optimizer
+│   │   └── cluster_risk_mapper.py   # Cluster Risk Mapper
+│   ├── feature_engineer/             # Feature Engineering Module
+│   │   ├── feature_creator.py       # Feature Creator
+│   │   ├── feature_selector.py      # Feature Selector
+│   │   └── data_preprocessor.py     # Data Preprocessor
+│   ├── ml_models/                    # Machine Learning Models
+│   │   ├── ensemble_model.py        # Ensemble Model
+│   │   ├── catboost_model.py        # CatBoost Model
+│   │   └── xgboost_model.py         # XGBoost Model
+│   ├── pseudo_labeling/              # Pseudo Labeling Module
+│   │   ├── pseudo_labeler.py        # Pseudo Label Generator
+│   │   └── label_quality_assessor.py # Label Quality Assessor
+│   ├── attack_classification/        # Attack Classification Module
+│   │   └── attack_classifier.py     # Attack Classifier
+│   └── analysis_reporting/           # Analysis Reporting Module
+│       ├── report_generator.py      # Report Generator
+│       └── visualization_creator.py # Visualization Creator
+├── frontend/                         # Frontend Interface
+│   ├── pages/                        # Page Components
+│   │   ├── data_upload_page.py      # Data Upload Page
+│   │   ├── feature_engineering_page.py # Feature Engineering Page
+│   │   ├── clustering_page.py       # Clustering Analysis Page
+│   │   ├── risk_scoring_page.py     # Risk Scoring Page
+│   │   ├── pseudo_labeling_page.py  # Pseudo Labeling Page
+│   │   ├── model_prediction_page.py # Model Prediction Page
+│   │   ├── attack_analysis_page.py  # Attack Analysis Page
+│   │   └── analysis_report_page.py  # Analysis Report Page
+│   └── components/                   # Common Components
+├── config/                           # Configuration Files
+│   ├── settings.py                  # System Settings
+│   ├── optimization_settings.json   # Optimization Configuration
+│   └── risk_thresholds.json        # Risk Threshold Configuration
+├── data/                            # Data Directory
+├── models/                          # Model Storage
+├── reports/                         # Generated Reports
+└── main.py                          # Main Application Entry
 ```
 
-## 🔄 系统工作流程
+## System Workflow
 
-### 📊 三层预测架构
+### Three-Layer Prediction Architecture
 
 ```mermaid
 graph TD
-    A[原始交易数据] --> B[数据预处理]
-    B --> C[特征工程]
-    C --> D[聚类分析]
-    D --> E[风险评分]
-    E --> F[伪标签生成]
-    F --> G[模型训练]
-    G --> H[风险预测]
-    H --> I[攻击分类]
-    I --> J[分析报告]
+    A[Raw Transaction Data] --> B[Data Preprocessing]
+    B --> C[Feature Engineering]
+    C --> D[Clustering Analysis]
+    D --> E[Risk Scoring]
+    E --> F[Pseudo Label Generation]
+    F --> G[Model Training]
+    G --> H[Risk Prediction]
+    H --> I[Attack Classification]
+    I --> J[Analysis Report]
 
-    subgraph "第一层: 无监督分析"
+    subgraph "Layer 1: Unsupervised Analysis"
         D
         E
     end
 
-    subgraph "第二层: 半监督学习"
+    subgraph "Layer 2: Semi-supervised Learning"
         F
         G
     end
 
-    subgraph "第三层: 监督预测"
+    subgraph "Layer 3: Supervised Prediction"
         H
         I
     end
 ```
 
-### 🎯 详细工作流程
+### Detailed Workflow
 
-#### 阶段1: 数据准备与特征工程
+#### Stage 1: Data Preparation and Feature Engineering
 ```
-原始数据 → 数据清洗 → 特征创建 → 特征选择 → 数据标准化
+Raw Data → Data Cleaning → Feature Creation → Feature Selection → Data Standardization
 ```
-- **数据验证**: 检查数据完整性和格式
-- **缺失值处理**: 智能填充和异常值检测
-- **特征创建**: 生成50+个风险相关特征
-- **特征选择**: 基于重要性和相关性的智能选择
-- **数据标准化**: 多种标准化方法自适应选择
+- **Data Validation**: Check data integrity and format
+- **Missing Value Handling**: Intelligent imputation and outlier detection
+- **Feature Creation**: Generate 50+ risk-related features
+- **Feature Selection**: Intelligent selection based on importance and correlation
+- **Data Standardization**: Adaptive selection of multiple standardization methods
 
-#### 阶段2: 无监督风险发现
+#### Stage 2: Unsupervised Risk Discovery
 ```
-聚类分析 → 风险模式发现 → 异常检测 → 初始风险评分
+Clustering Analysis → Risk Pattern Discovery → Anomaly Detection → Initial Risk Scoring
 ```
-- **智能聚类**: 自动选择最优聚类算法和参数
-- **风险映射**: 将聚类结果映射到风险等级
-- **动态阈值**: 基于数据分布的自适应阈值调整
-- **四分类评分**: Low/Medium/High/Critical风险分级
+- **Intelligent Clustering**: Automatic selection of optimal clustering algorithms and parameters
+- **Risk Mapping**: Map clustering results to risk levels
+- **Dynamic Thresholds**: Adaptive threshold adjustment based on data distribution
+- **Four-Class Scoring**: Low/Medium/High/Critical risk classification
 
-#### 阶段3: 监督学习与预测
+#### Stage 3: Supervised Learning and Prediction
 ```
-伪标签生成 → 模型训练 → 风险预测 → 攻击分类
+Pseudo Label Generation → Model Training → Risk Prediction → Attack Classification
 ```
-- **高质量伪标签**: 基于聚类和风险评分的标签生成
-- **集成模型**: CatBoost + XGBoost + 传统ML的集成
-- **实时预测**: 毫秒级风险评分
-- **攻击分类**: 8种攻击类型的精准识别
+- **High-Quality Pseudo Labels**: Label generation based on clustering and risk scoring
+- **Ensemble Models**: Integration of CatBoost + XGBoost + Traditional ML
+- **Real-time Prediction**: Millisecond-level risk scoring
+- **Attack Classification**: Precise identification of 8 attack types
 
-## 🚀 快速开始
+## Quick Start
 
-### 📋 系统要求
-- **Python版本**: >= 3.8
-- **内存要求**: >= 8GB RAM
-- **存储空间**: >= 2GB 可用空间
-- **操作系统**: Windows/macOS/Linux
+### System Requirements
+- **Python Version**: >= 3.8
+- **Memory Requirements**: >= 8GB RAM
+- **Storage Space**: >= 2GB available space
+- **Operating System**: Windows/macOS/Linux
 
-### 🔧 安装步骤
+### Installation Steps
 ```bash
-# 1. 克隆项目
+# 1. Clone the project
 git clone <repository-url>
 cd Capstone_test
 
-# 2. 创建虚拟环境（推荐）
+# 2. Create virtual environment (recommended)
 python -m venv venv
 source venv/bin/activate  # Linux/macOS
-# 或
+# or
 venv\Scripts\activate     # Windows
 
-# 3. 安装依赖
+# 3. Install dependencies
 pip install -r requirements.txt
 
-# 4. 启动应用
+# 4. Launch application
 streamlit run main.py
 ```
 
-### 🌐 访问系统
-启动后在浏览器中访问: `http://localhost:8501`
+### Access System
+After startup, access in browser: `http://localhost:8501`
 
-## 📱 系统页面详解
+## System Page Details
 
-### 📁 数据上传页面 (data_upload_page.py)
-**功能**: 数据导入和初步验证
-- **支持格式**: CSV, Excel, JSON
-- **数据验证**: 自动检测数据格式和完整性
-- **预览功能**: 数据样本展示和统计信息
-- **错误处理**: 智能错误提示和修复建议
+### Data Upload Page (data_upload_page.py)
+**Function**: Data import and initial validation
+- **Supported Formats**: CSV, Excel, JSON
+- **Data Validation**: Automatic detection of data format and integrity
+- **Preview Function**: Data sample display and statistical information
+- **Error Handling**: Intelligent error prompts and repair suggestions
 
-**实现原理**:
+**Implementation Principle**:
 ```python
-# 数据上传和验证流程
-uploaded_file = st.file_uploader("选择数据文件", type=['csv', 'xlsx', 'json'])
+# Data upload and validation process
+uploaded_file = st.file_uploader("Select data file", type=['csv', 'xlsx', 'json'])
 if uploaded_file:
     data = pd.read_csv(uploaded_file)
-    # 数据验证和预处理
+    # Data validation and preprocessing
     validation_results = validate_data_format(data)
     st.session_state.raw_data = data
 ```
 
-### 🔧 特征工程页面 (feature_engineering_page.py)
-**功能**: 智能特征创建和选择
-- **特征创建**: 50+个风险相关特征自动生成
-- **特征选择**: 基于重要性和相关性的智能筛选
-- **数据预处理**: 缺失值处理、异常值检测、数据标准化
-- **可视化**: 特征分布图、相关性热力图
+### Feature Engineering Page (feature_engineering_page.py)
+**Function**: Intelligent feature creation and selection
+- **Feature Creation**: Automatic generation of 50+ risk-related features
+- **Feature Selection**: Intelligent filtering based on importance and correlation
+- **Data Preprocessing**: Missing value handling, outlier detection, data standardization
+- **Visualization**: Feature distribution plots, correlation heatmaps
 
-**核心特征类型**:
-- **交易特征**: 金额、频率、时间模式
-- **用户特征**: 年龄、账户历史、行为模式
-- **风险特征**: 异常评分、风险指标、复合特征
-- **统计特征**: 百分位数、排名、聚合统计
+**Core Feature Types**:
+- **Transaction Features**: Amount, frequency, time patterns
+- **User Features**: Age, account history, behavioral patterns
+- **Risk Features**: Anomaly scores, risk indicators, composite features
+- **Statistical Features**: Percentiles, rankings, aggregate statistics
 
-**实现流程**:
+**Implementation Process**:
 ```python
-# 特征工程流程
+# Feature engineering process
 feature_creator = FeatureCreator()
 engineered_features = feature_creator.create_comprehensive_features(raw_data)
 selected_features = feature_selector.select_optimal_features(engineered_features)
 st.session_state.engineered_features = selected_features
 ```
 
-### 📊 聚类分析页面 (clustering_page.py)
-**功能**: 用户行为模式发现
-- **智能聚类**: 自动选择最优算法(K-means/DBSCAN/GMM)
-- **参数优化**: 肘部法则、轮廓系数自动优化
-- **聚类可视化**: 2D/3D聚类图、特征重要性图
-- **风险映射**: 聚类到风险等级的智能映射
+### Clustering Analysis Page (clustering_page.py)
+**Function**: User behavior pattern discovery
+- **Intelligent Clustering**: Automatic selection of optimal algorithms (K-means/DBSCAN/GMM)
+- **Parameter Optimization**: Automatic optimization using elbow method and silhouette coefficient
+- **Clustering Visualization**: 2D/3D clustering plots, feature importance plots
+- **Risk Mapping**: Intelligent mapping from clusters to risk levels
 
-**支持算法**:
-- **K-means**: 适用于球形聚类
-- **DBSCAN**: 适用于密度聚类
-- **Gaussian Mixture**: 适用于概率聚类
+**Supported Algorithms**:
+- **K-means**: Suitable for spherical clustering
+- **DBSCAN**: Suitable for density-based clustering
+- **Gaussian Mixture**: Suitable for probabilistic clustering
 
-**实现核心**:
+**Implementation Core**:
 ```python
-# 智能聚类优化
+# Intelligent clustering optimization
 cluster_analyzer = ClusterAnalyzer()
 cluster_results = cluster_analyzer.intelligent_auto_clustering(data)
-# 包含: 最优算法、聚类数量、聚类标签、质量评估
+# Contains: optimal algorithm, cluster count, cluster labels, quality assessment
 ```
 
-### 🎯 风险评分页面 (risk_scoring_page.py)
-**功能**: 四分类风险评分系统
-- **动态阈值**: 基于数据分布的自适应阈值调整
-- **四分类评分**: Low/Medium/High/Critical精准分级
-- **实时监控**: 风险分布实时更新和监控
-- **可视化**: 风险分布图、阈值调整图、趋势分析
+### Risk Scoring Page (risk_scoring_page.py)
+**Function**: Four-class risk scoring system
+- **Dynamic Thresholds**: Adaptive threshold adjustment based on data distribution
+- **Four-Class Scoring**: Precise classification into Low/Medium/High/Critical
+- **Real-time Monitoring**: Real-time risk distribution updates and monitoring
+- **Visualization**: Risk distribution plots, threshold adjustment plots, trend analysis
 
-**评分算法**:
+**Scoring Algorithm**:
 ```python
-# 四分类风险计算
+# Four-class risk calculation
 risk_calculator = FourClassRiskCalculator()
 risk_results = risk_calculator.calculate_four_class_risk_scores(
     data, cluster_results=cluster_results
 )
-# 输出: 风险等级、风险分数、置信度、分布统计
+# Output: risk level, risk score, confidence, distribution statistics
 ```
 
-**风险等级定义**:
-- **Low (低风险)**: 0-25分，正常用户行为
-- **Medium (中风险)**: 25-50分，轻微异常行为
-- **High (高风险)**: 50-75分，可疑欺诈行为
-- **Critical (极高风险)**: 75-100分，高概率欺诈
+**Risk Level Definitions**:
+- **Low Risk**: 0-25 points, normal user behavior
+- **Medium Risk**: 25-50 points, slight abnormal behavior
+- **High Risk**: 50-75 points, suspicious fraudulent behavior
+- **Critical Risk**: 75-100 points, high probability fraud
 
-### 🏷️ 伪标签页面 (pseudo_labeling_page.py)
-**功能**: 高质量训练标签生成
-- **智能标签生成**: 基于聚类和风险评分的标签创建
-- **质量评估**: 标签质量评分和可信度分析
-- **标签优化**: 基于置信度的标签筛选和优化
-- **可视化**: 标签分布图、质量评估图
+### Pseudo Labeling Page (pseudo_labeling_page.py)
+**Function**: High-quality training label generation
+- **Intelligent Label Generation**: Label creation based on clustering and risk scoring
+- **Quality Assessment**: Label quality scoring and reliability analysis
+- **Label Optimization**: Label filtering and optimization based on confidence
+- **Visualization**: Label distribution plots, quality assessment plots
 
-**标签生成策略**:
+**Label Generation Strategy**:
 ```python
-# 伪标签生成流程
+# Pseudo label generation process
 pseudo_labeler = PseudoLabeler()
 labels = pseudo_labeler.generate_high_quality_labels(
     data, cluster_results, risk_results
 )
-# 基于多重验证的高质量标签
+# High-quality labels based on multiple validation
 ```
 
-### 🤖 模型预测页面 (model_prediction_page.py)
-**功能**: 智能风险预测
-- **集成模型**: CatBoost + XGBoost + 传统ML集成
-- **实时预测**: 毫秒级单笔交易风险评估
-- **模型解释**: SHAP/LIME可解释性分析
-- **性能监控**: 模型性能指标实时监控
+### Model Prediction Page (model_prediction_page.py)
+**Function**: Intelligent risk prediction
+- **Ensemble Models**: Integration of CatBoost + XGBoost + Traditional ML
+- **Real-time Prediction**: Millisecond-level single transaction risk assessment
+- **Model Interpretation**: SHAP/LIME explainability analysis
+- **Performance Monitoring**: Real-time model performance metrics monitoring
 
-**模型架构**:
+**Model Architecture**:
 ```python
-# 集成模型预测
+# Ensemble model prediction
 ensemble_model = EnsembleModel()
 predictions = ensemble_model.predict_risk(
     features, return_probabilities=True
 )
-# 输出: 风险预测、概率分布、特征重要性
+# Output: risk prediction, probability distribution, feature importance
 ```
 
-**支持模型**:
-- **CatBoost**: 处理类别特征的梯度提升
-- **XGBoost**: 高性能梯度提升树
-- **Random Forest**: 随机森林集成
-- **Logistic Regression**: 线性基准模型
+**Supported Models**:
+- **CatBoost**: Gradient boosting for categorical features
+- **XGBoost**: High-performance gradient boosting trees
+- **Random Forest**: Random forest ensemble
+- **Logistic Regression**: Linear baseline model
 
-### ⚔️ 攻击分析页面 (attack_analysis_page.py)
-**功能**: 攻击类型智能识别
-- **8种攻击类型**: 精准识别不同攻击模式
-- **智能分类**: 基于聚类和风险评分的攻击分类
-- **可视化分析**: 攻击分布饼图、时间趋势图
-- **防护建议**: 针对性的安全防护建议
+### Attack Analysis Page (attack_analysis_page.py)
+**Function**: Intelligent attack type identification
+- **8 Attack Types**: Precise identification of different attack patterns
+- **Intelligent Classification**: Attack classification based on clustering and risk scoring
+- **Visualization Analysis**: Attack distribution pie charts, time trend charts
+- **Protection Recommendations**: Targeted security protection suggestions
 
-**攻击类型定义**:
-- **Account Takeover**: 账户接管攻击
-- **Identity Theft**: 身份盗用攻击
-- **Credit Card Testing**: 信用卡测试攻击
-- **Bulk Fraud**: 批量欺诈攻击
-- **High Velocity Attack**: 高频攻击
-- **Synthetic Identity**: 合成身份欺诈
-- **Friendly Fraud**: 友好欺诈
-- **Normal Behavior**: 正常行为
+**Attack Type Definitions**:
+- **Account Takeover**: Account takeover attacks
+- **Identity Theft**: Identity theft attacks
+- **Credit Card Testing**: Credit card testing attacks
+- **Bulk Fraud**: Bulk fraud attacks
+- **High Velocity Attack**: High-frequency attacks
+- **Synthetic Identity**: Synthetic identity fraud
+- **Friendly Fraud**: Friendly fraud
+- **Normal Behavior**: Normal behavior
 
-**分类实现**:
+**Classification Implementation**:
 ```python
-# 攻击类型分类
+# Attack type classification
 attack_classifier = AttackClassifier()
 attack_results = attack_classifier.classify_attacks(
     data, cluster_results, risk_results
 )
-# 输出: 攻击类型分布、详细分析、防护建议
+# Output: attack type distribution, detailed analysis, protection recommendations
 ```
 
-### 📋 分析报告页面 (analysis_report_page.py)
-**功能**: 综合分析报告生成
-- **PDF报告**: 专业格式的分析报告
-- **可视化图表**: 丰富的图表和统计信息
-- **风险总结**: 全面的风险评估总结
-- **建议方案**: 具体的风险控制建议
+### Analysis Report Page (analysis_report_page.py)
+**Function**: Comprehensive analysis report generation
+- **PDF Reports**: Professional format analysis reports
+- **Visualization Charts**: Rich charts and statistical information
+- **Risk Summary**: Comprehensive risk assessment summary
+- **Recommendation Plans**: Specific risk control recommendations
 
-**报告内容**:
-- 数据概览和质量评估
-- 特征工程结果分析
-- 聚类分析详细结果
-- 风险评分分布统计
-- 攻击类型分析报告
-- 模型性能评估
-- 风险控制建议
+**Report Content**:
+- Data overview and quality assessment
+- Feature engineering results analysis
+- Detailed clustering analysis results
+- Risk score distribution statistics
+- Attack type analysis reports
+- Model performance evaluation
+- Risk control recommendations
 
-## 🛠️ 技术栈详解
+## Technology Stack Details
 
-### 🖥️ 前端技术
-- **Streamlit**: 快速Web应用开发框架
-- **Plotly**: 交互式数据可视化
-- **Matplotlib/Seaborn**: 静态图表生成
-- **Pandas**: 数据处理和展示
+### Frontend Technologies
+- **Streamlit**: Rapid web application development framework
+- **Plotly**: Interactive data visualization
+- **Matplotlib/Seaborn**: Static chart generation
+- **Pandas**: Data processing and display
 
-### 🧠 机器学习技术
-- **scikit-learn**: 传统机器学习算法
-- **CatBoost**: 类别特征梯度提升
-- **XGBoost**: 高性能梯度提升树
-- **imbalanced-learn**: 不平衡数据处理
+### Machine Learning Technologies
+- **scikit-learn**: Traditional machine learning algorithms
+- **CatBoost**: Categorical feature gradient boosting
+- **XGBoost**: High-performance gradient boosting trees
+- **imbalanced-learn**: Imbalanced data processing
 
-### 📊 数据处理技术
-- **Pandas**: 数据操作和分析
-- **NumPy**: 数值计算
-- **SciPy**: 科学计算
-- **Joblib**: 模型序列化
+### Data Processing Technologies
+- **Pandas**: Data manipulation and analysis
+- **NumPy**: Numerical computing
+- **SciPy**: Scientific computing
+- **Joblib**: Model serialization
 
-### 🔍 可解释性技术
-- **SHAP**: 模型解释和特征重要性
-- **LIME**: 局部可解释性
-- **Permutation Importance**: 排列重要性
+### Explainability Technologies
+- **SHAP**: Model interpretation and feature importance
+- **LIME**: Local interpretability
+- **Permutation Importance**: Permutation importance
 
-### 📈 可视化技术
-- **Plotly Express**: 快速图表创建
-- **Plotly Graph Objects**: 自定义图表
-- **Streamlit Charts**: 内置图表组件
+### Visualization Technologies
+- **Plotly Express**: Rapid chart creation
+- **Plotly Graph Objects**: Custom charts
+- **Streamlit Charts**: Built-in chart components
 
-## 📈 系统性能指标
+## System Performance Metrics
 
-### 🎯 风险分层效果
-- **Low Risk (低风险)**: 60-70% (正常用户)
-- **Medium Risk (中风险)**: 20-25% (轻微异常)
-- **High Risk (高风险)**: 8-12% (可疑行为)
-- **Critical Risk (极高风险)**: 2-5% (高风险欺诈)
+### Risk Stratification Effectiveness
+- **Low Risk**: 60-70% (normal users)
+- **Medium Risk**: 20-25% (slight anomalies)
+- **High Risk**: 8-12% (suspicious behavior)
+- **Critical Risk**: 2-5% (high-risk fraud)
 
-### ⚡ 处理性能
-- **特征工程速度**: ~50ms/1000条记录
-- **聚类分析速度**: ~200ms/1000条记录
-- **风险评分速度**: ~8ms/1000条记录
-- **攻击分类速度**: ~5ms/1000条记录
-- **单笔预测速度**: <1ms/条记录
+### Processing Performance
+- **Feature Engineering Speed**: ~50ms/1000 records
+- **Clustering Analysis Speed**: ~200ms/1000 records
+- **Risk Scoring Speed**: ~8ms/1000 records
+- **Attack Classification Speed**: ~5ms/1000 records
+- **Single Prediction Speed**: <1ms/record
 
-### 🎯 预测准确性
-- **欺诈检测准确率**: 95%+
-- **风险分层准确率**: 92%+
-- **攻击分类准确率**: 88%+
-- **假阳性率**: <3%
-- **假阴性率**: <5%
+### Prediction Accuracy
+- **Fraud Detection Accuracy**: 95%+
+- **Risk Stratification Accuracy**: 92%+
+- **Attack Classification Accuracy**: 88%+
+- **False Positive Rate**: <3%
+- **False Negative Rate**: <5%
 
-### 📊 系统扩展性
-- **支持数据量**: 100K+ 记录
-- **并发处理**: 支持多用户同时使用
-- **内存占用**: <2GB (10万条记录)
-- **存储需求**: <500MB (模型+配置)
+### System Scalability
+- **Supported Data Volume**: 100K+ records
+- **Concurrent Processing**: Supports multi-user simultaneous use
+- **Memory Usage**: <2GB (100K records)
+- **Storage Requirements**: <500MB (models + configuration)
 
-## ⚙️ 配置文件说明
+## Configuration File Description
 
-### 📁 config/settings.py
+### config/settings.py
 ```python
-# 系统基础配置
+# System basic configuration
 DATA_PATH = "data/"
 MODEL_PATH = "models/"
 REPORT_PATH = "reports/"
@@ -399,7 +399,7 @@ MAX_FILE_SIZE = 100  # MB
 SUPPORTED_FORMATS = ['csv', 'xlsx', 'json']
 ```
 
-### 📁 config/optimization_settings.json
+### config/optimization_settings.json
 ```json
 {
   "clustering": {
@@ -418,7 +418,7 @@ SUPPORTED_FORMATS = ['csv', 'xlsx', 'json']
 }
 ```
 
-### 📁 config/risk_thresholds.json
+### config/risk_thresholds.json
 ```json
 {
   "default_thresholds": {
@@ -434,138 +434,138 @@ SUPPORTED_FORMATS = ['csv', 'xlsx', 'json']
 }
 ```
 
-## 🚀 使用指南
+## Usage Guide
 
-### 📋 完整使用流程
+### Complete Usage Process
 
-#### 1️⃣ 数据准备
+#### Step 1: Data Preparation
 ```bash
-# 准备CSV格式的交易数据
-# 必需字段: transaction_amount, customer_age, account_age_days, etc.
+# Prepare CSV format transaction data
+# Required fields: transaction_amount, customer_age, account_age_days, etc.
 ```
 
-#### 2️⃣ 启动系统
+#### Step 2: Launch System
 ```bash
 streamlit run main.py
 ```
 
-#### 3️⃣ 数据上传
-- 访问"📁 数据上传"页面
-- 上传CSV/Excel文件
-- 验证数据格式和完整性
+#### Step 3: Data Upload
+- Access "Data Upload" page
+- Upload CSV/Excel files
+- Verify data format and integrity
 
-#### 4️⃣ 特征工程
-- 访问"🔧 特征工程"页面
-- 自动生成风险特征
-- 查看特征分布和相关性
+#### Step 4: Feature Engineering
+- Access "Feature Engineering" page
+- Automatically generate risk features
+- View feature distribution and correlation
 
-#### 5️⃣ 聚类分析
-- 访问"📊 聚类分析"页面
-- 执行智能聚类
-- 查看聚类结果和风险映射
+#### Step 5: Clustering Analysis
+- Access "Clustering Analysis" page
+- Execute intelligent clustering
+- View clustering results and risk mapping
 
-#### 6️⃣ 风险评分
-- 访问"🎯 风险评分"页面
-- 计算四分类风险分数
-- 查看风险分布和阈值
+#### Step 6: Risk Scoring
+- Access "Risk Scoring" page
+- Calculate four-class risk scores
+- View risk distribution and thresholds
 
-#### 7️⃣ 伪标签生成
-- 访问"🏷️ 伪标签"页面
-- 生成高质量训练标签
-- 评估标签质量
+#### Step 7: Pseudo Label Generation
+- Access "Pseudo Labeling" page
+- Generate high-quality training labels
+- Assess label quality
 
-#### 8️⃣ 模型预测
-- 访问"🤖 模型预测"页面
-- 训练集成模型
-- 执行风险预测
+#### Step 8: Model Prediction
+- Access "Model Prediction" page
+- Train ensemble models
+- Execute risk prediction
 
-#### 9️⃣ 攻击分析
-- 访问"⚔️ 攻击分析"页面
-- 识别攻击类型
-- 查看攻击分布
+#### Step 9: Attack Analysis
+- Access "Attack Analysis" page
+- Identify attack types
+- View attack distribution
 
-#### 🔟 生成报告
-- 访问"📋 分析报告"页面
-- 生成PDF综合报告
-- 下载分析结果
+#### Step 10: Generate Reports
+- Access "Analysis Report" page
+- Generate comprehensive PDF reports
+- Download analysis results
 
-### 💡 最佳实践
+### Best Practices
 
-#### 📊 数据质量要求
-- **完整性**: 缺失值比例 <20%
-- **一致性**: 数据格式统一
-- **时效性**: 数据时间跨度合理
-- **代表性**: 样本分布均匀
+#### Data Quality Requirements
+- **Completeness**: Missing value ratio <20%
+- **Consistency**: Unified data format
+- **Timeliness**: Reasonable data time span
+- **Representativeness**: Uniform sample distribution
 
-#### 🔧 参数调优建议
-- **聚类数量**: 根据数据规模调整(建议4-8个)
-- **风险阈值**: 根据业务需求调整
-- **特征选择**: 保留重要性>0.01的特征
-- **模型参数**: 使用默认参数或网格搜索
+#### Parameter Tuning Recommendations
+- **Cluster Count**: Adjust based on data scale (recommended 4-8)
+- **Risk Thresholds**: Adjust based on business requirements
+- **Feature Selection**: Retain features with importance >0.01
+- **Model Parameters**: Use default parameters or grid search
 
-#### ⚡ 性能优化
-- **数据预处理**: 提前清洗和标准化数据
-- **特征选择**: 移除冗余和无关特征
-- **模型选择**: 根据数据特点选择合适模型
-- **缓存机制**: 利用Streamlit缓存加速计算
+#### Performance Optimization
+- **Data Preprocessing**: Pre-clean and standardize data
+- **Feature Selection**: Remove redundant and irrelevant features
+- **Model Selection**: Choose appropriate models based on data characteristics
+- **Caching Mechanism**: Utilize Streamlit caching to accelerate computation
 
-## 🔧 故障排除
+## Troubleshooting
 
-### 常见问题及解决方案
+### Common Issues and Solutions
 
-#### ❌ 数据上传失败
-- **检查文件格式**: 确保为CSV/Excel格式
-- **检查文件大小**: 不超过100MB
-- **检查数据编码**: 使用UTF-8编码
+#### Data Upload Failure
+- **Check File Format**: Ensure CSV/Excel format
+- **Check File Size**: Not exceeding 100MB
+- **Check Data Encoding**: Use UTF-8 encoding
 
-#### ❌ 特征工程报错
-- **检查必需字段**: 确保包含必需的数据字段
-- **检查数据类型**: 数值字段应为数值类型
-- **检查缺失值**: 处理过多的缺失值
+#### Feature Engineering Error
+- **Check Required Fields**: Ensure required data fields are included
+- **Check Data Types**: Numeric fields should be numeric type
+- **Check Missing Values**: Handle excessive missing values
 
-#### ❌ 聚类分析失败
-- **检查数据量**: 确保数据量足够(>100条)
-- **检查特征质量**: 移除常数特征和异常值
-- **调整参数**: 尝试不同的聚类参数
+#### Clustering Analysis Failure
+- **Check Data Volume**: Ensure sufficient data volume (>100 records)
+- **Check Feature Quality**: Remove constant features and outliers
+- **Adjust Parameters**: Try different clustering parameters
 
-#### ❌ 模型训练失败
-- **检查标签质量**: 确保伪标签生成成功
-- **检查数据平衡**: 处理类别不平衡问题
-- **调整模型参数**: 使用更保守的参数设置
+#### Model Training Failure
+- **Check Label Quality**: Ensure pseudo label generation success
+- **Check Data Balance**: Handle class imbalance issues
+- **Adjust Model Parameters**: Use more conservative parameter settings
 
-### 🐛 调试技巧
+### Debugging Tips
 
-#### 📊 数据检查
+#### Data Inspection
 ```python
-# 检查数据基本信息
+# Check basic data information
 print(data.info())
 print(data.describe())
 print(data.isnull().sum())
 ```
 
-#### 🔍 日志查看
+#### Log Viewing
 ```bash
-# 查看Streamlit日志
+# View Streamlit logs
 streamlit run main.py --logger.level=debug
 ```
 
-#### 💾 缓存清理
+#### Cache Clearing
 ```bash
-# 清理Streamlit缓存
+# Clear Streamlit cache
 streamlit cache clear
 ```
 
-## 📚 扩展开发
+## Extension Development
 
-### 🔌 添加新的攻击类型
+### Adding New Attack Types
 ```python
-# 在 attack_classifier.py 中添加新的攻击模式
+# Add new attack patterns in attack_classifier.py
 def _define_attack_patterns(self):
     patterns = {
-        # 现有攻击类型...
+        # Existing attack types...
         'new_attack_type': {
-            'description': '新攻击类型描述',
-            'characteristics': ['特征1', '特征2'],
+            'description': 'New attack type description',
+            'characteristics': ['feature1', 'feature2'],
             'risk_level': 'HIGH',
             'detection_rules': {
                 'rule1': {'condition': 'value'},
@@ -577,71 +577,82 @@ def _define_attack_patterns(self):
     return patterns
 ```
 
-### 📊 添加新的可视化图表
+### Adding New Visualization Charts
 ```python
-# 在相应页面中添加新图表
+# Add new charts in corresponding pages
 import plotly.express as px
 
 fig = px.scatter(
     data, x='feature1', y='feature2',
-    color='risk_level', title='新的可视化图表'
+    color='risk_level', title='New Visualization Chart'
 )
 st.plotly_chart(fig, use_container_width=True)
 ```
 
-### 🤖 集成新的ML模型
+### Integrating New ML Models
 ```python
-# 在 ml_models/ 目录下创建新模型文件
+# Create new model file in ml_models/ directory
 class NewModel:
     def __init__(self):
         self.model = None
 
     def train(self, X, y):
-        # 训练逻辑
+        # Training logic
         pass
 
     def predict(self, X):
-        # 预测逻辑
+        # Prediction logic
         pass
 ```
 
-## 📝 开源协议
+## Open Source License
 
-本项目采用 MIT 开源协议，详见 [LICENSE](LICENSE) 文件。
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-## 🤝 贡献指南
+## Contributing
 
-欢迎贡献代码！请遵循以下步骤：
+Contributions are welcome! Please follow these steps:
 
-1. Fork 本项目
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 创建 Pull Request
+1. Fork the project
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Create a Pull Request
 
-### 📋 贡献规范
-- 遵循PEP 8代码规范
-- 添加适当的注释和文档
-- 编写单元测试
-- 更新相关文档
+### Contribution Guidelines
+- Follow PEP 8 coding standards
+- Add appropriate comments and documentation
+- Write unit tests
+- Update relevant documentation
 
-## 📞 技术支持
+## Project Development Team
 
-如有问题或建议，请通过以下方式联系：
+### Team Information
+- **Project Group**: capstone2-group22
+- **Team Members**:
+  - LILEI
+  - ZHOUXINGYU
+- **Contact Email**: 3171068715@qq.com
 
-- 📧 **邮箱**: support@example.com
-- 🐛 **问题反馈**: [GitHub Issues](https://github.com/your-repo/issues)
-- 📖 **项目文档**: [项目Wiki](https://github.com/your-repo/wiki)
-- 💬 **讨论区**: [GitHub Discussions](https://github.com/your-repo/discussions)
+### Development Contributions
+This project was developed as part of the capstone2-group22 team's collaborative effort to create an intelligent e-commerce fraud detection and risk assessment system. The team focused on implementing advanced machine learning techniques and creating a user-friendly interface for comprehensive risk analysis.
 
-### 🆘 获取帮助
-1. 查看本README文档
-2. 检查常见问题解答
-3. 搜索已有的Issues
-4. 创建新的Issue描述问题
+## Technical Support
+
+For questions or suggestions, please contact us through:
+
+- **Email**: 3171068715@qq.com
+- **Project Team**: capstone2-group22
+- **Team Members**: LILEI, ZHOUXINGYU
+
+### Getting Help
+1. Review this README documentation
+2. Check frequently asked questions
+3. Search existing issues
+4. Contact the development team via email
 
 ---
 
-**🎉 感谢使用电商用户行为风险评分系统！**
+**Thank you for using the E-commerce User Behavioral Risk Scoring System!**
 
-*让数据驱动风险管理，让AI守护交易安全！* 🛡️✨
+*Empowering data-driven risk management and AI-powered transaction security!*

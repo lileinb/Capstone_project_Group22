@@ -56,7 +56,7 @@ class FieldMapper:
             'transaction_hour': 'int64'
         }
         
-        # 字段分类
+        # Field categories
         self.field_categories = {
             'id_fields': ['transaction_id', 'customer_id'],
             'amount_fields': ['transaction_amount', 'quantity'],
@@ -68,27 +68,27 @@ class FieldMapper:
             'target_field': ['is_fraudulent'],
             'account_fields': ['account_age_days']
         }
-    
+
     def detect_format(self, data: pd.DataFrame) -> str:
-        """检测数据格式 (原始或清理后)"""
+        """Detect data format (original or cleaned)"""
         if 'Transaction Amount' in data.columns:
             return 'original'
         elif 'transaction_amount' in data.columns:
             return 'cleaned'
         else:
             return 'unknown'
-    
+
     def get_field_name(self, data: pd.DataFrame, original_name: str) -> Optional[str]:
-        """获取实际的字段名"""
+        """Get actual field name"""
         format_type = self.detect_format(data)
-        
+
         if format_type == 'original':
             return original_name if original_name in data.columns else None
         elif format_type == 'cleaned':
             cleaned_name = self.field_mapping.get(original_name)
             return cleaned_name if cleaned_name and cleaned_name in data.columns else None
         else:
-            # 尝试两种格式
+            # Try both formats
             if original_name in data.columns:
                 return original_name
             cleaned_name = self.field_mapping.get(original_name)
@@ -97,28 +97,28 @@ class FieldMapper:
             return None
     
     def get_all_field_names(self, data: pd.DataFrame) -> Dict[str, str]:
-        """获取所有字段的实际名称映射"""
+        """Get actual name mapping for all fields"""
         result = {}
         for original_name in self.field_mapping.keys():
             actual_name = self.get_field_name(data, original_name)
             if actual_name:
                 result[original_name] = actual_name
         return result
-    
+
     def validate_required_fields(self, data: pd.DataFrame, required_fields: List[str]) -> tuple[bool, List[str]]:
-        """验证必需字段是否存在"""
+        """Validate if required fields exist"""
         missing_fields = []
         for field in required_fields:
             if self.get_field_name(data, field) is None:
                 missing_fields.append(field)
-        
+
         return len(missing_fields) == 0, missing_fields
-    
+
     def get_field_by_category(self, data: pd.DataFrame, category: str) -> List[str]:
-        """根据分类获取字段名"""
+        """Get field names by category"""
         if category not in self.field_categories:
             return []
-        
+
         result = []
         for cleaned_name in self.field_categories[category]:
             original_name = self.reverse_mapping.get(cleaned_name)
@@ -127,15 +127,15 @@ class FieldMapper:
                 if actual_name:
                     result.append(actual_name)
         return result
-    
+
     def standardize_column_names(self, data: pd.DataFrame) -> pd.DataFrame:
-        """标准化列名为清理后格式"""
+        """Standardize column names to cleaned format"""
         df = data.copy()
-        
-        # 如果是原始格式，转换为清理后格式
+
+        # If original format, convert to cleaned format
         if self.detect_format(df) == 'original':
             df = df.rename(columns=self.field_mapping)
-        
+
         return df
     
     def get_data_info(self, data: pd.DataFrame) -> Dict:

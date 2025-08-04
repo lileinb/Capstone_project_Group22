@@ -555,7 +555,7 @@ class IndividualRiskPredictor:
                 f"Enhance monitoring for {high_count} high risk users"
             )
         
-        # 基于主要攻击类型生成建议
+        # Generate recommendations based on main attack types
         if attack_counts:
             main_attack = max(attack_counts.items(), key=lambda x: x[1])
             if main_attack[0] != 'none':
@@ -567,7 +567,7 @@ class IndividualRiskPredictor:
         return recommendations
     
     def _empty_result(self, error: str = None) -> Dict:
-        """返回空结果"""
+        """Return empty result"""
         return {
             'success': False,
             'error': error,

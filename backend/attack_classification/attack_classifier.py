@@ -201,19 +201,19 @@ class AttackClassifier:
             return self._empty_classification_result()
 
         try:
-            # 改进的攻击分类策略：
-            # 1. 优先使用风险评分（多样性更好）
-            # 2. 如果没有风险评分，使用聚类结果
-            # 3. 否则基于交易特征进行分类
+            # Improved attack classification strategy:
+            # 1. Prioritize risk scoring (better diversity)
+            # 2. If no risk scoring, use clustering results
+            # 3. Otherwise classify based on transaction features
 
             if risk_results and 'detailed_results' in risk_results:
-                logger.info("使用基于风险评分的攻击分类（优先选择）")
+                logger.info("Using risk score-based attack classification (preferred choice)")
                 return self._classify_attacks_by_risk(data, risk_results)
             elif cluster_results and 'cluster_details' in cluster_results:
-                logger.info("使用基于聚类的攻击分类")
+                logger.info("Using cluster-based attack classification")
                 return self._classify_attacks_by_clusters(data, cluster_results)
             else:
-                logger.info("使用基于特征的攻击分类")
+                logger.info("Using feature-based attack classification")
                 return self._classify_attacks_by_features(data)
 
             # Classify each fraud transaction
@@ -312,24 +312,24 @@ class AttackClassifier:
             return self._classify_attacks_by_features(data)
 
     def _determine_cluster_attack_type(self, cluster_detail: Dict) -> str:
-        """根据聚类特征智能确定攻击类型 - 优化分布均匀性"""
+        """Intelligently determine attack type based on cluster features - optimize distribution uniformity"""
         risk_level = cluster_detail.get('risk_level', 'low')
         fraud_rate = cluster_detail.get('fraud_rate', 0)
         avg_amount = cluster_detail.get('avg_transaction_amount', 0)
         size = cluster_detail.get('size', 0)
         cluster_id = cluster_detail.get('cluster_id', 0)
 
-        # 使用聚类ID来增加分布的多样性，确保不同聚类有不同的攻击类型倾向
+        # Use cluster ID to increase distribution diversity, ensuring different clusters have different attack type tendencies
         cluster_hash = hash(str(cluster_id)) % 100
 
         if risk_level == 'critical' or fraud_rate > 0.3:
-            # 极高风险聚类：3种主要攻击类型
+            # Very high risk clusters: 3 main attack types
             if cluster_hash < 35:
-                return 'account_takeover'  # 账户接管
+                return 'account_takeover'  # Account takeover
             elif cluster_hash < 65:
-                return 'synthetic_identity'  # 合成身份
+                return 'synthetic_identity'  # Synthetic identity
             else:
-                return 'bulk_fraud'  # 批量欺诈
+                return 'bulk_fraud'  # Bulk fraud
 
         elif risk_level == 'high' or fraud_rate > 0.15:
             # 高风险聚类：4种攻击类型
@@ -356,18 +356,18 @@ class AttackClassifier:
                 return 'bulk_fraud'  # 批量欺诈
 
         else:
-            # 低风险聚类：包含正常行为和轻微可疑
+            # Low risk clusters: contain normal behavior and slightly suspicious
             if cluster_hash < 30:
-                return 'normal_behavior'  # 正常行为
+                return 'normal_behavior'  # Normal behavior
             elif cluster_hash < 50:
-                return 'friendly_fraud'  # 友好欺诈
+                return 'friendly_fraud'  # Friendly fraud
             elif cluster_hash < 70:
-                return 'card_testing'  # 小额测试
+                return 'card_testing'  # Small amount testing
             else:
-                return 'velocity_attack'  # 低风险活跃
+                return 'velocity_attack'  # Low risk active
 
     def _classify_attacks_by_risk(self, data: pd.DataFrame, risk_results: Dict) -> Dict[str, Any]:
-        """基于风险评分进行攻击分类"""
+        """Classify attacks based on risk scoring"""
         try:
             detailed_results = risk_results.get('detailed_results', [])
 

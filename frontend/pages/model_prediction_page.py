@@ -52,7 +52,7 @@ def _check_prerequisites():
             st.info(f"   • {item}")
         st.info("🚀 **Current Mode**: Basic prediction (using engineered features only)")
 
-        # 显示可用的增强功能
+        # Display available enhancements
         with st.expander("🔧 Available Enhancements", expanded=False):
             if 'pseudo_labels' in st.session_state or 'high_quality_labels' in st.session_state:
                 st.success("✅ Pseudo labels available - Enhanced training enabled")
@@ -159,7 +159,7 @@ def _execute_individual_risk_prediction(engineered_data, clustering_results, use
                         critical_pct = stratification_stats.get('critical', {}).get('percentage', 0)
                         st.metric("Critical Risk Users", f"{critical_count} ({critical_pct:.1f}%)")
 
-                # 显示主要攻击类型
+                # Display main attack types
                 protection_recommendations = risk_results.get('protection_recommendations', {})
                 attack_distribution = protection_recommendations.get('attack_type_distribution', {})
 
@@ -237,7 +237,7 @@ ls backend/risk_scoring/
         numeric_features = len(engineered_data.select_dtypes(include=['number']).columns)
         st.metric("Numeric Features", f"{numeric_features}")
 
-    # 风险预测配置区域
+    # Risk prediction configuration area
     st.markdown("### ⚙️ Intelligent Risk Prediction Configuration")
 
     st.markdown("""
@@ -248,20 +248,20 @@ ls backend/risk_scoring/
     - **Protection Recommendations**: Provide targeted protection measures for different risk levels
     """)
 
-    # 预测配置
+    # Prediction configuration
     col1, col2 = st.columns(2)
 
     with col1:
         st.markdown("#### 📋 Prediction Settings")
 
-        # 是否使用聚类结果
+        # Whether to use clustering results
         use_clustering = st.checkbox(
             "Use clustering results to enhance prediction",
             value=clustering_results is not None,
             help="Based on clustering results can provide more accurate risk assessment"
         )
 
-        # 风险分层模式
+        # Risk stratification mode
         stratification_mode = st.selectbox(
             "Risk Stratification Mode",
             ["Standard Four-tier", "Custom Stratification"],
@@ -301,10 +301,10 @@ ls backend/risk_scoring/
         st.text("High Risk: ~12%")
         st.text("Critical Risk: ~3%")
 
-    # 执行风险预测
+    # Execute risk prediction
     st.markdown("---")
 
-    # 预测按钮
+    # Prediction button
     if st.button("🎯 Execute Intelligent Risk Prediction", type="primary", help="Perform individual analysis and attack type inference based on risk scoring"):
         _execute_individual_risk_prediction(engineered_data, clustering_results, use_clustering, risk_thresholds)
 
@@ -332,7 +332,7 @@ ls backend/risk_scoring/
             _display_basic_risk_results(st.session_state.individual_risk_results)
 
     else:
-        # 显示智能风险预测说明
+        # Display intelligent risk prediction description
         st.markdown("### 📝 Intelligent Risk Prediction Description")
 
         st.markdown("""
@@ -400,7 +400,7 @@ def _display_basic_risk_results(risk_results: Dict[str, Any]):
     with col2:
         st.metric("Processing Time", f"{processing_time:.2f}s")
 
-    # 显示风险分层统计
+    # Display risk stratification statistics
     stratification_stats = risk_results.get('stratification_stats', {})
     if stratification_stats:
         st.markdown("#### Risk Stratification Statistics")
@@ -409,7 +409,7 @@ def _display_basic_risk_results(risk_results: Dict[str, Any]):
             percentage = stats.get('percentage', 0)
             st.write(f"**{level} Risk**: {count} users ({percentage:.1f}%)")
 
-    # 显示攻击类型分布
+    # Display attack type distribution
     protection_recommendations = risk_results.get('protection_recommendations', {})
     attack_distribution = protection_recommendations.get('attack_type_distribution', {})
 

@@ -95,39 +95,39 @@ class FeatureSelector:
             ]
         }
     
-    def select_features(self, data: pd.DataFrame, 
+    def select_features(self, data: pd.DataFrame,
                        pseudo_labels: np.ndarray = None,
                        method: str = 'hybrid') -> List[str]:
         """
-        选择最重要的特征
-        
+        Select the most important features
+
         Args:
-            data: 特征数据
-            pseudo_labels: 伪标签（可选）
-            method: 选择方法 ('statistical', 'importance', 'hybrid')
-            
+            data: Feature data
+            pseudo_labels: Pseudo labels (optional)
+            method: Selection method ('statistical', 'importance', 'hybrid')
+
         Returns:
-            选择的特征列表
+            List of selected features
         """
         try:
-            logger.info(f"开始特征选择，原始特征数: {len(data.columns)}")
-            
-            # 1. 确保核心特征被包含
+            logger.info(f"Starting feature selection, original feature count: {len(data.columns)}")
+
+            # 1. Ensure core features are included
             available_core_features = [f for f in self.core_features if f in data.columns]
-            logger.info(f"可用核心特征: {len(available_core_features)}")
-            
-            # 2. 根据方法选择特征
+            logger.info(f"Available core features: {len(available_core_features)}")
+
+            # 2. Select features based on method
             if method == 'statistical':
                 selected_features = self._statistical_selection(data, pseudo_labels)
             elif method == 'importance':
                 selected_features = self._importance_based_selection(data, pseudo_labels)
             else:  # hybrid
                 selected_features = self._hybrid_selection(data, pseudo_labels)
-            
-            # 3. 确保核心特征被包含
+
+            # 3. Ensure core features are included
             final_features = list(set(available_core_features + selected_features))
-            
-            # 4. 如果特征数量超过目标，进行进一步筛选
+
+            # 4. If feature count exceeds target, perform further filtering
             if len(final_features) > self.target_features:
                 final_features = self._final_selection(data, final_features, pseudo_labels)
             
@@ -483,28 +483,28 @@ class FeatureSelector:
     
     def _hybrid_selection(self, data: pd.DataFrame,
                          pseudo_labels: np.ndarray = None) -> List[str]:
-        """混合方法特征选择"""
+        """Hybrid method feature selection"""
         try:
-            # 1. 统计方法选择
+            # 1. Statistical method selection
             statistical_features = self._statistical_selection(data, pseudo_labels)
-            
-            # 2. 重要性方法选择
+
+            # 2. Importance method selection
             importance_features = self._importance_based_selection(data, pseudo_labels)
-            
-            # 3. 业务规则选择
+
+            # 3. Business rule selection
             business_features = self._business_rule_selection(data)
-            
-            # 4. 合并并去重
+
+            # 4. Merge and deduplicate
             all_features = list(set(statistical_features + importance_features + business_features))
-            
-            # 5. 按重要性排序
+
+            # 5. Sort by importance
             if self.feature_importance_scores:
                 all_features.sort(key=lambda x: self.feature_importance_scores.get(x, 0), reverse=True)
-            
+
             return all_features
-            
+
         except Exception as e:
-            logger.error(f"混合特征选择失败: {e}")
+            logger.error(f"Hybrid feature selection failed: {e}")
             return self._business_rule_selection(data)
     
     def _business_rule_selection(self, data: pd.DataFrame) -> List[str]:

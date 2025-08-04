@@ -263,7 +263,7 @@ def _show_generation_config():
             help="Only retain labels with confidence above this threshold"
         )
     
-    # 策略说明
+    # Strategy descriptions
     strategy_descriptions = {
         'ensemble': """
         **🎯 Ensemble Strategy**
@@ -307,7 +307,7 @@ def _show_generation_config():
     
     if generate_labels:
         try:
-            # 获取工程化特征数据
+            # Get engineered feature data
             engineered_data = st.session_state.engineered_features
             if engineered_data is None or engineered_data.empty:
                 st.error("❌ Please complete feature engineering first!")

@@ -1,6 +1,6 @@
 """
-统一数据整合管道
-解决各模块间数据传递和重复计算问题
+Unified Data Integration Pipeline
+Solves data transfer and duplicate computation issues between modules
 """
 
 import pandas as pd
@@ -12,50 +12,50 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 class UnifiedDataPipeline:
-    """统一数据整合管道"""
-    
+    """Unified data integration pipeline"""
+
     def __init__(self):
-        """初始化管道"""
+        """Initialize pipeline"""
         self.integrated_data = None
         self.feature_mapping = {}
         self.data_sources = {}
         self.integration_log = []
         
-    def integrate_all_sources(self, 
+    def integrate_all_sources(self,
                             engineered_features: pd.DataFrame,
                             clustering_results: Optional[Dict] = None,
                             risk_scores: Optional[Dict] = None,
                             pseudo_labels: Optional[Dict] = None) -> Dict[str, Any]:
         """
-        整合所有数据源
-        
+        Integrate all data sources
+
         Args:
-            engineered_features: 特征工程结果
-            clustering_results: 聚类分析结果
-            risk_scores: 风险评分结果
-            pseudo_labels: 伪标签生成结果
-            
+            engineered_features: Feature engineering results
+            clustering_results: Clustering analysis results
+            risk_scores: Risk scoring results
+            pseudo_labels: Pseudo label generation results
+
         Returns:
-            整合后的数据集和元信息
+            Integrated dataset and metadata
         """
         try:
-            logger.info("🔄 开始统一数据整合")
+            logger.info("🔄 Starting unified data integration")
             start_time = datetime.now()
-            
-            # 1. 验证输入数据
+
+            # 1. Validate input data
             if not self._validate_inputs(engineered_features, clustering_results, risk_scores, pseudo_labels):
-                return self._empty_result("输入数据验证失败")
-            
-            # 2. 初始化基础数据
+                return self._empty_result("Input data validation failed")
+
+            # 2. Initialize base data
             integrated_df = engineered_features.copy()
             self.data_sources['engineered_features'] = len(engineered_features.columns)
-            
-            # 3. 整合聚类信息
+
+            # 3. Integrate clustering information
             if clustering_results:
                 integrated_df = self._integrate_clustering_data(integrated_df, clustering_results)
                 self.data_sources['clustering'] = True
-            
-            # 4. 整合风险评分信息
+
+            # 4. Integrate risk scoring information
             if risk_scores:
                 integrated_df = self._integrate_risk_scores(integrated_df, risk_scores)
                 self.data_sources['risk_scores'] = True
@@ -64,21 +64,21 @@ class UnifiedDataPipeline:
             if pseudo_labels:
                 integrated_df = self._integrate_pseudo_labels(integrated_df, pseudo_labels)
                 self.data_sources['pseudo_labels'] = True
-            
-            # 6. 创建增强特征
+
+            # 6. Create enhanced features
             integrated_df = self._create_enhanced_features(integrated_df)
-            
-            # 7. 数据质量检查
+
+            # 7. Data quality check
             quality_report = self._generate_quality_report(integrated_df)
-            
-            # 8. 保存结果
+
+            # 8. Save results
             self.integrated_data = integrated_df
-            
+
             processing_time = (datetime.now() - start_time).total_seconds()
-            
-            logger.info(f"✅ 数据整合完成，耗时: {processing_time:.2f}秒")
-            logger.info(f"📊 整合后数据: {len(integrated_df)} 行, {len(integrated_df.columns)} 列")
-            
+
+            logger.info(f"✅ Data integration completed, time taken: {processing_time:.2f} seconds")
+            logger.info(f"📊 Integrated data: {len(integrated_df)} rows, {len(integrated_df.columns)} columns")
+
             return {
                 'success': True,
                 'integrated_data': integrated_df,
@@ -88,10 +88,10 @@ class UnifiedDataPipeline:
                 'processing_time': processing_time,
                 'integration_log': self.integration_log
             }
-            
+
         except Exception as e:
-            logger.error(f"❌ 数据整合失败: {e}")
-            return self._empty_result(f"整合失败: {str(e)}")
+            logger.error(f"❌ Data integration failed: {e}")
+            return self._empty_result(f"Integration failed: {str(e)}")
     
     def _validate_inputs(self, engineered_features, clustering_results, risk_scores, pseudo_labels) -> bool:
         """验证输入数据"""
@@ -322,11 +322,11 @@ class UnifiedDataPipeline:
             return df
 
         except Exception as e:
-            logger.error(f"增强特征创建失败: {e}")
+            logger.error(f"Enhanced feature creation failed: {e}")
             return df
 
     def _generate_quality_report(self, df: pd.DataFrame) -> Dict[str, Any]:
-        """生成数据质量报告"""
+        """Generate data quality report"""
         try:
             report = {
                 'total_samples': len(df),
@@ -336,13 +336,13 @@ class UnifiedDataPipeline:
                 'feature_statistics': {}
             }
 
-            # 按来源统计特征
+            # Count features by source
             for feature, source in self.feature_mapping.items():
                 if source not in report['feature_sources']:
                     report['feature_sources'][source] = 0
                 report['feature_sources'][source] += 1
 
-            # 数据完整性检查
+            # Data completeness check
             for column in df.columns:
                 missing_count = df[column].isnull().sum()
                 report['data_completeness'][column] = {
@@ -350,7 +350,7 @@ class UnifiedDataPipeline:
                     'missing_rate': float(missing_count / len(df))
                 }
 
-            # 关键特征统计
+            # Key feature statistics
             key_features = ['risk_score', 'pseudo_confidence', 'cluster_fraud_rate', 'composite_risk_score']
             for feature in key_features:
                 if feature in df.columns:
@@ -364,11 +364,11 @@ class UnifiedDataPipeline:
             return report
 
         except Exception as e:
-            logger.error(f"质量报告生成失败: {e}")
+            logger.error(f"Quality report generation failed: {e}")
             return {'error': str(e)}
 
     def _empty_result(self, error_message: str) -> Dict[str, Any]:
-        """返回空结果"""
+        """Return empty result"""
         return {
             'success': False,
             'error': error_message,

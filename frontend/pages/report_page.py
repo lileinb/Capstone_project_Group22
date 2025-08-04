@@ -335,7 +335,7 @@ def show():
                 'Fraud Rate': data_info['fraud_rate']
             })
         
-        # 聚类分析
+        # Clustering analysis
         if 'clustering_results' in report_data:
             clustering_results = report_data['clustering_results']
             analysis_summary.append({
@@ -346,7 +346,7 @@ def show():
                 'Record Count': len(st.session_state.cluster_labels) if 'cluster_labels' in st.session_state else 'N/A'
             })
 
-        # 风险评分分析
+        # Risk scoring analysis
         if 'risk_analysis' in report_data:
             risk_analysis = report_data['risk_analysis']
             analysis_summary.append({
@@ -357,7 +357,7 @@ def show():
                 'Lowest Score': f"{risk_analysis['score_stats']['min']:.2f}"
             })
 
-        # 模型性能分析
+        # Model performance analysis
         if 'model_performance' in report_data:
             model_performance = report_data['model_performance']
             if model_performance:
@@ -371,11 +371,11 @@ def show():
                     'Average Accuracy': f"{np.mean([p.get('accuracy', 0) for p in model_performance.values()]):.3f}"
                 })
         
-        # 攻击分析
+        # Attack analysis
         if 'attack_analysis' in report_data:
             attack_analysis = report_data['attack_analysis']
 
-            # 安全地获取置信度数据
+            # Safely get confidence data
             try:
                 if 'attack_results' in st.session_state and st.session_state.attack_results:
                     attack_results = st.session_state.attack_results
@@ -396,13 +396,24 @@ def show():
             except Exception:
                 avg_confidence = 0
 
-            analysis_summary.append({
-                'Analysis Item': 'Attack Detection',
-                'Detected Attacks': attack_analysis.get('total_attacks', 0),
-                'Attack Types': len(attack_analysis.get('attack_types', {})),
-                'High Risk Rate': f"{attack_analysis.get('severity_distribution', {}).get('high', 0) / max(attack_analysis.get('total_attacks', 1), 1) * 100:.2f}%",
-                'Average Confidence': f"{avg_confidence:.3f}"
-            })
+            # Safely access attack_analysis data
+            if attack_analysis and isinstance(attack_analysis, dict):
+                analysis_summary.append({
+                    'Analysis Item': 'Attack Detection',
+                    'Detected Attacks': attack_analysis.get('total_attacks', 0),
+                    'Attack Types': len(attack_analysis.get('attack_types', {})),
+                    'High Risk Rate': f"{attack_analysis.get('severity_distribution', {}).get('high', 0) / max(attack_analysis.get('total_attacks', 1), 1) * 100:.2f}%",
+                    'Average Confidence': f"{avg_confidence:.3f}"
+                })
+            else:
+                # Add placeholder when attack analysis is not available or invalid
+                analysis_summary.append({
+                    'Analysis Item': 'Attack Detection',
+                    'Detected Attacks': 'Not Available',
+                    'Attack Types': 'Not Available',
+                    'High Risk Rate': 'Not Available',
+                    'Average Confidence': 'Not Available'
+                })
         
         # Show comprehensive analysis table
         if analysis_summary:
@@ -487,7 +498,7 @@ def show():
                     except Exception as e:
                         st.error(f"❌ HTML report generation failed: {str(e)}")
         
-        # 报告完成
+        # Report completion
         st.markdown("---")
         st.success("🎉 Congratulations! You have completed the entire e-commerce fraud risk prediction system analysis process!")
         st.markdown("""

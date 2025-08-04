@@ -100,21 +100,21 @@ def show():
         account_weight = st.slider("Account Weight", 0.1, 2.0, 1.0, 0.1, help="Weight for account-related features")
         account_age_threshold = st.slider("Account Age Threshold", 30, 365, 90, help="New account age threshold (days)")
     
-    # 执行特征工程
+    # Execute feature engineering
     if st.button("🚀 Execute Feature Engineering", type="primary", help="Generate risk features based on current parameters"):
         try:
             with st.spinner("Generating risk features..."):
-                # 创建特征工程器
+                # Create feature engineer
                 feature_engineer = RiskFeatureEngineer()
 
-                # 生成特征
+                # Generate features
                 engineered_data = feature_engineer.engineer_all_features(cleaned_data)
 
-                # 计算特征重要性
+                # Calculate feature importance
                 if 'is_fraudulent' in engineered_data.columns:
                     feature_importance = feature_engineer.calculate_feature_importance(engineered_data)
 
-                # 保存结果
+                # Save results
                 st.session_state.engineered_features = engineered_data
                 st.session_state.feature_info = feature_engineer.get_feature_info()
 
@@ -186,14 +186,14 @@ def show():
                 )
                 st.plotly_chart(fig, use_container_width=True, key="correlation_heatmap")
 
-            # 高风险特征分析
+            # High risk feature analysis
             if 'is_fraudulent' in engineered_data.columns:
                 st.markdown("**High Risk Feature Analysis**")
 
-                # 计算与欺诈标签的相关性
+                # Calculate correlation with fraud labels
                 fraud_corr = engineered_data[numeric_cols].corrwith(engineered_data['is_fraudulent']).abs().sort_values(ascending=False)
 
-                # 显示前10个最相关的特征
+                # Display top 10 most correlated features
                 top_features = fraud_corr.head(10)
 
                 fig = px.bar(
@@ -277,7 +277,7 @@ def show():
                 st.info("💡 Please select '📊 Clustering Analysis' page from the sidebar to continue")
 
     else:
-        # 显示特征工程说明
+        # Display feature engineering description
         st.markdown("### 📝 Feature Engineering Description")
 
         st.markdown("""

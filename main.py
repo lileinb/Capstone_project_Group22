@@ -111,14 +111,14 @@ st.markdown("""
 st.sidebar.markdown("## 🛡️ Behavioral Feature-Based E-commerce User Big Data Driven Risk Scoring Model System")
 st.sidebar.markdown("---")
 
-# 侧边栏工作流程状态
+# Sidebar workflow status
 try:
     from frontend.components.workflow_status import show_compact_workflow_status
     with st.sidebar:
         show_compact_workflow_status()
         st.markdown("---")
 except ImportError:
-    pass  # 如果组件不可用，跳过
+    pass  # Skip if component is not available
 
 # Page selection
 page = st.sidebar.selectbox(
@@ -142,7 +142,7 @@ page = st.sidebar.selectbox(
 if page == "🏠 Home":
     st.markdown('<div class="main-header">🛡️ Behavioral Feature-Based E-commerce User Big Data Driven Risk Scoring Model System</div>', unsafe_allow_html=True)
 
-    # 工作流程状态
+    # Workflow status
     try:
         from frontend.components.workflow_status import show_workflow_progress, show_next_steps, show_workflow_dependencies
         show_workflow_progress()
@@ -150,7 +150,7 @@ if page == "🏠 Home":
         show_workflow_dependencies()
         st.markdown("---")
     except ImportError:
-        pass  # 如果组件不可用，跳过
+        pass  # Skip if component is not available
 
     # System overview
     col1, col2 = st.columns(2)

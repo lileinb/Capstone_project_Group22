@@ -1,7 +1,7 @@
 """
-数据清理器
-基于真实电商欺诈数据集的清理和预处理
-处理16个标准字段的数据质量问题
+Data Cleaner
+Data cleaning and preprocessing based on real e-commerce fraud datasets
+Handles data quality issues for 16 standard fields
 """
 
 import pandas as pd
@@ -11,19 +11,19 @@ import logging
 from datetime import datetime, timedelta
 import re
 
-# 配置日志
+# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class DataCleaner:
-    """基于真实数据集的数据清理器"""
+    """Data cleaner based on real datasets"""
 
     def __init__(self):
         self.cleaning_log = []
         self.original_shape = None
         self.cleaned_shape = None
 
-        # 标准字段映射（原始名称 -> 清理后名称）
+        # Standard field mapping (original name -> cleaned name)
         self.column_mapping = {
             'Transaction ID': 'transaction_id',
             'Customer ID': 'customer_id',
@@ -43,7 +43,7 @@ class DataCleaner:
             'Transaction Hour': 'transaction_hour'
         }
 
-        # 数据类型映射
+        # Data type mapping
         self.dtype_mapping = {
             'transaction_id': 'object',
             'customer_id': 'object',
@@ -65,66 +65,66 @@ class DataCleaner:
 
     def clean_data(self, data: pd.DataFrame) -> pd.DataFrame:
         """
-        完整的数据清理流程
+        Complete data cleaning process
 
         Args:
-            data: 原始DataFrame
+            data: Raw DataFrame
 
         Returns:
-            清洗后的DataFrame
+            Cleaned DataFrame
         """
         if data is None or data.empty:
-            logger.error("输入数据为空")
+            logger.error("Input data is empty")
             return pd.DataFrame()
 
         self.original_shape = data.shape
         self.cleaning_log = []
 
-        logger.info(f"开始数据清理，原始数据形状: {self.original_shape}")
+        logger.info(f"Starting data cleaning, original data shape: {self.original_shape}")
 
         df = data.copy()
 
-        # 1. 标准化列名
+        # 1. Standardize column names
         df = self._standardize_column_names(df)
 
-        # 2. 处理重复数据
+        # 2. Handle duplicate data
         df = self._handle_duplicates(df)
 
-        # 3. 处理缺失值
+        # 3. Handle missing values
         df = self._handle_missing_values(df)
 
-        # 4. 数据类型转换
+        # 4. Data type conversion
         df = self._convert_data_types(df)
 
-        # 5. 处理异常值
+        # 5. Handle outliers
         df = self._handle_outliers(df)
 
-        # 6. 数据验证
+        # 6. Data validation
         df = self._validate_cleaned_data(df)
 
         self.cleaned_shape = df.shape
-        logger.info(f"数据清理完成，清理后数据形状: {self.cleaned_shape}")
-        logger.info(f"清理日志: {self.cleaning_log}")
+        logger.info(f"Data cleaning completed, cleaned data shape: {self.cleaned_shape}")
+        logger.info(f"Cleaning log: {self.cleaning_log}")
 
         return df
 
     def _standardize_column_names(self, df: pd.DataFrame) -> pd.DataFrame:
-        """标准化列名"""
-        # 使用映射表重命名列
+        """Standardize column names"""
+        # Rename columns using mapping table
         df_renamed = df.rename(columns=self.column_mapping)
 
-        # 记录重命名的列
+        # Record renamed columns
         renamed_cols = [col for col in df.columns if col in self.column_mapping]
         if renamed_cols:
-            self.cleaning_log.append(f"重命名列: {renamed_cols}")
+            self.cleaning_log.append(f"Renamed columns: {renamed_cols}")
 
         return df_renamed
 
     def _handle_duplicates(self, df: pd.DataFrame) -> pd.DataFrame:
-        """处理重复数据"""
+        """Handle duplicate data"""
         initial_count = len(df)
 
-        # 基于transaction_id去重（如果存在）
+        # Remove duplicates based on transaction_id (if exists)
         if 'transaction_id' in df.columns:
             df = df.drop_duplicates(subset=['transaction_id'], keep='first')
         else:
@@ -132,97 +132,97 @@ class DataCleaner:
 
         removed_count = initial_count - len(df)
         if removed_count > 0:
-            self.cleaning_log.append(f"删除重复行: {removed_count}条")
+            self.cleaning_log.append(f"Removed duplicate rows: {removed_count} records")
 
         return df
 
     def _handle_missing_values(self, df: pd.DataFrame) -> pd.DataFrame:
-        """处理缺失值"""
+        """Handle missing values"""
         missing_info = df.isnull().sum()
         missing_cols = missing_info[missing_info > 0]
 
         if len(missing_cols) > 0:
-            self.cleaning_log.append(f"发现缺失值: {missing_cols.to_dict()}")
+            self.cleaning_log.append(f"Found missing values: {missing_cols.to_dict()}")
 
-            # 对于关键字段，删除缺失值的行
+            # For critical fields, remove rows with missing values
             critical_fields = ['transaction_id', 'customer_id', 'transaction_amount', 'is_fraudulent']
             for field in critical_fields:
                 if field in df.columns and df[field].isnull().any():
                     before_count = len(df)
                     df = df.dropna(subset=[field])
                     after_count = len(df)
-                    self.cleaning_log.append(f"删除{field}缺失的行: {before_count - after_count}条")
+                    self.cleaning_log.append(f"Removed rows with missing {field}: {before_count - after_count} records")
 
-            # 对于非关键字段，使用合理的默认值填充
+            # For non-critical fields, use reasonable default values for filling
             for col in df.columns:
                 if df[col].isnull().any():
                     if col in ['customer_age']:
-                        # 年龄用中位数填充
+                        # Fill age with median
                         median_age = df[col].median()
                         df[col] = df[col].fillna(median_age)
-                        self.cleaning_log.append(f"{col}用中位数{median_age}填充缺失值")
+                        self.cleaning_log.append(f"Filled {col} missing values with median {median_age}")
                     elif col in ['account_age_days']:
-                        # 账户年龄用平均值填充
+                        # Fill account age with mean
                         mean_days = df[col].mean()
                         df[col] = df[col].fillna(mean_days)
-                        self.cleaning_log.append(f"{col}用平均值{mean_days:.0f}填充缺失值")
+                        self.cleaning_log.append(f"Filled {col} missing values with mean {mean_days:.0f}")
                     elif df[col].dtype == 'object':
-                        # 文本字段用"unknown"填充
+                        # Fill text fields with "unknown"
                         df[col] = df[col].fillna('unknown')
-                        self.cleaning_log.append(f"{col}用'unknown'填充缺失值")
+                        self.cleaning_log.append(f"Filled {col} missing values with 'unknown'")
                     else:
-                        # 数值字段用0填充
+                        # Fill numeric fields with 0
                         df[col] = df[col].fillna(0)
-                        self.cleaning_log.append(f"{col}用0填充缺失值")
+                        self.cleaning_log.append(f"Filled {col} missing values with 0")
 
         return df
 
     def _convert_data_types(self, df: pd.DataFrame) -> pd.DataFrame:
-        """转换数据类型"""
+        """Convert data types"""
         for col, target_dtype in self.dtype_mapping.items():
             if col in df.columns:
                 try:
                     if target_dtype == 'category':
                         df[col] = df[col].astype('category')
                     elif target_dtype == 'int64':
-                        # 确保没有小数点，然后转换为整数
+                        # Ensure no decimal points, then convert to integer
                         df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype('int64')
                     elif target_dtype == 'float64':
                         df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0.0)
                     elif target_dtype == 'object':
                         df[col] = df[col].astype('object')
 
-                    self.cleaning_log.append(f"转换{col}为{target_dtype}类型")
+                    self.cleaning_log.append(f"Converted {col} to {target_dtype} type")
                 except Exception as e:
-                    logger.warning(f"转换{col}类型失败: {e}")
+                    logger.warning(f"Failed to convert {col} type: {e}")
 
         return df
 
     def _handle_outliers(self, df: pd.DataFrame) -> pd.DataFrame:
-        """处理异常值"""
-        # 处理客户年龄异常值
+        """Handle outliers"""
+        # Handle customer age outliers
         if 'customer_age' in df.columns:
-            # 年龄应该在合理范围内
+            # Age should be within reasonable range
             before_count = len(df)
             df = df[(df['customer_age'] >= 0) & (df['customer_age'] <= 100)]
             after_count = len(df)
             if before_count != after_count:
-                self.cleaning_log.append(f"删除异常年龄记录: {before_count - after_count}条")
+                self.cleaning_log.append(f"Removed abnormal age records: {before_count - after_count} records")
 
-        # 处理交易金额异常值
+        # Handle transaction amount outliers
         if 'transaction_amount' in df.columns:
-            # 删除负数金额
+            # Remove negative amounts
             before_count = len(df)
             df = df[df['transaction_amount'] > 0]
             after_count = len(df)
             if before_count != after_count:
-                self.cleaning_log.append(f"删除负数金额记录: {before_count - after_count}条")
+                self.cleaning_log.append(f"Removed negative amount records: {before_count - after_count} records")
 
-            # 处理极端异常值（使用IQR方法）
+            # Handle extreme outliers (using IQR method)
             Q1 = df['transaction_amount'].quantile(0.25)
             Q3 = df['transaction_amount'].quantile(0.75)
             IQR = Q3 - Q1
-            lower_bound = Q1 - 3 * IQR  # 使用3倍IQR作为极端异常值阈值
+            lower_bound = Q1 - 3 * IQR  # Use 3x IQR as extreme outlier threshold
             upper_bound = Q3 + 3 * IQR
 
             before_count = len(df)
@@ -230,39 +230,39 @@ class DataCleaner:
                    (df['transaction_amount'] <= upper_bound)]
             after_count = len(df)
             if before_count != after_count:
-                self.cleaning_log.append(f"删除极端金额异常值: {before_count - after_count}条")
+                self.cleaning_log.append(f"Removed extreme amount outliers: {before_count - after_count} records")
 
-        # 处理数量异常值
+        # Handle quantity outliers
         if 'quantity' in df.columns:
             before_count = len(df)
             df = df[(df['quantity'] >= 1) & (df['quantity'] <= 10)]
             after_count = len(df)
             if before_count != after_count:
-                self.cleaning_log.append(f"删除异常数量记录: {before_count - after_count}条")
+                self.cleaning_log.append(f"Removed abnormal quantity records: {before_count - after_count} records")
 
         return df
 
     def _validate_cleaned_data(self, df: pd.DataFrame) -> pd.DataFrame:
-        """验证清理后的数据"""
-        # 检查关键字段是否存在
+        """Validate cleaned data"""
+        # Check if critical fields exist
         required_fields = ['transaction_id', 'customer_id', 'transaction_amount', 'is_fraudulent']
         missing_required = [field for field in required_fields if field not in df.columns]
         if missing_required:
-            logger.warning(f"清理后仍缺少关键字段: {missing_required}")
+            logger.warning(f"Still missing critical fields after cleaning: {missing_required}")
 
-        # 检查数据完整性
+        # Check data integrity
         if len(df) == 0:
-            logger.error("清理后数据为空")
+            logger.error("Data is empty after cleaning")
         else:
-            # 检查欺诈标签分布
+            # Check fraud label distribution
             if 'is_fraudulent' in df.columns:
                 fraud_rate = df['is_fraudulent'].mean()
-                self.cleaning_log.append(f"欺诈率: {fraud_rate:.3f}")
+                self.cleaning_log.append(f"Fraud rate: {fraud_rate:.3f}")
 
         return df
 
     def get_cleaning_summary(self) -> Dict:
-        """获取清理摘要"""
+        """Get cleaning summary"""
         return {
             'original_shape': self.original_shape,
             'cleaned_shape': self.cleaned_shape,

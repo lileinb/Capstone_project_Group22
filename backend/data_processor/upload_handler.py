@@ -39,36 +39,36 @@ class DataUploadHandler:
         return file.size <= self.max_file_size
     
     def load_csv_data(self, file) -> Optional[pd.DataFrame]:
-        """加载CSV数据"""
+        """Load CSV data"""
         try:
             if file is None:
                 return None
-                
-            # 尝试不同的编码方式
+
+            # Try different encoding methods
             encodings = ['utf-8', 'gbk', 'gb2312', 'latin1']
             data = None
-            
+
             for encoding in encodings:
                 try:
-                    file.seek(0)  # 重置文件指针
+                    file.seek(0)  # Reset file pointer
                     data = pd.read_csv(file, encoding=encoding)
-                    logger.info(f"成功使用 {encoding} 编码读取文件")
+                    logger.info(f"Successfully read file using {encoding} encoding")
                     break
                 except UnicodeDecodeError:
                     continue
                 except Exception as e:
-                    logger.error(f"使用 {encoding} 编码读取失败: {e}")
+                    logger.error(f"Failed to read using {encoding} encoding: {e}")
                     continue
-            
+
             if data is None:
-                st.error("无法读取文件，请检查文件格式和编码")
+                st.error("Unable to read file, please check file format and encoding")
                 return None
-                
+
             return data
-            
+
         except Exception as e:
-            logger.error(f"加载数据时发生错误: {e}")
-            st.error(f"加载数据时发生错误: {e}")
+            logger.error(f"Error occurred while loading data: {e}")
+            st.error(f"Error occurred while loading data: {e}")
             return None
     
     def get_data_info(self, data: pd.DataFrame) -> Dict[str, Any]:
@@ -91,11 +91,11 @@ class DataUploadHandler:
         return info
     
     def validate_data_structure(self, data: pd.DataFrame) -> Tuple[bool, str]:
-        """验证数据结构 - 检查是否符合系统支持的数据集格式"""
+        """Validate data structure - check if it matches the system-supported dataset format"""
         if data is None or data.empty:
-            return False, "数据为空"
+            return False, "Data is empty"
 
-        # 系统支持的标准字段 (基于现有数据集)
+        # System-supported standard fields (based on existing datasets)
         standard_columns = [
             'Transaction ID', 'Customer ID', 'Transaction Amount', 'Transaction Date',
             'Payment Method', 'Product Category', 'Quantity', 'Customer Age',
@@ -104,14 +104,14 @@ class DataUploadHandler:
             'Account Age Days', 'Transaction Hour'
         ]
 
-        # 检查是否包含核心字段 (至少包含80%的标准字段)
+        # Check if core fields are included (at least 80% of standard fields)
         matching_columns = [col for col in standard_columns if col in data.columns]
         match_ratio = len(matching_columns) / len(standard_columns)
 
         if match_ratio < 0.8:
-            return False, f"数据格式不匹配。当前匹配度: {match_ratio:.1%}。请确保数据集包含以下字段: {standard_columns}"
+            return False, f"Data format mismatch. Current match ratio: {match_ratio:.1%}. Please ensure dataset contains the following fields: {standard_columns}"
 
-        return True, f"数据结构验证通过，字段匹配度: {match_ratio:.1%}"
+        return True, f"Data structure validation passed, field match ratio: {match_ratio:.1%}"
     
     def upload_data(self, file) -> Tuple[bool, str, Optional[pd.DataFrame]]:
         """Main function for uploading data"""

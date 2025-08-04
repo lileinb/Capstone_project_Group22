@@ -54,7 +54,7 @@ def show():
     if st.session_state.uploaded_data is not None:
         st.markdown("### 📊 Data Quality Check")
 
-        # 数据基本信息
+        # Basic data information
         data = st.session_state.uploaded_data
         info = st.session_state.data_info
 
@@ -73,10 +73,10 @@ def show():
         with col4:
             st.metric("Duplicate Rows", f"{info['duplicate_rows']:,}")
 
-        # 数据质量报告
+        # Data quality report
         st.markdown("#### 📋 Data Quality Report")
 
-        # 缺失值分析
+        # Missing value analysis
         if missing_count > 0:
             st.markdown("**Missing Value Analysis**")
             missing_df = pd.DataFrame(list(info['missing_values'].items()),
@@ -89,18 +89,18 @@ def show():
                         color_continuous_scale='Reds')
             st.plotly_chart(fig, use_container_width=True, key="missing_values_bar")
 
-        # 数据类型分布
+        # Data type distribution
         st.markdown("**Data Type Distribution**")
         type_counts = pd.Series(info['data_types']).value_counts()
         fig = px.pie(values=type_counts.values, names=type_counts.index,
                     title="Data Type Distribution")
         st.plotly_chart(fig, use_container_width=True, key="data_types_pie")
 
-        # 数据预览
+        # Data preview
         st.markdown("#### 📋 Data Preview")
         st.dataframe(data.head(10), use_container_width=True)
-        
-        # 数据清理
+
+        # Data cleaning
         st.markdown("### 🔧 Data Cleaning")
 
         if st.button("🧹 Execute Data Cleaning", help="Automatically clean missing values, duplicates, etc. in data"):
@@ -109,7 +109,7 @@ def show():
                 cleaned_data = data_cleaner.clean_data(data)
                 st.session_state.cleaned_data = cleaned_data
 
-                # 清理结果对比
+                # Cleaning results comparison
                 original_shape = data.shape
                 cleaned_shape = cleaned_data.shape
 
@@ -130,19 +130,19 @@ def show():
             except Exception as e:
                 st.error(f"❌ Data cleaning failed: {e}")
         
-        # 清理后的数据统计
+        # Cleaned data statistics
         if st.session_state.cleaned_data is not None:
             st.markdown("#### 📊 Cleaned Data Statistics")
 
             cleaned_data = st.session_state.cleaned_data
 
-            # 数值特征统计
+            # Numerical feature statistics
             numeric_cols = cleaned_data.select_dtypes(include=['number']).columns
             if len(numeric_cols) > 0:
                 st.markdown("**Numerical Feature Statistics**")
                 st.dataframe(cleaned_data[numeric_cols].describe(), use_container_width=True)
 
-                # 数值特征分布图
+                # Numerical feature distribution plots
                 if len(numeric_cols) > 0:
                     st.markdown("**Numerical Feature Distribution**")
                     selected_numeric = st.selectbox("Select feature to view distribution", numeric_cols, key="upload_numeric_select")
@@ -152,7 +152,7 @@ def show():
                                      nbins=50)
                     st.plotly_chart(fig, use_container_width=True, key="numeric_distribution_hist")
 
-            # 分类特征统计
+            # Categorical feature statistics
             categorical_cols = cleaned_data.select_dtypes(include=['object']).columns
             if len(categorical_cols) > 0:
                 st.markdown("**Categorical Feature Statistics**")
@@ -163,8 +163,8 @@ def show():
                            title=f"{selected_categorical} Value Distribution",
                            labels={'x': selected_categorical, 'y': 'Frequency'})
                 st.plotly_chart(fig, use_container_width=True, key="categorical_distribution_bar")
-        
-        # 下一步按钮
+
+        # Next step button
         if st.session_state.cleaned_data is not None:
             st.markdown("---")
             col1, col2, col3 = st.columns([1, 1, 1])
@@ -175,7 +175,7 @@ def show():
                     st.info("💡 Please select '🔧 Feature Engineering' page from the sidebar to continue")
 
     else:
-        # 显示上传说明
+        # Display upload instructions
         st.markdown("### 📝 Upload Instructions")
 
         st.markdown("""

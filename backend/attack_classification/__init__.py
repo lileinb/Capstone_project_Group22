@@ -1,6 +1,6 @@
 """
-攻击类型分类模块
-提供欺诈攻击类型识别和分类功能
+Attack Classification Module
+Provides fraud attack type identification and classification functions
 """
 
 from .attack_classifier import AttackClassifier

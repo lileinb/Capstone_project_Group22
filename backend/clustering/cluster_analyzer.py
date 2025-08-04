@@ -1,8 +1,8 @@
 """
-聚类分析器
-基于真实数据集特征的聚类分析
-支持K-means、DBSCAN、高斯混合聚类
-用于识别异常交易模式和用户行为群体
+Clustering Analyzer
+Clustering analysis based on real dataset features
+Supports K-means, DBSCAN, Gaussian Mixture clustering
+Used to identify abnormal transaction patterns and user behavior groups
 """
 import pandas as pd
 import numpy as np
@@ -16,7 +16,7 @@ import logging
 from .cluster_risk_mapper import ClusterRiskMapper
 from .intelligent_cluster_optimizer import IntelligentClusterOptimizer
 
-# 导入配置管理
+# Import configuration management
 try:
     from config.optimization_config import optimization_config
     CONFIG_AVAILABLE = True
@@ -28,34 +28,34 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class ClusterAnalyzer:
-    """基于真实数据集的聚类分析器"""
+    """Clustering analyzer based on real datasets"""
 
     def __init__(self, n_clusters: int = 5, random_state: int = 42):
         self.n_clusters = n_clusters
         self.random_state = random_state
         self.scaler = StandardScaler()
         self.pca = None
-        self.risk_mapper = ClusterRiskMapper()  # 风险映射器
-        self.intelligent_optimizer = IntelligentClusterOptimizer()  # 智能优化器
+        self.risk_mapper = ClusterRiskMapper()  # Risk mapper
+        self.intelligent_optimizer = IntelligentClusterOptimizer()  # Intelligent optimizer
 
-        # 加载配置
+        # Load configuration
         self.config = self._load_clustering_config()
 
-        # 用于聚类的关键特征 - 优化版本，使用更有区分度的特征
+        # Key features for clustering - optimized version, using more discriminative features
         self.clustering_features = [
-            # 原始基础特征
+            # Original basic features
             'transaction_amount', 'quantity', 'customer_age', 'account_age_days', 'transaction_hour',
-            # 工程特征 - 金额相关
+            # Engineering features - amount related
             'amount_zscore', 'amount_percentile', 'is_large_amount', 'amount_risk_score',
-            # 工程特征 - 时间相关
+            # Engineering features - time related
             'time_risk_score', 'is_night_transaction', 'is_early_morning',
-            # 工程特征 - 账户相关
+            # Engineering features - account related
             'is_new_account', 'account_age_risk_score', 'is_frequent_user',
-            # 工程特征 - 复合风险
+            # Engineering features - composite risk
             'composite_risk_score', 'anomaly_score'
         ]
 
-        # 备用基础特征（如果工程特征不可用）
+        # Fallback basic features (if engineering features are not available)
         self.fallback_features = [
             'transaction_amount', 'quantity', 'customer_age', 'account_age_days', 'transaction_hour'
         ]
@@ -69,29 +69,29 @@ class ClusterAnalyzer:
 
     def analyze_clusters(self, data: pd.DataFrame, algorithm: str = 'auto') -> Dict[str, Any]:
         """
-        基于真实数据集进行聚类分析
+        Perform clustering analysis based on real dataset
 
         Args:
-            data: 清理后的DataFrame
-            algorithm: 聚类算法 ('kmeans', 'dbscan', 'gaussian_mixture')
+            data: Cleaned DataFrame
+            algorithm: Clustering algorithm ('kmeans', 'dbscan', 'gaussian_mixture')
 
         Returns:
-            聚类分析结果字典
+            Clustering analysis result dictionary
         """
         if data is None or data.empty:
-            logger.error("输入数据为空")
+            logger.error("Input data is empty")
             return self._empty_result()
 
         try:
-            # 准备聚类特征
+            # Prepare clustering features
             cluster_data = self._prepare_clustering_data(data)
             if cluster_data is None or cluster_data.empty:
-                logger.error("无法准备聚类数据")
+                logger.error("Unable to prepare clustering data")
                 return self._empty_result()
 
-            # 执行聚类 - 优化版本
+            # Execute clustering - optimized version
             if algorithm == 'auto':
-                # 智能选择最佳算法
+                # Intelligently select best algorithm
                 results = self._auto_select_best_algorithm(cluster_data, data)
             elif algorithm == 'kmeans':
                 results = self._kmeans_clustering(cluster_data, data)
@@ -100,19 +100,19 @@ class ClusterAnalyzer:
             elif algorithm == 'gaussian_mixture':
                 results = self._gaussian_mixture_clustering(cluster_data, data)
             else:
-                logger.warning(f"不支持的聚类算法: {algorithm}，使用智能选择")
+                logger.warning(f"Unsupported clustering algorithm: {algorithm}, using intelligent selection")
                 results = self._auto_select_best_algorithm(cluster_data, data)
 
-            # 添加聚类质量评估
+            # Add clustering quality evaluation
             if len(set(results['cluster_labels'])) > 1:
                 results['quality_metrics'] = self._evaluate_clustering_quality(
                     cluster_data, results['cluster_labels']
                 )
 
-            # 分析异常群体
+            # Analyze anomalous groups
             results['anomaly_analysis'] = self._analyze_anomalies(data, results['cluster_labels'])
 
-            # 添加风险映射
+            # Add risk mapping
             risk_mapping_results = self.risk_mapper.map_clusters_to_risk_levels(results, data)
             results.update(risk_mapping_results)
 
@@ -192,22 +192,22 @@ class ClusterAnalyzer:
         return cluster_df_scaled
 
     def _select_optimal_clustering_features(self, data: pd.DataFrame) -> List[str]:
-        """智能选择最优聚类特征 - 增强版"""
-        logger.info("🎯 开始智能特征选择")
+        """Intelligently select optimal clustering features - enhanced version"""
+        logger.info("🎯 Starting intelligent feature selection")
 
-        # 第一步：创建更多区分性特征
+        # Step 1: Create more discriminative features
         enhanced_data = self._create_discriminative_features(data.copy())
 
-        # 第二步：多层次特征选择
+        # Step 2: Multi-level feature selection
         candidate_features = self._get_candidate_features(enhanced_data)
 
-        # 第三步：基于聚类友好性评分特征
+        # Step 3: Score features based on clustering friendliness
         scored_features = self._score_features_for_clustering(enhanced_data, candidate_features)
 
-        # 第四步：选择最优特征组合
+        # Step 4: Select optimal feature combination
         final_features = self._select_optimal_feature_combination(enhanced_data, scored_features)
 
-        logger.info(f"✅ 选择了 {len(final_features)} 个优化特征: {final_features}")
+        logger.info(f"✅ Selected {len(final_features)} optimized features: {final_features}")
         return final_features
 
     def _create_discriminative_features(self, data: pd.DataFrame) -> pd.DataFrame:
@@ -409,8 +409,8 @@ class ClusterAnalyzer:
         return scaled_data
 
     def _auto_select_best_algorithm(self, cluster_data: pd.DataFrame, original_data: pd.DataFrame) -> Dict[str, Any]:
-        """智能选择最佳聚类算法"""
-        logger.info("🤖 开始智能算法选择")
+        """Intelligently select best clustering algorithm"""
+        logger.info("🤖 Starting intelligent algorithm selection")
 
         algorithms_to_try = ['dbscan', 'kmeans', 'gaussian_mixture']
         best_result = None
@@ -418,7 +418,7 @@ class ClusterAnalyzer:
 
         for algorithm in algorithms_to_try:
             try:
-                logger.info(f"尝试算法: {algorithm}")
+                logger.info(f"Trying algorithm: {algorithm}")
 
                 if algorithm == 'dbscan':
                     result = self._dbscan_clustering(cluster_data, original_data)
@@ -566,11 +566,11 @@ class ClusterAnalyzer:
             return 0.0
 
     def _load_clustering_config(self) -> Dict[str, Any]:
-        """加载聚类配置"""
+        """Load clustering configuration"""
         if CONFIG_AVAILABLE and optimization_config:
             return optimization_config.get_clustering_config()
         else:
-            # 默认配置
+            # Default configuration
             return {
                 "auto_k_optimization": True,
                 "max_k": 10,
@@ -680,26 +680,26 @@ class ClusterAnalyzer:
             return data
 
     def _calculate_data_quality_score(self, data: pd.DataFrame) -> float:
-        """计算数据质量评分"""
+        """Calculate data quality score"""
         try:
             if data.empty:
                 return 0.0
 
-            # 1. 完整性评分 (40%)
+            # 1. Completeness score (40%)
             completeness = (1 - data.isnull().sum().sum() / (len(data) * len(data.columns))) * 40
 
-            # 2. 一致性评分 (30%) - 基于数据类型一致性
-            consistency = 30  # 假设数据类型一致
+            # 2. Consistency score (30%) - based on data type consistency
+            consistency = 30  # Assume data types are consistent
 
-            # 3. 有效性评分 (20%) - 基于数值范围合理性
+            # 3. Validity score (20%) - based on numerical range reasonableness
             validity = 0
             for column in data.columns:
                 if data[column].dtype in ['int64', 'float64']:
-                    # 检查是否有无穷值或极端值
+                    # Check for infinite values or extreme values
                     if not np.isinf(data[column]).any() and data[column].std() > 0:
                         validity += 20 / len(data.columns)
 
-            # 4. 唯一性评分 (10%) - 基于重复行比例
+            # 4. Uniqueness score (10%) - based on duplicate row proportion
             uniqueness = (1 - data.duplicated().sum() / len(data)) * 10
 
             total_score = completeness + consistency + validity + uniqueness
@@ -953,7 +953,7 @@ class ClusterAnalyzer:
         cluster_details = []
         for label in unique_labels:
             if label == -1:
-                continue  # 跳过噪声点
+                continue  # Skip noise points
 
             cluster_mask = labels == label
             cluster_size = np.sum(cluster_mask)
@@ -965,7 +965,7 @@ class ClusterAnalyzer:
                 cluster_info['percentage'] = round(cluster_size / len(labels) * 100, 2)
                 cluster_details.append(cluster_info)
 
-        # 分析噪声点
+        # Analyze noise points
         noise_count = np.sum(labels == -1)
 
         return {
@@ -1012,7 +1012,7 @@ class ClusterAnalyzer:
         return self.labels_
 
     def _analyze_cluster_characteristics(self, cluster_data: pd.DataFrame, cluster_id: int) -> Dict[str, Any]:
-        """分析聚类特征"""
+        """Analyze cluster characteristics"""
         characteristics = {
             'cluster_id': cluster_id,
             'avg_transaction_amount': 0,
@@ -1054,11 +1054,11 @@ class ClusterAnalyzer:
         if 'product_category' in cluster_data.columns:
             characteristics['common_category'] = cluster_data['product_category'].mode().iloc[0] if not cluster_data['product_category'].mode().empty else 'unknown'
 
-        # 欺诈率
+        # Fraud rate
         if 'is_fraudulent' in cluster_data.columns:
             characteristics['fraud_rate'] = round(cluster_data['is_fraudulent'].mean(), 3)
 
-            # 基于欺诈率确定风险等级
+            # Determine risk level based on fraud rate
             fraud_rate = characteristics['fraud_rate']
             if fraud_rate > 0.1:
                 characteristics['risk_level'] = 'high'
@@ -1067,27 +1067,27 @@ class ClusterAnalyzer:
             else:
                 characteristics['risk_level'] = 'low'
 
-        # 时间模式
+        # Time patterns
         if 'transaction_hour' in cluster_data.columns:
             characteristics['common_hour'] = int(cluster_data['transaction_hour'].mode().iloc[0]) if not cluster_data['transaction_hour'].mode().empty else 12
 
-            # 计算夜间交易比例 (22点-5点)
+            # Calculate night transaction ratio (22:00-5:00)
             night_transactions = ((cluster_data['transaction_hour'] >= 22) | (cluster_data['transaction_hour'] <= 5))
             characteristics['night_transaction_rate'] = round(night_transactions.mean(), 3)
 
-        # 账户年龄特征
+        # Account age features
         if 'account_age_days' in cluster_data.columns:
             account_ages = cluster_data['account_age_days']
             characteristics['avg_account_age_days'] = round(account_ages.mean(), 1)
             characteristics['median_account_age_days'] = round(account_ages.median(), 1)
 
-            # 计算新账户比例 (小于90天)
+            # Calculate new account ratio (less than 90 days)
             new_accounts = (account_ages < 90)
             characteristics['new_account_rate'] = round(new_accounts.mean(), 3)
 
-        # 设备使用模式
+        # Device usage patterns
         if 'device' in cluster_data.columns:
-            # 移动设备使用比例
+            # Mobile device usage ratio
             mobile_usage = (cluster_data['device'] == 'mobile')
             characteristics['mobile_device_rate'] = round(mobile_usage.mean(), 3)
             characteristics['common_device'] = cluster_data['device'].mode().iloc[0] if not cluster_data['device'].mode().empty else 'unknown'
@@ -1120,12 +1120,12 @@ class ClusterAnalyzer:
                 len(cluster_data[cluster_data['product_category'] == 'electronics']) / len(cluster_data), 3
             )
 
-        # 地址一致性
+        # Address consistency
         if 'shipping_address' in cluster_data.columns and 'billing_address' in cluster_data.columns:
             address_mismatch = cluster_data['shipping_address'] != cluster_data['billing_address']
             characteristics['address_mismatch_rate'] = round(address_mismatch.mean(), 3)
 
-        # 交易金额统计
+        # Transaction amount statistics
         if 'transaction_amount' in cluster_data.columns:
             characteristics['transaction_amount_std'] = round(cluster_data['transaction_amount'].std(), 2)
             characteristics['high_amount_rate'] = round(
@@ -1156,19 +1156,19 @@ class ClusterAnalyzer:
             'unusual_patterns': []
         }
 
-        # 统计每个聚类的大小和欺诈率
+        # Count size and fraud rate for each cluster
         unique_labels = set(labels)
         total_size = len(labels)
 
         for label in unique_labels:
-            if label == -1:  # DBSCAN的噪声点
+            if label == -1:  # DBSCAN noise points
                 continue
 
             cluster_mask = [l == label for l in labels]
             cluster_data = data[cluster_mask]
             cluster_size = len(cluster_data)
 
-            # 小聚类（占比小于5%）
+            # Small clusters (proportion less than 5%)
             if cluster_size / total_size < 0.05:
                 anomaly_info['small_clusters'].append({
                     'cluster_id': label,
@@ -1176,7 +1176,7 @@ class ClusterAnalyzer:
                     'percentage': round(cluster_size / total_size * 100, 2)
                 })
 
-            # 高风险聚类（欺诈率>10%）
+            # High-risk clusters (fraud rate > 10%)
             if 'is_fraudulent' in cluster_data.columns:
                 fraud_rate = cluster_data['is_fraudulent'].mean()
                 if fraud_rate > 0.1:
@@ -1189,7 +1189,7 @@ class ClusterAnalyzer:
         return anomaly_info
 
     def _empty_result(self) -> Dict[str, Any]:
-        """返回空结果"""
+        """Return empty result"""
         return {
             'algorithm': 'none',
             'cluster_count': 0,
@@ -1204,7 +1204,7 @@ class ClusterAnalyzer:
         self.model = DBSCAN(eps=eps, min_samples=min_samples)
         self.labels_ = self.model.fit_predict(data)
         self.centers_ = None
-        logger.info(f"DBSCAN聚类完成，簇数: {len(set(self.labels_)) - (1 if -1 in self.labels_ else 0)}")
+        logger.info(f"DBSCAN clustering completed, number of clusters: {len(set(self.labels_)) - (1 if -1 in self.labels_ else 0)}")
         return self.labels_
 
     def fit_gmm(self, data: pd.DataFrame, n_components: int = 4, random_state: int = 42) -> np.ndarray:
@@ -1299,27 +1299,27 @@ class ClusterAnalyzer:
             if len(cluster_data) == 0:
                 continue
 
-            # 基础统计
+            # Basic statistics
             detail = {
                 'cluster_id': cluster_id,
                 'size': len(cluster_data),
                 'percentage': len(cluster_data) / len(data) * 100
             }
 
-            # 数值特征统计
+            # Numerical feature statistics
             for feature in features:
                 if feature in cluster_data.columns and pd.api.types.is_numeric_dtype(cluster_data[feature]):
                     detail[f'avg_{feature}'] = cluster_data[feature].mean()
                     detail[f'{feature}_std'] = cluster_data[feature].std()
 
-            # 特殊特征计算
+            # Special feature calculations
             if 'is_fraudulent' in cluster_data.columns:
                 detail['fraud_rate'] = cluster_data['is_fraudulent'].mean()
 
             if 'transaction_amount' in cluster_data.columns:
                 detail['avg_transaction_amount'] = cluster_data['transaction_amount'].mean()
                 detail['transaction_amount_std'] = cluster_data['transaction_amount'].std()
-                # 高额交易比例
+                # High amount transaction ratio
                 high_amount_threshold = data['transaction_amount'].quantile(0.75)
                 detail['high_amount_rate'] = (cluster_data['transaction_amount'] > high_amount_threshold).mean()
 
@@ -1334,7 +1334,7 @@ class ClusterAnalyzer:
                 ).mean()
                 detail['common_hour'] = cluster_data['transaction_hour'].mode().iloc[0] if len(cluster_data['transaction_hour'].mode()) > 0 else 12
 
-            # 分类特征统计
+            # Categorical feature statistics
             if 'device' in cluster_data.columns:
                 device_counts = cluster_data['device'].value_counts()
                 detail['common_device'] = device_counts.index[0] if len(device_counts) > 0 else 'unknown'
