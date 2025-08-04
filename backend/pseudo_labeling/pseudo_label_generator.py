@@ -1,7 +1,7 @@
 """
-伪标签生成器
-基于多种无监督和半监督方法生成高质量伪标签
-支持风险评分、聚类分析、规则匹配等多种标签生成策略
+Pseudo Label Generator
+Generate high-quality pseudo labels based on various unsupervised and semi-supervised methods
+Support multiple label generation strategies including risk scoring, clustering analysis, rule matching, etc.
 """
 
 import numpy as np
@@ -13,61 +13,61 @@ from sklearn.cluster import KMeans, DBSCAN
 from sklearn.mixture import GaussianMixture
 from sklearn.preprocessing import StandardScaler
 
-# 配置日志
+# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 class PseudoLabelGenerator:
-    """伪标签生成器"""
+    """Pseudo Label Generator"""
 
     def __init__(self):
-        """初始化伪标签生成器"""
+        """Initialize pseudo label generator"""
         self.label_history = []
         self.confidence_threshold = 0.7
-        
-        # 标签生成策略配置
+
+        # Label generation strategy configuration
         self.strategies = {
             'risk_based': {
-                'name': '基于风险评分',
-                'description': '根据风险评分阈值生成标签',
+                'name': 'Risk Score Based',
+                'description': 'Generate labels based on risk score thresholds',
                 'weight': 0.3
             },
             'cluster_based': {
-                'name': '基于聚类分析',
-                'description': '根据聚类欺诈率生成标签',
+                'name': 'Cluster Analysis Based',
+                'description': 'Generate labels based on cluster fraud rates',
                 'weight': 0.25
             },
             'rule_based': {
-                'name': '基于专家规则',
-                'description': '根据业务规则生成标签',
+                'name': 'Expert Rules Based',
+                'description': 'Generate labels based on business rules',
                 'weight': 0.25
             },
             'ensemble': {
-                'name': '集成多策略',
-                'description': '综合多种策略的结果',
+                'name': 'Multi-Strategy Ensemble',
+                'description': 'Combine results from multiple strategies',
                 'weight': 0.2
             }
         }
 
     def generate_pseudo_labels(self, data: pd.DataFrame, strategy: str = 'ensemble') -> Dict[str, Any]:
         """
-        生成伪标签
-        
+        Generate pseudo labels
+
         Args:
-            data: 输入数据
-            strategy: 标签生成策略
-            
+            data: Input data
+            strategy: Label generation strategy
+
         Returns:
-            伪标签生成结果
+            Pseudo label generation results
         """
         if data is None or data.empty:
-            logger.error("输入数据为空")
+            logger.error("Input data is empty")
             return self._empty_result()
 
         try:
-            logger.info(f"开始生成伪标签，策略: {strategy}")
-            
+            logger.info(f"Starting pseudo label generation, strategy: {strategy}")
+
             if strategy == 'risk_based':
                 result = self._generate_risk_based_labels(data)
             elif strategy == 'cluster_based':
@@ -77,22 +77,22 @@ class PseudoLabelGenerator:
             elif strategy == 'ensemble':
                 result = self._generate_ensemble_labels(data)
             else:
-                logger.warning(f"未知策略: {strategy}，使用默认集成策略")
+                logger.warning(f"Unknown strategy: {strategy}, using default ensemble strategy")
                 result = self._generate_ensemble_labels(data)
-            
-            # 记录生成历史
+
+            # Record generation history
             self._record_generation_history(result, strategy)
-            
-            logger.info(f"伪标签生成完成，生成了 {len(result.get('labels', []))} 个标签")
+
+            logger.info(f"Pseudo label generation completed, generated {len(result.get('labels', []))} labels")
             return result
-            
+
         except Exception as e:
-            logger.error(f"伪标签生成失败: {e}")
+            logger.error(f"Pseudo label generation failed: {e}")
             return self._empty_result()
 
     def _generate_risk_based_labels(self, data: pd.DataFrame,
                                   unsupervised_risk_results: Optional[Dict] = None) -> Dict[str, Any]:
-        """基于无监督风险评分生成伪标签"""
+        """Generate pseudo labels based on unsupervised risk scoring"""
         # 如果没有提供无监督风险评分结果，则计算
         if unsupervised_risk_results is None:
             # 延迟导入避免循环依赖
@@ -110,7 +110,7 @@ class PseudoLabelGenerator:
                     data, clustering_results
                 )
             except ImportError as e:
-                logger.warning(f"无法导入风险计算模块: {e}")
+                logger.warning(f"Unable to import risk calculation module: {e}")
                 return self._generate_fallback_risk_labels(data)
 
         labels = []
@@ -124,7 +124,7 @@ class PseudoLabelGenerator:
             risk_level = result.get('risk_level', 'low')
             risk_factors = result.get('risk_factors', [])
 
-            # 基于无监督风险评分生成二分类标签
+            # 基于无监督风险评分生成二分类标签 (降低阈值，增加欺诈检出率)
             if risk_level == 'critical':
                 label = 1  # 极高风险 -> 欺诈
                 confidence = min(0.95, 0.85 + (risk_score - 75) / 100)
@@ -132,16 +132,21 @@ class PseudoLabelGenerator:
                 label = 1  # 高风险 -> 欺诈
                 confidence = min(0.90, 0.70 + (risk_score - 50) / 100)
             elif risk_level == 'medium':
-                # 中风险区间，基于具体评分决定
-                if risk_score >= 60:
+                # 中风险区间，降低阈值，更多标记为欺诈
+                if risk_score >= 45:  # 从60降低到45
                     label = 1
-                    confidence = 0.60 + (risk_score - 50) / 200
+                    confidence = 0.55 + (risk_score - 40) / 200
                 else:
                     label = 0
-                    confidence = 0.55 + (50 - risk_score) / 200
+                    confidence = 0.60 + (45 - risk_score) / 200
             else:  # low risk
-                label = 0  # 低风险 -> 正常
-                confidence = min(0.90, 0.70 + (50 - risk_score) / 100)
+                # 即使是低风险，如果评分较高也可能是欺诈
+                if risk_score >= 35:  # 新增：低风险但评分较高的情况
+                    label = 1
+                    confidence = 0.50 + (risk_score - 30) / 300
+                else:
+                    label = 0  # 低风险 -> 正常
+                    confidence = min(0.85, 0.65 + (35 - risk_score) / 100)
 
             # 基于风险因素数量调整置信度
             risk_factor_count = len(risk_factors)
@@ -176,7 +181,7 @@ class PseudoLabelGenerator:
 
     def _generate_cluster_based_labels(self, data: pd.DataFrame,
                                      clustering_results: Optional[Dict] = None) -> Dict[str, Any]:
-        """基于聚类风险映射生成伪标签"""
+        """Generate pseudo labels based on cluster risk mapping"""
         # 如果没有提供聚类结果，则计算
         if clustering_results is None:
             from backend.clustering.cluster_analyzer import ClusterAnalyzer
@@ -269,62 +274,93 @@ class PseudoLabelGenerator:
         }
 
     def _generate_rule_based_labels(self, data: pd.DataFrame) -> Dict[str, Any]:
-        """基于专家规则生成伪标签"""
+        """Generate pseudo labels based on expert rules"""
         labels = []
         confidences = []
         rule_matches = []
-        
+
+        # 获取实际的列名（支持原始格式和清理后格式）
+        amount_col = self._get_column_name(data, ['transaction_amount', 'Transaction Amount'])
+        hour_col = self._get_column_name(data, ['transaction_hour', 'Transaction Hour'])
+        age_days_col = self._get_column_name(data, ['account_age_days', 'Account Age Days'])
+        customer_age_col = self._get_column_name(data, ['customer_age', 'Customer Age'])
+        quantity_col = self._get_column_name(data, ['quantity', 'Quantity'])
+
+        logger.info(f"规则生成使用的列名: amount={amount_col}, hour={hour_col}, age_days={age_days_col}")
+
         for idx, row in data.iterrows():
             label = 0
             confidence = 0.5
             matched_rules = []
-            
-            # 规则1: 大额夜间交易
-            if (row.get('transaction_amount', 0) > 1000 and 
-                row.get('transaction_hour', 12) in [0, 1, 2, 3, 4, 5, 22, 23]):
+
+            # 获取实际值，使用安全的默认值
+            amount = row.get(amount_col, 0) if amount_col else 0
+            hour = row.get(hour_col, 12) if hour_col else 12
+            age_days = row.get(age_days_col, 365) if age_days_col else 365
+            customer_age = row.get(customer_age_col, 30) if customer_age_col else 30
+            quantity = row.get(quantity_col, 1) if quantity_col else 1
+
+            # Rule 1: Large amount night transactions (降低阈值)
+            if (amount > 500 and hour in [0, 1, 2, 3, 4, 5, 22, 23]):
                 label = 1
                 confidence += 0.3
-                matched_rules.append('大额夜间交易')
-            
-            # 规则2: 新账户大额交易
-            if (row.get('account_age_days', 365) < 30 and 
-                row.get('transaction_amount', 0) > 500):
+                matched_rules.append('Large amount night transaction')
+
+            # Rule 2: New account large transactions (降低阈值)
+            if (age_days < 30 and amount > 200):
                 label = 1
                 confidence += 0.25
-                matched_rules.append('新账户大额交易')
-            
-            # 规则3: 异常年龄 + 高风险商品
-            if (row.get('customer_age', 30) < 18 or row.get('customer_age', 30) > 70) and \
-               row.get('product_category', '') == 'electronics':
+                matched_rules.append('New account large transaction')
+
+            # Rule 3: Abnormal age + high-risk products (使用正确列名，降低阈值)
+            product_col = self._get_column_name(data, ['product_category', 'Product Category'])
+            product_category = row.get(product_col, '') if product_col else ''
+            if ((customer_age < 18 or customer_age > 70) and product_category == 'electronics'):
                 label = 1
                 confidence += 0.2
-                matched_rules.append('异常年龄高风险商品')
-            
-            # 规则4: 移动设备 + 银行转账 + 大额
-            if (row.get('device_used', '') == 'mobile' and 
-                row.get('payment_method', '') == 'bank transfer' and
-                row.get('transaction_amount', 0) > 300):
+                matched_rules.append('Abnormal age high-risk product')
+
+            # Rule 4: Mobile device + bank transfer + large amount (使用正确列名，降低阈值)
+            device_col = self._get_column_name(data, ['device_used', 'Device Used'])
+            payment_col = self._get_column_name(data, ['payment_method', 'Payment Method'])
+            device = row.get(device_col, '') if device_col else ''
+            payment = row.get(payment_col, '') if payment_col else ''
+            if (device == 'mobile' and payment == 'bank transfer' and amount > 150):
                 label = 1
                 confidence += 0.2
-                matched_rules.append('移动设备银行转账')
-            
-            # 规则5: 地址不一致 + 大额交易
-            shipping_addr = str(row.get('shipping_address', ''))
-            billing_addr = str(row.get('billing_address', ''))
-            if (shipping_addr != billing_addr and 
-                row.get('transaction_amount', 0) > 200):
+                matched_rules.append('Mobile device bank transfer')
+
+            # Rule 5: 基于工程特征的高风险模式
+            # 使用时间风险特征
+            if 'time_risk_score' in row and row.get('time_risk_score', 1) >= 3:
                 label = 1
-                confidence += 0.15
-                matched_rules.append('地址不一致大额交易')
-            
-            # 正常交易规则
+                confidence += 0.25
+                matched_rules.append('High time risk score')
+
+            # 使用金额风险特征
+            if 'amount_risk_score' in row and row.get('amount_risk_score', 1) >= 3:
+                label = 1
+                confidence += 0.3
+                matched_rules.append('High amount risk score')
+
+            # 使用账户风险特征
+            if 'account_age_risk_score' in row and row.get('account_age_risk_score', 1) >= 3:
+                label = 1
+                confidence += 0.25
+                matched_rules.append('High account age risk score')
+
+            # Rule 6: 夜间交易 + 新账户
+            if ('is_night_transaction' in row and row.get('is_night_transaction', 0) == 1 and age_days < 60):
+                label = 1
+                confidence += 0.2
+                matched_rules.append('Night transaction new account')
+
+            # Normal transaction rules (更宽松的条件)
             if not matched_rules:
-                # 小额 + 正常时间 + 老账户
-                if (row.get('transaction_amount', 0) < 100 and
-                    9 <= row.get('transaction_hour', 12) <= 21 and
-                    row.get('account_age_days', 0) > 90):
+                # Small amount + normal time + old account
+                if (amount < 50 and 9 <= hour <= 21 and age_days > 90):
                     confidence = 0.8
-                    matched_rules.append('正常交易模式')
+                    matched_rules.append('Normal transaction pattern')
             
             confidence = min(0.95, max(0.1, confidence))
             
@@ -347,7 +383,7 @@ class PseudoLabelGenerator:
         }
 
     def _generate_ensemble_labels(self, data: pd.DataFrame) -> Dict[str, Any]:
-        """集成多种策略生成伪标签"""
+        """Generate pseudo labels using ensemble of multiple strategies"""
         # 首先计算无监督风险评分和聚类结果
         from backend.risk_scoring.risk_calculator import UnsupervisedRiskCalculator
         from backend.clustering.cluster_analyzer import ClusterAnalyzer
@@ -466,7 +502,7 @@ class PseudoLabelGenerator:
         }
 
     def _record_generation_history(self, result: Dict, strategy: str):
-        """记录生成历史"""
+        """Record generation history"""
         history_record = {
             'timestamp': datetime.now().isoformat(),
             'strategy': strategy,
@@ -478,12 +514,12 @@ class PseudoLabelGenerator:
         
         self.label_history.append(history_record)
         
-        # 保持历史记录不超过100条
+        # Keep history records under 100 entries
         if len(self.label_history) > 100:
             self.label_history = self.label_history[-100:]
 
     def get_label_quality_metrics(self, pseudo_labels: List[int], true_labels: List[int] = None) -> Dict:
-        """计算伪标签质量指标"""
+        """Calculate pseudo label quality metrics"""
         if true_labels is None:
             return {
                 'label_distribution': pd.Series(pseudo_labels).value_counts().to_dict(),
@@ -503,8 +539,15 @@ class PseudoLabelGenerator:
             'positive_rate': sum(pseudo_labels) / len(pseudo_labels)
         }
 
+    def _get_column_name(self, data: pd.DataFrame, possible_names: List[str]) -> str:
+        """获取实际存在的列名"""
+        for name in possible_names:
+            if name in data.columns:
+                return name
+        return None
+
     def _empty_result(self) -> Dict[str, Any]:
-        """返回空结果"""
+        """Return empty result"""
         return {
             'strategy': 'none',
             'labels': [],
@@ -516,19 +559,19 @@ class PseudoLabelGenerator:
         }
 
     def _generate_fallback_risk_labels(self, data: pd.DataFrame) -> Dict[str, Any]:
-        """生成回退风险标签（当主要方法失败时使用）"""
+        """Generate fallback risk labels (used when main methods fail)"""
         try:
-            logger.info("使用回退方法生成风险标签")
+            logger.info("Using fallback method to generate risk labels")
 
             labels = []
             confidences = []
 
-            # 简单的基于规则的标签生成
+            # Simple rule-based label generation
             for _, row in data.iterrows():
                 label = 0
                 confidence = 0.6
 
-                # 基于交易金额的简单规则
+                # Simple rules based on transaction amount
                 amount = row.get('transaction_amount', 0)
                 if amount > 2000:
                     label = 1
@@ -551,34 +594,34 @@ class PseudoLabelGenerator:
             }
 
         except Exception as e:
-            logger.error(f"回退标签生成失败: {e}")
+            logger.error(f"Fallback label generation failed: {e}")
             return self._empty_result()
 
     def get_generation_history(self) -> List[Dict]:
-        """获取生成历史"""
+        """Get generation history"""
         return self.label_history.copy()
 
     def update_confidence_threshold(self, threshold: float):
-        """更新置信度阈值"""
+        """Update confidence threshold"""
         self.confidence_threshold = max(0.1, min(0.9, threshold))
-        logger.info(f"置信度阈值更新为: {self.confidence_threshold}")
+        logger.info(f"Confidence threshold updated to: {self.confidence_threshold}")
 
     def generate_high_quality_pseudo_labels(self, data: pd.DataFrame,
                                           min_confidence: float = 0.8,
                                           use_calibration: bool = True) -> Dict[str, Any]:
         """
-        生成高质量伪标签
+        Generate high-quality pseudo labels
 
         Args:
-            data: 输入数据
-            min_confidence: 最小置信度阈值
-            use_calibration: 是否使用校准结果
+            data: Input data
+            min_confidence: Minimum confidence threshold
+            use_calibration: Whether to use calibration results
 
         Returns:
-            高质量伪标签结果
+            High-quality pseudo label results
         """
         try:
-            logger.info(f"开始生成高质量伪标签，最小置信度: {min_confidence}")
+            logger.info(f"Starting high-quality pseudo label generation, minimum confidence: {min_confidence}")
 
             # 1. 进行聚类分析
             from backend.clustering.cluster_analyzer import ClusterAnalyzer
@@ -597,9 +640,9 @@ class PseudoLabelGenerator:
                     )
                     unsupervised_risk_results = calibration_results.get('calibrated_results', {})
                     calibration_applied = calibration_results.get('calibration_applied', False)
-                    logger.info(f"校准{'成功' if calibration_applied else '未'}应用")
+                    logger.info(f"Calibration {'successfully' if calibration_applied else 'not'} applied")
                 except Exception as e:
-                    logger.warning(f"校准失败，使用未校准结果: {e}")
+                    logger.warning(f"Calibration failed, using uncalibrated results: {e}")
                     unsupervised_risk_results = risk_calculator.calculate_unsupervised_risk_score(
                         data, clustering_results
                     )
@@ -648,18 +691,18 @@ class PseudoLabelGenerator:
                 }
             }
 
-            logger.info(f"高质量伪标签生成完成，筛选出 {len(high_quality_labels)}/{len(labels)} 个高质量标签")
+            logger.info(f"High-quality pseudo label generation completed, filtered {len(high_quality_labels)}/{len(labels)} high-quality labels")
             return result
 
         except Exception as e:
-            logger.error(f"高质量伪标签生成失败: {e}")
+            logger.error(f"High-quality pseudo label generation failed: {e}")
             return self._empty_result()
 
     def _generate_quality_report(self, labels: List[int], confidences: List[float],
                                high_quality_indices: List[int],
                                unsupervised_risk_results: Dict,
                                ensemble_result: Dict) -> Dict[str, Any]:
-        """生成质量报告"""
+        """Generate quality report"""
         try:
             # 置信度分布分析
             confidence_bins = [0.0, 0.5, 0.7, 0.8, 0.9, 1.0]
@@ -696,13 +739,13 @@ class PseudoLabelGenerator:
             }
 
         except Exception as e:
-            logger.error(f"质量报告生成失败: {e}")
+            logger.error(f"Quality report generation failed: {e}")
             return {}
 
     def _calculate_overall_quality_score(self, confidences: List[float],
                                        high_quality_indices: List[int],
                                        ensemble_result: Dict) -> float:
-        """计算整体质量评分"""
+        """Calculate overall quality score"""
         try:
             # 基础分数：平均置信度
             base_score = np.mean(confidences) * 100
@@ -730,5 +773,5 @@ class PseudoLabelGenerator:
             return round(min(100, total_score), 2)
 
         except Exception as e:
-            logger.error(f"质量评分计算失败: {e}")
+            logger.error(f"Quality score calculation failed: {e}")
             return 0.0

@@ -1,6 +1,6 @@
 """
-机器学习模型模块
-包含模型管理、集成预测等功能
+Machine Learning Models Module
+Contains model management, ensemble prediction and other functions
 """
 
 from .model_manager import ModelManager

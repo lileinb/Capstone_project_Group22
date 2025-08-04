@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-个体风险预测器
-基于风险评分进行个体分析和攻击类型推断
+Individual Risk Predictor
+Perform individual analysis and attack type inference based on risk scores
 """
 
 import pandas as pd
@@ -16,12 +16,12 @@ logger = logging.getLogger(__name__)
 
 class IndividualRiskPredictor:
     """
-    个体风险预测器
-    基于聚类结果和风险评分进行个体风险分析和攻击类型推断
+    Individual Risk Predictor
+    Perform individual risk analysis and attack type inference based on clustering results and risk scores
     """
-    
+
     def __init__(self):
-        """初始化个体风险预测器"""
+        """Initialize individual risk predictor"""
         # 风险等级阈值
         self.risk_thresholds = {
             'low': 40,        # 0-40: 低风险
@@ -33,32 +33,32 @@ class IndividualRiskPredictor:
         # 攻击类型定义
         self.attack_types = {
             'account_takeover': {
-                'name': '账户接管攻击',
-                'description': '攻击者获取用户账户控制权',
+                'name': 'Account Takeover Attack',
+                'description': 'Attackers gain control of user accounts',
                 'risk_level': 'critical',
-                'indicators': ['新账户', '大额交易', '异常时间', '设备变更'],
-                'prevention': ['多因素认证', '设备绑定', '异常登录监控']
+                'indicators': ['New account', 'Large transactions', 'Unusual time', 'Device changes'],
+                'prevention': ['Multi-factor authentication', 'Device binding', 'Abnormal login monitoring']
             },
             'identity_theft': {
-                'name': '身份盗用攻击',
-                'description': '使用他人身份信息进行欺诈',
+                'name': 'Identity Theft Attack',
+                'description': 'Using others identity information for fraud',
                 'risk_level': 'high',
-                'indicators': ['异常年龄', '身份不匹配', '高风险商品'],
-                'prevention': ['身份验证', '生物识别', '信息核查']
+                'indicators': ['Unusual age', 'Identity mismatch', 'High-risk products'],
+                'prevention': ['Identity verification', 'Biometric recognition', 'Information verification']
             },
             'bulk_fraud': {
-                'name': '批量欺诈攻击',
-                'description': '大规模自动化欺诈行为',
+                'name': 'Bulk Fraud Attack',
+                'description': 'Large-scale automated fraud behavior',
                 'risk_level': 'high',
-                'indicators': ['相似交易', '固定模式', '批量操作'],
-                'prevention': ['行为分析', '频率限制', '验证码']
+                'indicators': ['Similar transactions', 'Fixed patterns', 'Batch operations'],
+                'prevention': ['Behavior analysis', 'Frequency limits', 'CAPTCHA']
             },
             'testing_attack': {
-                'name': '测试性攻击',
-                'description': '小额测试以验证支付方式',
+                'name': 'Testing Attack',
+                'description': 'Small amount testing to verify payment methods',
                 'risk_level': 'medium',
-                'indicators': ['小额交易', '频繁尝试', '新账户'],
-                'prevention': ['交易限制', '监控频率', '风控规则']
+                'indicators': ['Small transactions', 'Frequent attempts', 'New accounts'],
+                'prevention': ['Transaction limits', 'Frequency monitoring', 'Risk control rules']
             }
         }
         
@@ -66,27 +66,27 @@ class IndividualRiskPredictor:
         self.risk_stratification = {
             'low': {
                 'percentage_target': 60,
-                'description': '正常用户，风险极低',
-                'monitoring_level': '基础监控',
-                'actions': ['正常处理']
+                'description': 'Normal users with very low risk',
+                'monitoring_level': 'Basic monitoring',
+                'actions': ['Normal processing']
             },
             'medium': {
                 'percentage_target': 25,
-                'description': '需要关注的用户',
-                'monitoring_level': '增强监控',
-                'actions': ['额外验证', '限制部分功能']
+                'description': 'Users requiring attention',
+                'monitoring_level': 'Enhanced monitoring',
+                'actions': ['Additional verification', 'Restrict some functions']
             },
             'high': {
                 'percentage_target': 12,
-                'description': '高风险用户，需要重点关注',
-                'monitoring_level': '严密监控',
-                'actions': ['人工审核', '限制交易', '身份验证']
+                'description': 'High risk users, need focused attention',
+                'monitoring_level': 'Close monitoring',
+                'actions': ['Manual review', 'Transaction restrictions', 'Identity verification']
             },
             'critical': {
                 'percentage_target': 3,
-                'description': '极高风险用户，需要立即处理',
-                'monitoring_level': '实时监控',
-                'actions': ['立即冻结', '人工介入', '安全调查']
+                'description': 'Critical risk users, need immediate action',
+                'monitoring_level': 'Real-time monitoring',
+                'actions': ['Immediate freeze', 'Manual intervention', 'Security investigation']
             }
         }
     
@@ -387,10 +387,10 @@ class IndividualRiskPredictor:
 
         return risk_levels
     
-    def _predict_attack_types(self, data: pd.DataFrame, 
-                            risk_scores: np.ndarray, 
+    def _predict_attack_types(self, data: pd.DataFrame,
+                            risk_scores: np.ndarray,
                             risk_levels: List[str]) -> List[Dict]:
-        """预测攻击类型"""
+        """Predict attack types"""
         attack_predictions = []
         
         for i, (idx, row) in enumerate(data.iterrows()):
@@ -401,7 +401,7 @@ class IndividualRiskPredictor:
                 # 低风险用户，无攻击类型
                 attack_predictions.append({
                     'attack_type': 'none',
-                    'attack_name': '无风险',
+                    'attack_name': 'No Risk',
                     'confidence': 0.9,
                     'indicators': []
                 })
@@ -409,10 +409,10 @@ class IndividualRiskPredictor:
                 # 中高风险用户，推断攻击类型
                 attack_type = self._infer_attack_type(row)
                 attack_info = self.attack_types.get(attack_type, {})
-                
+
                 attack_predictions.append({
                     'attack_type': attack_type,
-                    'attack_name': attack_info.get('name', '未知攻击'),
+                    'attack_name': attack_info.get('name', 'Unknown Attack'),
                     'confidence': min(0.95, 0.6 + risk_score / 200),
                     'indicators': self._identify_attack_indicators(row, attack_type),
                     'description': attack_info.get('description', ''),
@@ -422,7 +422,7 @@ class IndividualRiskPredictor:
         return attack_predictions
     
     def _infer_attack_type(self, transaction: pd.Series) -> str:
-        """推断攻击类型"""
+        """Infer attack type"""
         # 获取关键特征
         account_age = transaction.get('account_age_days', 365)
         transaction_amount = transaction.get('transaction_amount', 0)
@@ -526,13 +526,13 @@ class IndividualRiskPredictor:
     
     def _generate_protection_recommendations(self, attack_predictions: List[Dict],
                                            risk_levels: List[str]) -> Dict:
-        """生成防护建议"""
+        """Generate protection recommendations"""
         # 统计攻击类型分布
         attack_counts = {}
         for pred in attack_predictions:
             attack_type = pred['attack_type']
             attack_counts[attack_type] = attack_counts.get(attack_type, 0) + 1
-        
+
         # 生成针对性建议
         recommendations = {
             'immediate_actions': [],
@@ -540,22 +540,22 @@ class IndividualRiskPredictor:
             'system_improvements': [],
             'attack_type_distribution': attack_counts
         }
-        
+
         # 基于风险分层生成建议
         critical_count = risk_levels.count('critical')
         high_count = risk_levels.count('high')
-        
+
         if critical_count > 0:
             recommendations['immediate_actions'].append(
-                f"立即处理 {critical_count} 个极高风险用户"
+                f"Immediately handle {critical_count} critical risk users"
             )
-        
+
         if high_count > 0:
             recommendations['monitoring_enhancements'].append(
-                f"加强监控 {high_count} 个高风险用户"
+                f"Enhance monitoring for {high_count} high risk users"
             )
         
-        # 基于主要攻击类型生成建议
+        # Generate recommendations based on main attack types
         if attack_counts:
             main_attack = max(attack_counts.items(), key=lambda x: x[1])
             if main_attack[0] != 'none':
@@ -567,7 +567,7 @@ class IndividualRiskPredictor:
         return recommendations
     
     def _empty_result(self, error: str = None) -> Dict:
-        """返回空结果"""
+        """Return empty result"""
         return {
             'success': False,
             'error': error,

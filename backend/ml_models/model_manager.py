@@ -27,17 +27,17 @@ logger = logging.getLogger(__name__)
 
 
 class ModelManager:
-    """模型管理器类"""
-    
+    """Model manager class"""
+
     def __init__(self, models_dir: str = None):
         """
-        初始化模型管理器
+        Initialize model manager
 
         Args:
-            models_dir: 模型文件目录，如果为None则自动检测
+            models_dir: Model file directory, auto-detect if None
         """
         if models_dir is None:
-            # 自动检测项目根目录下的models/pretrained目录
+            # Auto-detect models/pretrained directory under project root
             current_file = os.path.abspath(__file__)
             project_root = os.path.dirname(os.path.dirname(os.path.dirname(current_file)))
             self.models_dir = os.path.join(project_root, "models", "pretrained")
@@ -47,12 +47,12 @@ class ModelManager:
         self.models = {}
         self.feature_info = {}
 
-        # 检查模型目录是否存在
+        # Check if model directory exists
         if not os.path.exists(self.models_dir):
-            logger.warning(f"模型目录不存在: {self.models_dir}")
-            logger.info("请确保models/pretrained目录存在并包含预训练模型文件")
+            logger.warning(f"Model directory does not exist: {self.models_dir}")
+            logger.info("Please ensure models/pretrained directory exists and contains pre-trained model files")
         else:
-            logger.info(f"使用模型目录: {self.models_dir}")
+            logger.info(f"Using model directory: {self.models_dir}")
 
         self._load_all_models()
     
@@ -81,54 +81,54 @@ class ModelManager:
                     try:
                         if model_name == 'catboost':
                             if not CATBOOST_AVAILABLE:
-                                logger.warning("跳过CatBoost模型：CatBoost未安装")
+                                logger.warning("Skipping CatBoost model: CatBoost not installed")
                                 continue
-                            # CatBoost模型使用特殊加载方式
+                            # CatBoost model uses special loading method
                             model = CatBoostClassifier()
                             model.load_model(model_path)
                         else:
-                            # 其他模型使用joblib加载
+                            # Other models use joblib loading
                             model = joblib.load(model_path)
-                        
+
                         self.models[model_name] = model
-                        logger.info(f"成功加载模型: {model_name}")
-                        
-                        # 加载对应的特征信息
+                        logger.info(f"Successfully loaded model: {model_name}")
+
+                        # Load corresponding feature information
                         feature_file = feature_files.get(model_name)
                         if feature_file:
                             feature_path = os.path.join(self.models_dir, feature_file)
                             if os.path.exists(feature_path):
                                 with open(feature_path, 'rb') as f:
                                     self.feature_info[model_name] = pickle.load(f)
-                                logger.info(f"成功加载特征信息: {model_name}")
-                        
+                                logger.info(f"Successfully loaded feature information: {model_name}")
+
                     except Exception as e:
-                        logger.warning(f"加载模型{model_name}失败: {e}")
+                        logger.warning(f"Failed to load model {model_name}: {e}")
                 else:
-                    logger.warning(f"模型文件不存在: {model_path}")
-            
+                    logger.warning(f"Model file does not exist: {model_path}")
+
             if not self.models:
-                logger.warning("未加载任何模型")
+                logger.warning("No models loaded")
             else:
-                logger.info(f"成功加载 {len(self.models)} 个模型")
-                
+                logger.info(f"Successfully loaded {len(self.models)} models")
+
         except Exception as e:
-            logger.error(f"加载模型时出错: {e}")
+            logger.error(f"Error occurred while loading models: {e}")
     
     def load_model(self, model_name: str):
         """
-        加载指定模型
-        
+        Load specified model
+
         Args:
-            model_name: 模型名称
-            
+            model_name: Model name
+
         Returns:
-            模型对象或None
+            Model object or None
         """
         return self.models.get(model_name.lower())
-    
+
     def get_available_models(self) -> list:
-        """获取可用模型列表"""
+        """Get available model list"""
         return list(self.models.keys())
     
     def predict_with_model(self, model, X: pd.DataFrame, y: pd.Series = None) -> Tuple[np.ndarray, np.ndarray]:

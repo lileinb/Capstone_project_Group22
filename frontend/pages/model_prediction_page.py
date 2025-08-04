@@ -13,73 +13,99 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from typing import Dict, List, Any, Optional
 
-# 添加项目根目录到路径
+# Add project root directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-# 导入后端模块（使用安全导入）
+# Import backend modules (using safe import)
 try:
     from backend.prediction.individual_risk_predictor import IndividualRiskPredictor
     from backend.clustering.cluster_analyzer import ClusterAnalyzer
     PREDICTION_AVAILABLE = True
 except ImportError as e:
-    st.error(f"❌ 风险预测模块导入失败: {e}")
-    st.info("💡 请检查风险预测模块和依赖包是否正确安装")
+    st.error(f"❌ Risk prediction module import failed: {e}")
+    st.info("💡 Please check if risk prediction modules and dependencies are correctly installed")
     PREDICTION_AVAILABLE = False
     IndividualRiskPredictor = None
     ClusterAnalyzer = None
 
 def _check_prerequisites():
-    """检查前置条件"""
+    """Check prerequisites with enhanced dependency validation"""
+    # 必需的依赖
     if 'engineered_features' not in st.session_state or st.session_state.engineered_features is None:
-        st.warning("⚠️ 请先完成特征工程！")
-        st.info("💡 请在'🔧 特征工程'页面完成特征生成")
+        st.warning("⚠️ Please complete feature engineering first!")
+        st.info("💡 Please complete feature generation on the '🔧 Feature Engineering' page")
         return False
 
+    # 检查可选但推荐的依赖
+    missing_recommended = []
     if 'clustering_results' not in st.session_state or st.session_state.clustering_results is None:
-        st.warning("⚠️ 建议先完成聚类分析以获得更准确的风险评估！")
-        st.info("💡 请在'📊 聚类分析'页面完成聚类分析")
-        # 不强制要求聚类结果，但会给出提示
+        missing_recommended.append("📊 Clustering Analysis")
+    if 'pseudo_labels' not in st.session_state or st.session_state.pseudo_labels is None:
+        if 'high_quality_labels' not in st.session_state or st.session_state.high_quality_labels is None:
+            missing_recommended.append("🏷️ Pseudo Labeling")
+    if 'four_class_risk_results' not in st.session_state or st.session_state.four_class_risk_results is None:
+        missing_recommended.append("🎯 Risk Scoring")
+
+    if missing_recommended:
+        st.info("💡 **Enhanced Prediction Available**: For better model performance, consider completing:")
+        for item in missing_recommended:
+            st.info(f"   • {item}")
+        st.info("🚀 **Current Mode**: Basic prediction (using engineered features only)")
+
+        # Display available enhancements
+        with st.expander("🔧 Available Enhancements", expanded=False):
+            if 'pseudo_labels' in st.session_state or 'high_quality_labels' in st.session_state:
+                st.success("✅ Pseudo labels available - Enhanced training enabled")
+            else:
+                st.info("🏷️ Pseudo labels: Improve model training with generated labels")
+
+            if 'four_class_risk_results' in st.session_state:
+                st.success("✅ Risk scoring available - Risk-aware prediction enabled")
+            else:
+                st.info("🎯 Risk scoring: Enable risk-stratified predictions")
+    else:
+        st.success("✅ All dependencies available - Full enhanced mode enabled!")
 
     return True
 
 
-# 删除了所有旧的显示函数，使用新的风险预测显示组件
+# Removed all old display functions, using new risk prediction display components
 
 
 def _execute_individual_risk_prediction(engineered_data, clustering_results, use_clustering, risk_thresholds):
-    """执行个体风险预测"""
+    """Execute individual risk prediction"""
     if not PREDICTION_AVAILABLE:
-        st.error("❌ 风险预测模块不可用，无法进行预测")
-        st.info("💡 请检查以下项目:")
-        st.info("1. 确保 backend/prediction 目录存在")
-        st.info("2. 确保风险评分模块完整")
-        st.info("3. 安装必要的依赖包: pip install scikit-learn pandas numpy")
+        st.error("❌ Risk prediction module unavailable, cannot perform prediction")
+        st.info("💡 Please check the following items:")
+        st.info("1. Ensure backend/prediction directory exists")
+        st.info("2. Ensure risk scoring module is complete")
+        st.info("3. Install necessary dependencies: pip install scikit-learn pandas numpy")
         return
 
     try:
-        with st.spinner("正在进行智能风险预测..."):
-            # 准备数据
+        with st.spinner("Performing intelligent risk prediction..."):
+            # Prepare data
             X = engineered_data.copy()
 
-            # 只保留数值特征
+            # Keep only numeric features
             numeric_cols = X.select_dtypes(include=[np.number]).columns
             X = X[numeric_cols]
 
-            # 处理缺失值和无穷值
+            # Handle missing values and infinite values
             X = X.fillna(0)
             X = X.replace([np.inf, -np.inf], 0)
             X = X.astype(float)
 
-            # 创建个体风险预测器
+            # Create individual risk predictor
             risk_predictor = IndividualRiskPredictor()
 
-            # 更新风险阈值
+            # Update risk thresholds
             if risk_thresholds:
                 risk_predictor.risk_thresholds = risk_thresholds
 
-            st.info(f"✅ 开始分析 {len(X)} 个样本的个体风险")
+            st.info(f"✅ Starting analysis of {len(X)} individual risk samples")
 
-            # 执行个体风险预测
+            # Execute individual risk prediction
             clustering_data = clustering_results if use_clustering else None
             risk_results = risk_predictor.predict_individual_risks(
                 X,
@@ -87,28 +113,28 @@ def _execute_individual_risk_prediction(engineered_data, clustering_results, use
                 use_four_class_labels=True
             )
 
-            # 检查预测结果
+            # Check prediction results
             if risk_results.get('success', False):
-                # 保存结果到session state
+                # Save results to session state
                 st.session_state.individual_risk_results = risk_results
                 st.session_state.risk_stratification = risk_results.get('stratification_stats', {})
 
-                # 显示预测统计
+                # Display prediction statistics
                 total_samples = risk_results.get('total_samples', 0)
                 processing_time = risk_results.get('processing_time', 0)
 
-                st.success(f"✅ 个体风险预测完成！")
-                st.info(f"📊 成功分析 {total_samples} 个样本，耗时 {processing_time:.2f} 秒")
+                st.success(f"✅ Individual risk prediction completed!")
+                st.info(f"📊 Successfully analyzed {total_samples} samples, time taken: {processing_time:.2f} seconds")
 
-                # 显示动态阈值信息
+                # Display dynamic threshold information
                 if 'dynamic_thresholds' in risk_results:
                     thresholds = risk_results['dynamic_thresholds']
-                    st.info(f"🎚️ 动态阈值: 低风险(<{thresholds.get('low', 40):.1f}) | "
-                           f"中风险({thresholds.get('low', 40):.1f}-{thresholds.get('medium', 60):.1f}) | "
-                           f"高风险({thresholds.get('medium', 60):.1f}-{thresholds.get('high', 80):.1f}) | "
-                           f"极高风险(>{thresholds.get('high', 80):.1f})")
+                    st.info(f"🎚️ Dynamic Thresholds: Low Risk(<{thresholds.get('low', 40):.1f}) | "
+                           f"Medium Risk({thresholds.get('low', 40):.1f}-{thresholds.get('medium', 60):.1f}) | "
+                           f"High Risk({thresholds.get('medium', 60):.1f}-{thresholds.get('high', 80):.1f}) | "
+                           f"Critical Risk(>{thresholds.get('high', 80):.1f})")
 
-                # 显示风险分层统计
+                # Display risk stratification statistics
                 stratification_stats = risk_results.get('stratification_stats', {})
                 if stratification_stats:
                     col1, col2, col3, col4 = st.columns(4)
@@ -116,141 +142,141 @@ def _execute_individual_risk_prediction(engineered_data, clustering_results, use
                     with col1:
                         low_count = stratification_stats.get('low', {}).get('count', 0)
                         low_pct = stratification_stats.get('low', {}).get('percentage', 0)
-                        st.metric("低风险用户", f"{low_count} ({low_pct:.1f}%)")
+                        st.metric("Low Risk Users", f"{low_count} ({low_pct:.1f}%)")
 
                     with col2:
                         medium_count = stratification_stats.get('medium', {}).get('count', 0)
                         medium_pct = stratification_stats.get('medium', {}).get('percentage', 0)
-                        st.metric("中风险用户", f"{medium_count} ({medium_pct:.1f}%)")
+                        st.metric("Medium Risk Users", f"{medium_count} ({medium_pct:.1f}%)")
 
                     with col3:
                         high_count = stratification_stats.get('high', {}).get('count', 0)
                         high_pct = stratification_stats.get('high', {}).get('percentage', 0)
-                        st.metric("高风险用户", f"{high_count} ({high_pct:.1f}%)")
+                        st.metric("High Risk Users", f"{high_count} ({high_pct:.1f}%)")
 
                     with col4:
                         critical_count = stratification_stats.get('critical', {}).get('count', 0)
                         critical_pct = stratification_stats.get('critical', {}).get('percentage', 0)
-                        st.metric("极高风险用户", f"{critical_count} ({critical_pct:.1f}%)")
+                        st.metric("Critical Risk Users", f"{critical_count} ({critical_pct:.1f}%)")
 
-                # 显示主要攻击类型
+                # Display main attack types
                 protection_recommendations = risk_results.get('protection_recommendations', {})
                 attack_distribution = protection_recommendations.get('attack_type_distribution', {})
 
                 if attack_distribution:
-                    st.markdown("#### 🎯 检测到的主要攻击类型")
+                    st.markdown("#### 🎯 Detected Main Attack Types")
                     for attack_type, count in sorted(attack_distribution.items(), key=lambda x: x[1], reverse=True)[:3]:
                         if attack_type != 'none' and count > 0:
-                            st.info(f"🔍 {attack_type}: {count} 个案例")
+                            st.info(f"🔍 {attack_type}: {count} cases")
 
             else:
-                error_msg = risk_results.get('error', '未知错误')
-                st.error(f"❌ 个体风险预测失败: {error_msg}")
+                error_msg = risk_results.get('error', 'Unknown error')
+                st.error(f"❌ Individual risk prediction failed: {error_msg}")
 
     except Exception as e:
-        st.error(f"❌ 个体风险预测执行失败: {str(e)}")
+        st.error(f"❌ Individual risk prediction execution failed: {str(e)}")
         st.exception(e)
 
 
 def show():
-    """显示智能风险预测页面"""
-    st.markdown('<div class="sub-header">🎯 智能风险预测与个体分析</div>', unsafe_allow_html=True)
+    """Show intelligent risk prediction page"""
+    st.markdown('<div class="sub-header">🎯 Intelligent Risk Prediction & Individual Analysis</div>', unsafe_allow_html=True)
 
-    # 检查前置条件
+    # Check prerequisites
     if not _check_prerequisites():
         return
 
-    # 检查风险预测可用性
+    # Check risk prediction availability
     if not PREDICTION_AVAILABLE:
-        st.error("❌ 风险预测功能不可用")
-        st.info("💡 风险预测模块导入失败，请检查:")
-        st.info("1. backend/prediction 目录是否存在")
-        st.info("2. 风险评分模块是否完整")
-        st.info("3. 必要的Python包是否已安装")
+        st.error("❌ Risk prediction functionality unavailable")
+        st.info("💡 Risk prediction module import failed, please check:")
+        st.info("1. Whether backend/prediction directory exists")
+        st.info("2. Whether risk scoring module is complete")
+        st.info("3. Whether necessary Python packages are installed")
 
-        with st.expander("📋 安装指南"):
+        with st.expander("📋 Installation Guide"):
             st.code("""
-# 安装基础依赖
+# Install basic dependencies
 pip install scikit-learn pandas numpy
 
-# 检查模块结构
+# Check module structure
 ls backend/prediction/
 ls backend/risk_scoring/
             """)
         return
 
 
-    # 初始化session state
+    # Initialize session state
     if 'individual_risk_results' not in st.session_state:
         st.session_state.individual_risk_results = None
     if 'risk_stratification' not in st.session_state:
         st.session_state.risk_stratification = None
 
-    # 获取特征工程数据和聚类结果
+    # Get feature engineering data and clustering results
     engineered_data = st.session_state.engineered_features
     clustering_results = st.session_state.get('clustering_results', None)
 
-    st.markdown("### 📊 数据概览")
+    st.markdown("### 📊 Data Overview")
 
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        st.metric("记录数", f"{len(engineered_data):,}")
+        st.metric("Record Count", f"{len(engineered_data):,}")
 
     with col2:
-        st.metric("特征数", f"{len(engineered_data.columns)}")
+        st.metric("Feature Count", f"{len(engineered_data.columns)}")
 
     with col3:
         if clustering_results:
             cluster_count = clustering_results.get('cluster_count', 0)
-            st.metric("聚类数量", f"{cluster_count}")
+            st.metric("Cluster Count", f"{cluster_count}")
         else:
-            st.metric("聚类状态", "未聚类")
+            st.metric("Clustering Status", "Not Clustered")
 
     with col4:
         numeric_features = len(engineered_data.select_dtypes(include=['number']).columns)
-        st.metric("数值特征", f"{numeric_features}")
+        st.metric("Numeric Features", f"{numeric_features}")
 
-    # 风险预测配置区域
-    st.markdown("### ⚙️ 智能风险预测配置")
+    # Risk prediction configuration area
+    st.markdown("### ⚙️ Intelligent Risk Prediction Configuration")
 
     st.markdown("""
-    **风险预测特点：**
-    - **个体分析**: 为每个用户计算详细的风险评分和攻击类型推断
-    - **风险分层**: 将用户分为低、中、高、极高四个风险等级
-    - **攻击类型推断**: 识别账户接管、身份盗用、批量欺诈、测试性攻击等类型
-    - **防护建议**: 为不同风险等级提供针对性的防护措施
+    **Risk Prediction Features:**
+    - **Individual Analysis**: Calculate detailed risk scores and attack type inference for each user
+    - **Risk Stratification**: Classify users into low, medium, high, and critical risk levels
+    - **Attack Type Inference**: Identify account takeover, identity theft, bulk fraud, testing attacks, etc.
+    - **Protection Recommendations**: Provide targeted protection measures for different risk levels
     """)
 
-    # 预测配置
+    # Prediction configuration
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("#### 📋 预测设置")
+        st.markdown("#### 📋 Prediction Settings")
 
-        # 是否使用聚类结果
+        # Whether to use clustering results
         use_clustering = st.checkbox(
-            "使用聚类结果增强预测",
+            "Use clustering results to enhance prediction",
             value=clustering_results is not None,
-            help="基于聚类结果可以提供更准确的风险评估"
+            help="Based on clustering results can provide more accurate risk assessment"
         )
 
-        # 风险分层模式
+        # Risk stratification mode
         stratification_mode = st.selectbox(
-            "风险分层模式",
-            ["标准四分层", "自定义分层"],
-            help="选择风险分层方式"
+            "Risk Stratification Mode",
+            ["Standard Four-tier", "Custom Stratification"],
+            help="Select risk stratification method"
         )
 
     with col2:
-        st.markdown("#### ⚙️ 风险参数")
+        st.markdown("#### ⚙️ Risk Parameters")
 
         # 风险阈值配置
-        if stratification_mode == "自定义分层":
-            st.markdown("**自定义风险阈值**")
-            low_threshold = st.slider("低风险阈值", 0, 50, 40, help="0-此值为低风险")
-            medium_threshold = st.slider("中风险阈值", low_threshold, 80, 60, help="低风险阈值-此值为中风险")
-            high_threshold = st.slider("高风险阈值", medium_threshold, 100, 80, help="中风险阈值-此值为高风险")
+        if stratification_mode == "Custom Stratification":
+            st.markdown("**Custom Risk Thresholds**")
+            low_threshold = st.slider("Low Risk Threshold", 0, 50, 40, help="0 to this value is low risk")
+            medium_threshold = st.slider("Medium Risk Threshold", low_threshold, 80, 60, help="Low risk threshold to this value is medium risk")
+            high_threshold = st.slider("High Risk Threshold", medium_threshold, 100, 80, help="Medium risk threshold to this value is high risk")
 
             risk_thresholds = {
                 'low': low_threshold,
@@ -259,27 +285,27 @@ ls backend/risk_scoring/
                 'critical': 100
             }
         else:
-            # 使用标准阈值
+            # Use standard thresholds
             risk_thresholds = {
                 'low': 40,
                 'medium': 60,
                 'high': 80,
                 'critical': 100
             }
-            st.info("使用标准风险阈值：低(0-40)、中(41-60)、高(61-80)、极高(81-100)")
+            st.info("Using standard risk thresholds: Low(0-40), Medium(41-60), High(61-80), Critical(81-100)")
 
-        # 显示预期分布
-        st.markdown("**预期风险分布**")
-        st.text("低风险: ~60%")
-        st.text("中风险: ~25%")
-        st.text("高风险: ~12%")
-        st.text("极高风险: ~3%")
+        # Display expected distribution
+        st.markdown("**Expected Risk Distribution**")
+        st.text("Low Risk: ~60%")
+        st.text("Medium Risk: ~25%")
+        st.text("High Risk: ~12%")
+        st.text("Critical Risk: ~3%")
 
-    # 执行风险预测
+    # Execute risk prediction
     st.markdown("---")
 
-    # 预测按钮
-    if st.button("🎯 执行智能风险预测", type="primary", help="基于风险评分进行个体分析和攻击类型推断"):
+    # Prediction button
+    if st.button("🎯 Execute Intelligent Risk Prediction", type="primary", help="Perform individual analysis and attack type inference based on risk scoring"):
         _execute_individual_risk_prediction(engineered_data, clustering_results, use_clustering, risk_thresholds)
 
     # 显示风险预测结果
@@ -297,7 +323,7 @@ ls backend/risk_scoring/
             display_risk_prediction_results(risk_results)
 
             # 显示风险评分分布
-            with st.expander("📊 风险评分分布分析", expanded=False):
+            with st.expander("📊 Risk Score Distribution Analysis", expanded=False):
                 display_risk_score_distribution(risk_results)
 
         except ImportError as e:
@@ -306,53 +332,53 @@ ls backend/risk_scoring/
             _display_basic_risk_results(st.session_state.individual_risk_results)
 
     else:
-        # 显示智能风险预测说明
-        st.markdown("### 📝 智能风险预测说明")
+        # Display intelligent risk prediction description
+        st.markdown("### 📝 Intelligent Risk Prediction Description")
 
         st.markdown("""
-        **智能风险预测特点：**
+        **Intelligent Risk Prediction Features:**
 
-        🎯 **个体风险分析**
-        - 为每个用户计算详细的风险评分（0-100分）
-        - 基于多维度特征进行综合评估
-        - 提供个性化的风险分析报告
+        🎯 **Individual Risk Analysis**
+        - Calculate detailed risk scores for each user (0-100 points)
+        - Comprehensive assessment based on multi-dimensional features
+        - Provide personalized risk analysis reports
 
-        🏷️ **四层风险分层**
-        - **低风险** (0-40分): 正常用户，基础监控
-        - **中风险** (41-60分): 需要关注，增强监控
-        - **高风险** (61-80分): 重点关注，严密监控
-        - **极高风险** (81-100分): 立即处理，实时监控
+        🏷️ **Four-tier Risk Stratification**
+        - **Low Risk** (0-40 points): Normal users, basic monitoring
+        - **Medium Risk** (41-60 points): Requires attention, enhanced monitoring
+        - **High Risk** (61-80 points): Focus attention, close monitoring
+        - **Critical Risk** (81-100 points): Immediate action, real-time monitoring
 
-        🔍 **攻击类型推断**
-        - **账户接管攻击**: 攻击者获取用户账户控制权
-        - **身份盗用攻击**: 使用他人身份信息进行欺诈
-        - **批量欺诈攻击**: 大规模自动化欺诈行为
-        - **测试性攻击**: 小额测试以验证支付方式
+        🔍 **Attack Type Inference**
+        - **Account Takeover Attack**: Attackers gain control of user accounts
+        - **Identity Theft Attack**: Using others' identity information for fraud
+        - **Bulk Fraud Attack**: Large-scale automated fraud behavior
+        - **Testing Attack**: Small amount testing to verify payment methods
 
-        🛡️ **防护建议**
-        - 针对不同风险等级提供具体的防护措施
-        - 基于攻击类型推荐相应的安全策略
-        - 提供系统改进和监控增强建议
+        🛡️ **Protection Recommendations**
+        - Provide specific protection measures for different risk levels
+        - Recommend corresponding security strategies based on attack types
+        - Provide system improvement and monitoring enhancement suggestions
 
-        📊 **数据驱动**
-        - 基于聚类分析增强预测准确性
-        - 使用无监督学习识别异常模式
-        - 结合业务规则和统计分析
+        📊 **Data-Driven**
+        - Enhance prediction accuracy based on clustering analysis
+        - Use unsupervised learning to identify anomalous patterns
+        - Combine business rules and statistical analysis
         """)
 
         # 下一步指引
         st.markdown("---")
-        st.markdown("### 🚀 开始使用")
+        st.markdown("### 🚀 Getting Started")
 
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             st.info("""
-            💡 **使用步骤**:
-            1. 确保已完成特征工程
-            2. 建议先完成聚类分析（可选）
-            3. 配置风险预测参数
-            4. 点击"执行智能风险预测"按钮
-            5. 查看详细的个体风险分析结果
+            💡 **Usage Steps**:
+            1. Ensure feature engineering is completed
+            2. Recommend completing clustering analysis first (optional)
+            3. Configure risk prediction parameters
+            4. Click "Execute Intelligent Risk Prediction" button
+            5. View detailed individual risk analysis results
             """)
 
 
@@ -370,27 +396,27 @@ def _display_basic_risk_results(risk_results: Dict[str, Any]):
 
     col1, col2 = st.columns(2)
     with col1:
-        st.metric("分析样本数", f"{total_samples:,}")
+        st.metric("Analysis Samples", f"{total_samples:,}")
     with col2:
-        st.metric("处理时间", f"{processing_time:.2f}秒")
+        st.metric("Processing Time", f"{processing_time:.2f}s")
 
-    # 显示风险分层统计
+    # Display risk stratification statistics
     stratification_stats = risk_results.get('stratification_stats', {})
     if stratification_stats:
-        st.markdown("#### 风险分层统计")
+        st.markdown("#### Risk Stratification Statistics")
         for level, stats in stratification_stats.items():
             count = stats.get('count', 0)
             percentage = stats.get('percentage', 0)
-            st.write(f"**{level}风险**: {count} 用户 ({percentage:.1f}%)")
+            st.write(f"**{level} Risk**: {count} users ({percentage:.1f}%)")
 
-    # 显示攻击类型分布
+    # Display attack type distribution
     protection_recommendations = risk_results.get('protection_recommendations', {})
     attack_distribution = protection_recommendations.get('attack_type_distribution', {})
 
     if attack_distribution:
-        st.markdown("#### 攻击类型分布")
+        st.markdown("#### Attack Type Distribution")
         for attack_type, count in attack_distribution.items():
             if attack_type != 'none' and count > 0:
-                st.write(f"**{attack_type}**: {count} 个案例")
+                st.write(f"**{attack_type}**: {count} cases")
 
-    st.success("✅ 基础风险预测结果显示完成")
+    st.success("✅ Basic risk prediction results display completed")

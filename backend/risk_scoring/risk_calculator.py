@@ -535,31 +535,31 @@ class RiskCalculator:
             return data
     
     def _get_model_predictions(self, data: pd.DataFrame) -> Dict[str, float]:
-        """获取各模型预测结果"""
+        """Get prediction results from each model"""
         predictions = {}
         
         for model_name, model in self.models.items():
             try:
                 if hasattr(model, 'predict_proba'):
-                    # 获取欺诈概率
+                    # Get fraud probability
                     proba = model.predict_proba(data)
                     if proba.shape[1] > 1:
-                        fraud_prob = proba[:, 1]  # 假设第二列是欺诈概率
+                        fraud_prob = proba[:, 1]  # Assume second column is fraud probability
                     else:
                         fraud_prob = proba[:, 0]
                 else:
-                    # 直接预测
+                    # Direct prediction
                     fraud_prob = model.predict(data)
-                
-                # 确保是标量值
+
+                # Ensure scalar value
                 if isinstance(fraud_prob, np.ndarray):
                     fraud_prob = fraud_prob[0] if len(fraud_prob) == 1 else np.mean(fraud_prob)
-                
+
                 predictions[model_name] = float(fraud_prob)
-                
+
             except Exception as e:
-                logger.error(f"模型 {model_name} 预测时出错: {e}")
-                predictions[model_name] = 0.5  # 默认值
+                logger.error(f"Model {model_name} prediction error: {e}")
+                predictions[model_name] = 0.5  # Default value
         
         return predictions
     

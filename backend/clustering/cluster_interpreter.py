@@ -1,6 +1,6 @@
 """
-聚类解释器
-输出每个聚类的特征均值、样本数、异常群体识别
+Cluster Interpreter
+Output feature means, sample counts, and anomaly group identification for each cluster
 """
 import pandas as pd
 import numpy as np
@@ -11,18 +11,18 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class ClusterInterpreter:
-    """聚类解释器"""
+    """Cluster Interpreter"""
     def __init__(self):
         pass
 
     def interpret_clusters(self, clustering_results: Dict[str, Any], data: pd.DataFrame) -> Dict[str, Any]:
         """
-        解释聚类结果，识别异常聚类
+        Interpret clustering results and identify anomaly clusters
         Args:
-            clustering_results: 聚类分析结果
-            data: 原始数据
+            clustering_results: Clustering analysis results
+            data: Original data
         Returns:
-            聚类解释结果
+            Cluster interpretation results
         """
         try:
             cluster_details = clustering_results.get('cluster_details', [])
@@ -33,17 +33,17 @@ class ClusterInterpreter:
                 cluster_id = cluster.get('cluster_id', 0)
                 size = cluster.get('size', 0)
 
-                # 简单异常检测：聚类大小过小或过大
+                # Simple anomaly detection: cluster size too small or too large
                 total_samples = len(data)
                 cluster_ratio = size / total_samples if total_samples > 0 else 0
 
-                if cluster_ratio < 0.05 or cluster_ratio > 0.4:  # 异常阈值
+                if cluster_ratio < 0.05 or cluster_ratio > 0.4:  # Anomaly threshold
                     anomaly_clusters.append({
                         'cluster_id': cluster_id,
                         'size': size,
                         'ratio': cluster_ratio,
                         'anomaly_type': 'size_anomaly',
-                        'description': f'聚类{cluster_id}大小异常: {size}个样本({cluster_ratio:.2%})'
+                        'description': f'Cluster {cluster_id} size anomaly: {size} samples ({cluster_ratio:.2%})'
                     })
                 else:
                     normal_clusters.append({
@@ -59,7 +59,7 @@ class ClusterInterpreter:
                 'anomaly_count': len(anomaly_clusters)
             }
         except Exception as e:
-            logger.error(f"聚类解释失败: {e}")
+            logger.error(f"Cluster interpretation failed: {e}")
             return {
                 'anomaly_clusters': [],
                 'normal_clusters': [],
@@ -69,28 +69,28 @@ class ClusterInterpreter:
 
     def analyze_clusters(self, data: pd.DataFrame, cluster_labels: List[int], features: List[str]) -> Dict[str, Any]:
         """
-        分析聚类结果，提供详细的聚类特征分析
+        Analyze clustering results and provide detailed cluster feature analysis
         Args:
-            data: 原始数据
-            cluster_labels: 聚类标签
-            features: 用于聚类的特征
+            data: Original data
+            cluster_labels: Cluster labels
+            features: Features used for clustering
         Returns:
-            聚类分析结果
+            Cluster analysis results
         """
         try:
             if len(cluster_labels) == 0:
                 return self._empty_analysis_result()
 
-            # 添加聚类标签到数据
+            # Add cluster labels to data
             analysis_data = data.copy()
             analysis_data['cluster_label'] = cluster_labels
 
-            # 获取唯一聚类标签
+            # Get unique cluster labels
             unique_clusters = sorted(set(cluster_labels))
             cluster_analysis = []
 
             for cluster_id in unique_clusters:
-                if cluster_id == -1:  # DBSCAN噪声点
+                if cluster_id == -1:  # DBSCAN noise points
                     continue
 
                 cluster_mask = analysis_data['cluster_label'] == cluster_id
@@ -99,7 +99,7 @@ class ClusterInterpreter:
                 if len(cluster_data) == 0:
                     continue
 
-                # 计算聚类特征统计
+                # Calculate cluster feature statistics
                 cluster_stats = {}
                 for feature in features:
                     if feature in cluster_data.columns:
@@ -110,7 +110,7 @@ class ClusterInterpreter:
                             'max': float(cluster_data[feature].max())
                         }
 
-                # 计算聚类风险特征
+                # Calculate cluster risk features
                 risk_features = {}
                 if 'is_fraudulent' in cluster_data.columns:
                     fraud_rate = cluster_data['is_fraudulent'].mean()
@@ -127,9 +127,9 @@ class ClusterInterpreter:
 
                 cluster_analysis.append(cluster_info)
 
-            # 计算整体统计
+            # Calculate overall statistics
             total_clusters = len(unique_clusters)
-            if -1 in unique_clusters:  # 排除噪声点
+            if -1 in unique_clusters:  # Exclude noise points
                 total_clusters -= 1
 
             return {
@@ -141,35 +141,35 @@ class ClusterInterpreter:
             }
 
         except Exception as e:
-            logger.error(f"聚类分析失败: {e}")
+            logger.error(f"Cluster analysis failed: {e}")
             return self._empty_analysis_result()
 
     def _identify_anomaly_clusters(self, cluster_analysis: List[Dict]) -> List[Dict]:
-        """识别异常聚类"""
+        """Identify anomaly clusters"""
         anomaly_clusters = []
 
         for cluster in cluster_analysis:
-            # 基于大小识别异常
-            if cluster['percentage'] < 5:  # 小于5%的聚类
+            # Identify anomalies based on size
+            if cluster['percentage'] < 5:  # Clusters with less than 5%
                 anomaly_clusters.append({
                     'cluster_id': cluster['cluster_id'],
                     'anomaly_type': 'small_cluster',
-                    'description': f"聚类{cluster['cluster_id']}样本数过少({cluster['size']}个)"
+                    'description': f"Cluster {cluster['cluster_id']} has too few samples ({cluster['size']} samples)"
                 })
 
-            # 基于风险率识别异常
+            # Identify anomalies based on risk rate
             risk_features = cluster.get('risk_features', {})
-            if risk_features.get('fraud_rate', 0) > 0.2:  # 欺诈率超过20%
+            if risk_features.get('fraud_rate', 0) > 0.2:  # Fraud rate exceeds 20%
                 anomaly_clusters.append({
                     'cluster_id': cluster['cluster_id'],
                     'anomaly_type': 'high_risk',
-                    'description': f"聚类{cluster['cluster_id']}欺诈率过高({risk_features['fraud_rate']:.2%})"
+                    'description': f"Cluster {cluster['cluster_id']} has excessively high fraud rate ({risk_features['fraud_rate']:.2%})"
                 })
 
         return anomaly_clusters
 
     def _empty_analysis_result(self) -> Dict[str, Any]:
-        """返回空的分析结果"""
+        """Return empty analysis result"""
         return {
             'cluster_analysis': [],
             'total_clusters': 0,

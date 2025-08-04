@@ -23,34 +23,34 @@ logger = logging.getLogger(__name__)
 
 
 def load_and_prepare_data():
-    """加载和准备训练数据"""
+    """Load and prepare training data"""
     try:
-        # 加载原始数据
+        # Load raw data
         data_path = os.path.join(project_root, "data", "processed", "engineered_features.csv")
         if not os.path.exists(data_path):
-            logger.error(f"数据文件不存在: {data_path}")
+            logger.error(f"Data file does not exist: {data_path}")
             return None, None
-        
+
         data = pd.read_csv(data_path)
-        logger.info(f"加载数据成功，形状: {data.shape}")
-        
-        # 生成四分类标签
+        logger.info(f"Data loaded successfully, shape: {data.shape}")
+
+        # Generate four-class labels
         from backend.pseudo_labeling.semi_supervised_generator import SemiSupervisedLabelGenerator
         from backend.clustering.cluster_analyzer import ClusterAnalyzer
-        
-        # 先进行聚类分析
+
+        # First perform clustering analysis
         cluster_analyzer = ClusterAnalyzer()
         cluster_results = cluster_analyzer.analyze_clusters(data, algorithm='kmeans')
-        
-        # 生成四分类标签
+
+        # Generate four-class labels
         label_generator = SemiSupervisedLabelGenerator()
         label_results = label_generator.generate_four_class_labels(
-            data, 
+            data,
             cluster_results=cluster_results
         )
         
         if not label_results['success']:
-            logger.error("四分类标签生成失败")
+            logger.error("Four-class label generation failed")
             return None, None
         
         # 准备特征和标签
@@ -168,31 +168,31 @@ def evaluate_models(model_manager, X_val, y_val):
             for class_name, stats in distribution.items():
                 logger.info(f"  {class_name}: {stats['count']} ({stats['percentage']:.1f}%)")
             
-            # 置信度统计
+            # Confidence statistics
             confidence_stats = prediction_results['confidence_stats'][model_name]
-            logger.info(f"置信度统计:")
-            logger.info(f"  平均置信度: {confidence_stats['mean_confidence']:.3f}")
-            logger.info(f"  高置信度比例: {confidence_stats['high_confidence_ratio']:.3f}")
+            logger.info(f"Confidence statistics:")
+            logger.info(f"  Average confidence: {confidence_stats['mean_confidence']:.3f}")
+            logger.info(f"  High confidence ratio: {confidence_stats['high_confidence_ratio']:.3f}")
         
     except Exception as e:
-        logger.error(f"模型评估失败: {e}")
+        logger.error(f"Model evaluation failed: {e}")
 
 
 def main():
-    """主函数"""
-    logger.info("🚀 开始四分类模型训练")
+    """Main function"""
+    logger.info("🚀 Starting four-class model training")
     logger.info("=" * 50)
-    
+
     success = train_models()
-    
+
     logger.info("=" * 50)
     if success:
-        logger.info("🎉 四分类模型训练完成！")
-        logger.info("模型文件保存在: models/four_class/")
-        logger.info("可以在模型预测页面使用这些模型进行四分类预测")
+        logger.info("🎉 Four-class model training completed!")
+        logger.info("Model files saved in: models/four_class/")
+        logger.info("You can use these models for four-class prediction on the model prediction page")
     else:
-        logger.error("❌ 四分类模型训练失败")
-        logger.info("请检查数据和依赖是否正确安装")
+        logger.error("❌ Four-class model training failed")
+        logger.info("Please check if data and dependencies are correctly installed")
     
     return success
 

@@ -27,23 +27,23 @@ class ThreeLayerPredictionPipeline:
         logger.info("三层预测架构流水线初始化完成")
     
     def _initialize_components(self):
-        """初始化各层组件"""
+        """Initialize components for each layer"""
         try:
-            # 第一层：欺诈检测
+            # First layer: Fraud detection
             from backend.clustering.cluster_analyzer import ClusterAnalyzer
             from backend.feature_engineer.risk_features import RiskFeatureEngineer
             self.cluster_analyzer = ClusterAnalyzer()
             self.feature_engineer = RiskFeatureEngineer()
-            
-            # 第二层：四分类风险评级
+
+            # Second layer: Four-class risk grading
             from backend.prediction.four_class_pipeline import FourClassPredictionPipeline
             self.four_class_pipeline = FourClassPredictionPipeline()
-            
-            # 第三层：攻击类型分析
+
+            # Third layer: Attack type analysis
             from backend.attack_classification.attack_classifier import AttackClassifier
             self.attack_classifier = AttackClassifier()
-            
-            logger.info("三层预测组件初始化成功")
+
+            logger.info("Three-layer prediction components initialized successfully")
             
         except Exception as e:
             logger.error(f"组件初始化失败: {e}")
@@ -328,7 +328,7 @@ class ThreeLayerPredictionPipeline:
                         'risk_class': -1
                     }
                 
-                # 添加攻击分析信息
+                # Add attack analysis information
                 if attack_results and i < len(attack_results):
                     attack_info = attack_results[i]
                     sample_result['attack_analysis'] = {
@@ -343,7 +343,7 @@ class ThreeLayerPredictionPipeline:
                         'threat_level': 'unknown'
                     }
                 
-                # 计算综合威胁评分
+                # Calculate comprehensive threat score
                 sample_result['comprehensive_threat'] = self._calculate_comprehensive_threat(
                     sample_result
                 )
@@ -353,7 +353,7 @@ class ThreeLayerPredictionPipeline:
             return integrated_results
             
         except Exception as e:
-            logger.error(f"结果整合失败: {e}")
+            logger.error(f"Result integration failed: {e}")
             return []
     
     def _calculate_comprehensive_threat(self, sample_result: Dict) -> Dict[str, Any]:
@@ -394,16 +394,16 @@ class ThreeLayerPredictionPipeline:
             }
             
         except Exception as e:
-            logger.warning(f"综合威胁评分计算失败: {e}")
+            logger.warning(f"Comprehensive threat score calculation failed: {e}")
             return {
                 'comprehensive_score': 0.0,
                 'threat_level': 'unknown',
                 'confidence': 0.0,
                 'contributing_factors': {}
             }
-    
+
     def _partial_result(self, result: Dict, error_msg: str) -> Dict[str, Any]:
-        """返回部分结果"""
+        """Return partial result"""
         result['success'] = False
         result['error'] = error_msg
         return result

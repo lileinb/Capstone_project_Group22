@@ -1,6 +1,6 @@
-# 🎯 智能风险预测与欺诈检测系统 - Git忽略文件
+# Intelligent Risk Prediction and Fraud Detection System - Git Ignore File
 
-# ===== Python相关 =====
+# ===== Python Related =====
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -125,12 +125,12 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# ===== Streamlit相关 =====
+# ===== Streamlit Related =====
 # Streamlit cache
 .streamlit/
 
-# ===== 机器学习相关 =====
-# 训练好的模型文件
+# ===== Machine Learning Related =====
+# Trained model files
 *.pkl
 *.joblib
 *.h5
@@ -138,7 +138,7 @@ dmypy.json
 *.pb
 *.onnx
 
-# 大型数据文件
+# But keep large data files
 *.csv
 *.json
 *.parquet
@@ -146,39 +146,39 @@ dmypy.json
 *.xlsx
 *.xls
 
-# 但保留示例数据
+# But keep sample data
 !Dataset/*.csv
 !data/sample/*.csv
 
-# ===== 项目特定文件 =====
-# 缓存目录
+# ===== Project Specific Files =====
+# Cache directories
 cache/
 .cache/
 
-# 临时文件
+# Temporary files
 temp/
 tmp/
 *.tmp
 
-# 日志文件
+# Log files
 logs/
 *.log
 
-# 配置文件中的敏感信息
+# Sensitive information in config files
 config/secrets.py
 config/api_keys.py
 .secrets/
 
-# 导出文件
+# Export files
 exports/*.json
 exports/*.xlsx
 exports/*.html
 reports/generated/
 
-# CatBoost训练信息
+# CatBoost training information
 catboost_info/
 
-# ===== IDE相关 =====
+# ===== IDE Related =====
 # VSCode
 .vscode/
 *.code-workspace

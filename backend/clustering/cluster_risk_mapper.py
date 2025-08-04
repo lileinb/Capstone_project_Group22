@@ -1,6 +1,6 @@
 """
-聚类风险映射器
-将聚类结果映射到风险等级，支持无监督风险评估
+Cluster Risk Mapper
+Map clustering results to risk levels, supporting unsupervised risk assessment
 """
 
 import numpy as np
@@ -9,70 +9,70 @@ from typing import Dict, List, Any, Tuple
 import logging
 from datetime import datetime
 
-# 配置日志
+# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 class ClusterRiskMapper:
-    """聚类风险映射器"""
-    
+    """Cluster Risk Mapper"""
+
     def __init__(self):
-        """初始化聚类风险映射器"""
-        # 重新设计权重 - 平衡多维度风险特征
+        """Initialize cluster risk mapper"""
+        # Redesigned weights - balance multi-dimensional risk features
         self.risk_indicator_weights = {
-            'amount_risk': 0.25,           # 交易金额风险 (提升权重)
-            'account_age_risk': 0.20,      # 账户年龄风险 (提升权重)
-            'time_pattern_risk': 0.18,     # 时间模式风险 (提升权重)
-            'fraud_rate_risk': 0.15,       # 欺诈率风险 (降低权重，避免过度依赖)
-            'device_payment_risk': 0.10,   # 设备支付风险 (提升权重)
-            'address_risk': 0.07,          # 地址风险
-            'category_risk': 0.03,         # 商品类别风险
-            'statistical_risk': 0.02       # 统计异常风险
+            'amount_risk': 0.25,           # Transaction amount risk (increased weight)
+            'account_age_risk': 0.20,      # Account age risk (increased weight)
+            'time_pattern_risk': 0.18,     # Time pattern risk (increased weight)
+            'fraud_rate_risk': 0.15,       # Fraud rate risk (reduced weight to avoid over-dependence)
+            'device_payment_risk': 0.10,   # Device payment risk (increased weight)
+            'address_risk': 0.07,          # Address risk
+            'category_risk': 0.03,         # Product category risk
+            'statistical_risk': 0.02       # Statistical anomaly risk
         }
 
-        # 大幅降低风险等级阈值 - 确保四层分布
+        # Significantly reduced risk level thresholds - ensure four-tier distribution
         self.cluster_risk_thresholds = {
-            'low': 15,      # 0-15: 低风险 (大幅降低)
-            'medium': 30,   # 16-30: 中风险 (大幅降低)
-            'high': 50,     # 31-50: 高风险 (大幅降低)
-            'critical': 100 # 51-100: 极高风险 (大幅降低)
+            'low': 15,      # 0-15: Low risk (significantly reduced)
+            'medium': 30,   # 16-30: Medium risk (significantly reduced)
+            'high': 50,     # 31-50: High risk (significantly reduced)
+            'critical': 100 # 51-100: Critical risk (significantly reduced)
         }
     
     def map_clusters_to_risk_levels(self, cluster_results: Dict[str, Any], 
                                   data: pd.DataFrame) -> Dict[int, Dict[str, Any]]:
         """
-        将聚类结果映射到风险等级
-        
+        Map clustering results to risk levels
+
         Args:
-            cluster_results: 聚类分析结果
-            data: 原始数据
-            
+            cluster_results: Clustering analysis results
+            data: Original data
+
         Returns:
-            聚类ID到风险信息的映射
+            Mapping from cluster ID to risk information
         """
         try:
             cluster_risk_mapping = {}
             cluster_details = cluster_results.get('cluster_details', [])
             
-            logger.info(f"开始映射 {len(cluster_details)} 个聚类到风险等级")
-            
+            logger.info(f"Starting to map {len(cluster_details)} clusters to risk levels")
+
             for cluster_detail in cluster_details:
                 cluster_id = cluster_detail.get('cluster_id', -1)
-                
-                # 计算聚类风险指标
+
+                # Calculate cluster risk indicators
                 risk_indicators = self._calculate_cluster_risk_indicators(cluster_detail)
-                
-                # 计算综合风险评分
+
+                # Calculate comprehensive risk score
                 risk_score = self._calculate_comprehensive_risk_score(risk_indicators)
-                
-                # 确定风险等级
+
+                # Determine risk level
                 risk_level = self._determine_cluster_risk_level(risk_score)
-                
-                # 生成风险解释
+
+                # Generate risk explanation
                 risk_explanation = self._generate_risk_explanation(risk_indicators, risk_score)
-                
-                # 计算聚类质量指标
+
+                # Calculate cluster quality metrics
                 quality_metrics = self._calculate_cluster_quality_metrics(cluster_detail, cluster_results)
                 
                 cluster_risk_mapping[cluster_id] = {
@@ -87,19 +87,19 @@ class ClusterRiskMapper:
                     'timestamp': datetime.now().isoformat()
                 }
             
-            # 添加整体风险分布统计
+            # Add overall risk distribution statistics
             risk_distribution = self._calculate_risk_distribution(cluster_risk_mapping)
-            
-            logger.info(f"聚类风险映射完成，风险分布: {risk_distribution}")
-            
+
+            logger.info(f"Cluster risk mapping completed, risk distribution: {risk_distribution}")
+
             return {
                 'cluster_risk_mapping': cluster_risk_mapping,
                 'risk_distribution': risk_distribution,
                 'mapping_summary': self._generate_mapping_summary(cluster_risk_mapping)
             }
-            
+
         except Exception as e:
-            logger.error(f"聚类风险映射失败: {e}")
+            logger.error(f"Cluster risk mapping failed: {e}")
             return {'cluster_risk_mapping': {}, 'risk_distribution': {}, 'mapping_summary': {}}
     
     def _calculate_cluster_risk_indicators(self, cluster_detail: Dict) -> Dict[str, float]:
@@ -331,34 +331,34 @@ class ClusterRiskMapper:
         else:
             return 'low'
     
-    def _generate_risk_explanation(self, risk_indicators: Dict[str, float], 
+    def _generate_risk_explanation(self, risk_indicators: Dict[str, float],
                                  risk_score: float) -> List[str]:
-        """生成风险解释"""
+        """Generate risk explanation"""
         explanations = []
-        
-        # 找出主要风险因素
+
+        # Find main risk factors
         sorted_indicators = sorted(risk_indicators.items(), key=lambda x: x[1], reverse=True)
-        
-        for indicator, score in sorted_indicators[:3]:  # 取前3个主要风险因素
+
+        for indicator, score in sorted_indicators[:3]:  # Take top 3 main risk factors
             if score > 30:
                 if indicator == 'amount_risk':
-                    explanations.append(f"交易金额异常 (风险分数: {score:.1f})")
+                    explanations.append(f"Transaction amount anomaly (risk score: {score:.1f})")
                 elif indicator == 'time_pattern_risk':
-                    explanations.append(f"时间模式异常 (风险分数: {score:.1f})")
+                    explanations.append(f"Time pattern anomaly (risk score: {score:.1f})")
                 elif indicator == 'account_age_risk':
-                    explanations.append(f"账户年龄风险 (风险分数: {score:.1f})")
+                    explanations.append(f"Account age risk (risk score: {score:.1f})")
                 elif indicator == 'device_payment_risk':
-                    explanations.append(f"设备支付风险 (风险分数: {score:.1f})")
+                    explanations.append(f"Device payment risk (risk score: {score:.1f})")
                 elif indicator == 'address_risk':
-                    explanations.append(f"地址不一致风险 (风险分数: {score:.1f})")
+                    explanations.append(f"Address inconsistency risk (risk score: {score:.1f})")
                 elif indicator == 'category_risk':
-                    explanations.append(f"商品类别风险 (风险分数: {score:.1f})")
+                    explanations.append(f"Product category risk (risk score: {score:.1f})")
                 elif indicator == 'statistical_risk':
-                    explanations.append(f"统计异常风险 (风险分数: {score:.1f})")
-        
+                    explanations.append(f"Statistical anomaly risk (risk score: {score:.1f})")
+
         if not explanations:
-            explanations.append("风险因素较低，属于正常交易模式")
-        
+            explanations.append("Low risk factors, normal transaction pattern")
+
         return explanations
     
     def _calculate_cluster_quality_metrics(self, cluster_detail: Dict, 

@@ -64,20 +64,20 @@ class EnsemblePredictor:
             return ensemble_predictions, ensemble_probs
             
         except Exception as e:
-            logger.error(f"集成预测失败: {e}")
-            # 返回默认值
+            logger.error(f"Ensemble prediction failed: {e}")
+            # Return default values
             sample_size = len(list(model_probabilities.values())[0]) if model_probabilities else 1
             return np.zeros(sample_size), np.zeros(sample_size)
     
     def _weighted_voting(self, model_probabilities: Dict[str, np.ndarray]) -> np.ndarray:
         """
-        加权投票集成
-        
+        Weighted voting ensemble
+
         Args:
-            model_probabilities: 各模型的预测概率
-            
+            model_probabilities: Prediction probabilities from each model
+
         Returns:
-            集成概率
+            Ensemble probabilities
         """
         ensemble_probs = np.zeros(len(list(model_probabilities.values())[0]))
         total_weight = 0
@@ -140,13 +140,13 @@ class EnsemblePredictor:
     
     def get_model_contributions(self, model_probabilities: Dict[str, np.ndarray]) -> Dict[str, float]:
         """
-        获取各模型的贡献度
-        
+        Get contribution of each model
+
         Args:
-            model_probabilities: 各模型的预测概率
-            
+            model_probabilities: Prediction probabilities from each model
+
         Returns:
-            模型贡献度字典
+            Model contribution dictionary
         """
         contributions = {}
         
@@ -156,7 +156,7 @@ class EnsemblePredictor:
                 weight = self.weights.get(model_name.lower(), 1.0)
                 contributions[model_name] = weight / total_weight if total_weight > 0 else 0
         else:
-            # 简单平均
+            # Simple average
             num_models = len(model_probabilities)
             for model_name in model_probabilities.keys():
                 contributions[model_name] = 1.0 / num_models if num_models > 0 else 0

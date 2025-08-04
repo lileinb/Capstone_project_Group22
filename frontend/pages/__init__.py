@@ -1,4 +1,4 @@
 """
-页面模块
-包含所有Streamlit页面
-""" 
+Page Module
+Contains all Streamlit pages
+"""

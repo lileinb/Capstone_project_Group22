@@ -326,42 +326,44 @@ class RiskFeatureEngineer:
         category_field = self._get_field_name(df, 'Product Category', 'product_category')
         customer_field = self._get_field_name(df, 'Customer ID', 'customer_id')
 
-        # 1. 支付方式风险评分
+        # 1. Payment method risk scoring
         if payment_field:
             payment_risk_mapping = {
-                'credit card': 1,      # 信用卡风险较低
-                'debit card': 1,       # 借记卡风险较低
-                'bank transfer': 2,    # 银行转账风险中等
-                'PayPal': 2           # PayPal风险中等
+                'credit card': 1,      # Credit card lower risk
+                'debit card': 1,       # Debit card lower risk
+                'bank transfer': 2,    # Bank transfer medium risk
+                'PayPal': 2           # PayPal medium risk
             }
             df['payment_risk_score'] = df[payment_field].map(payment_risk_mapping).fillna(3)
-            self.feature_categories["支付行为特征"].append('payment_risk_score')
+            self.feature_categories["Payment Behavior Features"].append('payment_risk_score')
 
-        # 2. 支付方式编码
-        df['is_credit_card'] = (df['Payment Method'] == 'credit card').astype(int)
-        df['is_debit_card'] = (df['Payment Method'] == 'debit card').astype(int)
-        df['is_bank_transfer'] = (df['Payment Method'] == 'bank transfer').astype(int)
-        df['is_paypal'] = (df['Payment Method'] == 'PayPal').astype(int)
-        self.feature_categories["支付行为特征"].extend(['is_credit_card', 'is_debit_card', 'is_bank_transfer', 'is_paypal'])
+        # 2. 支付方式编码 (使用正确的列名)
+        if payment_field:
+            df['is_credit_card'] = (df[payment_field] == 'credit card').astype(int)
+            df['is_debit_card'] = (df[payment_field] == 'debit card').astype(int)
+            df['is_bank_transfer'] = (df[payment_field] == 'bank transfer').astype(int)
+            df['is_paypal'] = (df[payment_field] == 'PayPal').astype(int)
+            self.feature_categories["支付行为特征"].extend(['is_credit_card', 'is_debit_card', 'is_bank_transfer', 'is_paypal'])
 
-        # 3. 产品类别风险评分
-        category_risk_mapping = {
-            'electronics': 3,        # 电子产品风险较高
-            'clothing': 1,          # 服装风险较低
-            'home & garden': 1,     # 家居园艺风险较低
-            'health & beauty': 2,   # 健康美容风险中等
-            'toys & games': 2       # 玩具游戏风险中等
-        }
-        df['category_risk_score'] = df['Product Category'].map(category_risk_mapping).fillna(2)
-        self.feature_categories["支付行为特征"].append('category_risk_score')
+        # 3. 产品类别风险评分 (使用正确的列名)
+        if category_field:
+            category_risk_mapping = {
+                'electronics': 3,        # 电子产品风险较高
+                'clothing': 1,          # 服装风险较低
+                'home & garden': 1,     # 家居园艺风险较低
+                'health & beauty': 2,   # 健康美容风险中等
+                'toys & games': 2       # 玩具游戏风险中等
+            }
+            df['category_risk_score'] = df[category_field].map(category_risk_mapping).fillna(2)
+            self.feature_categories["支付行为特征"].append('category_risk_score')
 
-        # 4. 产品类别编码
-        df['is_electronics'] = (df['Product Category'] == 'electronics').astype(int)
-        df['is_clothing'] = (df['Product Category'] == 'clothing').astype(int)
-        df['is_home_garden'] = (df['Product Category'] == 'home & garden').astype(int)
-        df['is_health_beauty'] = (df['Product Category'] == 'health & beauty').astype(int)
-        df['is_toys_games'] = (df['Product Category'] == 'toys & games').astype(int)
-        self.feature_categories["支付行为特征"].extend(['is_electronics', 'is_clothing', 'is_home_garden', 'is_health_beauty', 'is_toys_games'])
+            # 4. 产品类别编码
+            df['is_electronics'] = (df[category_field] == 'electronics').astype(int)
+            df['is_clothing'] = (df[category_field] == 'clothing').astype(int)
+            df['is_home_garden'] = (df[category_field] == 'home & garden').astype(int)
+            df['is_health_beauty'] = (df[category_field] == 'health & beauty').astype(int)
+            df['is_toys_games'] = (df[category_field] == 'toys & games').astype(int)
+            self.feature_categories["支付行为特征"].extend(['is_electronics', 'is_clothing', 'is_home_garden', 'is_health_beauty', 'is_toys_games'])
 
         # 5. 用户支付方式多样性
         user_payment_diversity = df.groupby('Customer ID')['Payment Method'].nunique()
@@ -385,49 +387,54 @@ class RiskFeatureEngineer:
 
         df = data.copy()
 
-        # 1. 地址完全一致性检查
-        df['address_exact_match'] = (df['Shipping Address'] == df['Billing Address']).astype(int)
-        df['address_mismatch_risk'] = (1 - df['address_exact_match']) * 3  # 不一致为高风险
-        self.feature_categories["地址一致性特征"].extend(['address_exact_match', 'address_mismatch_risk'])
+        # 获取实际字段名
+        shipping_field = self._get_field_name(df, 'Shipping Address', 'shipping_address')
+        billing_field = self._get_field_name(df, 'Billing Address', 'billing_address')
 
-        # 2. 地址长度特征
-        df['shipping_address_length'] = df['Shipping Address'].str.len()
-        df['billing_address_length'] = df['Billing Address'].str.len()
-        df['address_length_diff'] = np.abs(df['shipping_address_length'] - df['billing_address_length'])
-        self.feature_categories["地址一致性特征"].extend(['shipping_address_length', 'billing_address_length', 'address_length_diff'])
+        if shipping_field and billing_field:
+            # 1. 地址完全一致性检查
+            df['address_exact_match'] = (df[shipping_field] == df[billing_field]).astype(int)
+            df['address_mismatch_risk'] = (1 - df['address_exact_match']) * 3  # 不一致为高风险
+            self.feature_categories["地址一致性特征"].extend(['address_exact_match', 'address_mismatch_risk'])
 
-        # 3. 地址相似性分析 (简化版)
-        # 检查是否包含相同的关键词
-        def extract_address_keywords(address):
-            if pd.isna(address):
-                return set()
-            # 提取数字和单词
-            words = re.findall(r'\b\w+\b', str(address).lower())
-            return set(words)
+            # 2. 地址长度特征
+            df['shipping_address_length'] = df[shipping_field].str.len()
+            df['billing_address_length'] = df[billing_field].str.len()
+            df['address_length_diff'] = np.abs(df['shipping_address_length'] - df['billing_address_length'])
+            self.feature_categories["地址一致性特征"].extend(['shipping_address_length', 'billing_address_length', 'address_length_diff'])
 
-        df['shipping_keywords'] = df['Shipping Address'].apply(extract_address_keywords)
-        df['billing_keywords'] = df['Billing Address'].apply(extract_address_keywords)
+            # 3. 地址相似性分析 (简化版)
+            # 检查是否包含相同的关键词
+            def extract_address_keywords(address):
+                if pd.isna(address):
+                    return set()
+                # 提取数字和单词
+                words = re.findall(r'\b\w+\b', str(address).lower())
+                return set(words)
 
-        # 计算关键词重叠度
-        df['address_keyword_overlap'] = df.apply(
-            lambda row: len(row['shipping_keywords'] & row['billing_keywords']) /
-                       max(len(row['shipping_keywords'] | row['billing_keywords']), 1),
-            axis=1
-        )
-        df['address_similarity_risk'] = df['address_keyword_overlap'].apply(
-            lambda x: 1 if x > 0.8 else (2 if x > 0.5 else 3)
-        )
-        self.feature_categories["地址一致性特征"].extend(['address_keyword_overlap', 'address_similarity_risk'])
+            df['shipping_keywords'] = df[shipping_field].apply(extract_address_keywords)
+            df['billing_keywords'] = df[billing_field].apply(extract_address_keywords)
 
-        # 4. 地址格式风险
-        # 检查地址是否包含PO Box等高风险格式
-        df['has_po_box'] = df['Shipping Address'].str.contains('Box|BOX|P.O.|PO', na=False).astype(int)
-        df['has_dpo'] = df['Shipping Address'].str.contains('DPO|APO', na=False).astype(int)
-        df['address_format_risk'] = (df['has_po_box'] + df['has_dpo']) * 2
-        self.feature_categories["地址一致性特征"].extend(['has_po_box', 'has_dpo', 'address_format_risk'])
+            # 计算关键词重叠度
+            df['address_keyword_overlap'] = df.apply(
+                lambda row: len(row['shipping_keywords'] & row['billing_keywords']) /
+                           max(len(row['shipping_keywords'] | row['billing_keywords']), 1),
+                axis=1
+            )
+            df['address_similarity_risk'] = df['address_keyword_overlap'].apply(
+                lambda x: 1 if x > 0.8 else (2 if x > 0.5 else 3)
+            )
+            self.feature_categories["地址一致性特征"].extend(['address_keyword_overlap', 'address_similarity_risk'])
 
-        # 清理临时列
-        df = df.drop(['shipping_keywords', 'billing_keywords'], axis=1)
+            # 4. 地址格式风险
+            # 检查地址是否包含PO Box等高风险格式
+            df['has_po_box'] = df[shipping_field].str.contains('Box|BOX|P.O.|PO', na=False).astype(int)
+            df['has_dpo'] = df[shipping_field].str.contains('DPO|APO', na=False).astype(int)
+            df['address_format_risk'] = (df['has_po_box'] + df['has_dpo']) * 2
+            self.feature_categories["地址一致性特征"].extend(['has_po_box', 'has_dpo', 'address_format_risk'])
+
+            # 清理临时列
+            df = df.drop(['shipping_keywords', 'billing_keywords'], axis=1)
 
         logger.info(f"创建了{len(self.feature_categories['地址一致性特征'])}个地址一致性特征")
         return df
@@ -452,21 +459,21 @@ class RiskFeatureEngineer:
         for category in self.feature_categories:
             self.feature_categories[category] = []
 
-        # 执行各类特征工程
+        # Execute various feature engineering
         df = self.create_time_risk_features(data)
         df = self.create_amount_risk_features(df)
         df = self.create_device_geographic_features(df)
         df = self.create_account_behavior_features(df)
 
-        # 简化版本，暂时跳过复杂特征
+        # Simplified version, temporarily skip complex features
         # df = self.create_payment_behavior_features(df)
         # df = self.create_address_consistency_features(df)
 
-        # 记录新创建的特征
+        # Record newly created features
         self.risk_features = [col for col in df.columns if col not in self.original_features]
 
-        logger.info(f"特征工程完成: 原始特征{len(self.original_features)}个, 新增风险特征{len(self.risk_features)}个")
-        logger.info(f"特征分类统计: {[(k, len(v)) for k, v in self.feature_categories.items()]}")
+        logger.info(f"Feature engineering completed: {len(self.original_features)} original features, {len(self.risk_features)} new risk features added")
+        logger.info(f"Feature category statistics: {[(k, len(v)) for k, v in self.feature_categories.items()]}")
 
         return df
 
@@ -481,18 +488,18 @@ class RiskFeatureEngineer:
         }
 
     def calculate_feature_importance(self, data: pd.DataFrame, target_column: str = 'Is Fraudulent') -> Dict[str, float]:
-        """计算特征重要性"""
+        """Calculate feature importance"""
         if data is None or data.empty or target_column not in data.columns:
             return {}
 
-        # 只计算数值特征的重要性
+        # Only calculate importance for numeric features
         numeric_columns = data.select_dtypes(include=[np.number]).columns
         numeric_columns = [col for col in numeric_columns if col != target_column]
 
         if len(numeric_columns) == 0:
             return {}
 
-        # 计算与目标变量的相关性
+        # Calculate correlation with target variable
         correlations = data[numeric_columns].corrwith(data[target_column]).abs()
         self.feature_importance = correlations.to_dict()
 
