@@ -8,6 +8,39 @@ project_root = os.path.dirname(os.path.abspath(__file__))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
+# Early dependency check
+try:
+    from utils.dependency_manager import check_and_install_dependencies, dependency_manager
+    # Check critical dependencies on startup
+    results = dependency_manager.check_all_dependencies()
+    if not results['summary']['all_critical_available']:
+        # Show dependency error page
+        try:
+            from frontend.pages.dependency_error_page import show_dependency_error
+            show_dependency_error(
+                missing_packages=results['summary']['critical_missing'],
+                error_details="Critical dependencies are missing"
+            )
+            st.stop()
+        except ImportError:
+            # Fallback error display
+            st.error("❌ Critical dependencies are missing!")
+            st.error(f"Missing packages: {', '.join(results['summary']['critical_missing'])}")
+            st.info("💡 Please run: pip install -r requirements.txt")
+            st.info("💡 Or use the smart startup script: python start.py")
+            st.stop()
+except ImportError:
+    # Fallback if dependency manager is not available
+    # Try basic imports
+    try:
+        import pandas
+        import numpy
+        import plotly
+    except ImportError as e:
+        st.error(f"❌ Critical dependency missing: {e}")
+        st.info("💡 Please run: pip install -r requirements.txt")
+        st.stop()
+
 # Clear module cache (solve import issues)
 def clear_module_cache():
     """Clear related module cache"""

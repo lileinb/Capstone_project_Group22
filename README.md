@@ -4,6 +4,62 @@
 
 An intelligent e-commerce user risk assessment system based on behavioral features and big data analysis. The system employs advanced machine learning technologies and a three-layer prediction architecture to provide comprehensive fraud detection and risk assessment solutions for e-commerce platforms.
 
+## Quick Start
+
+### Prerequisites
+- Python 3.8 or higher
+- pip package manager
+
+### Installation
+
+1. **Clone the repository:**
+```bash
+git clone <your-repository-url>
+cd Capstone_test
+```
+
+2. **Check dependencies (recommended):**
+```bash
+python check_dependencies.py
+```
+
+3. **Install required packages:**
+```bash
+pip install -r requirements.txt
+```
+
+4. **Run the application:**
+
+   **Option A: Smart startup (recommended)**
+   ```bash
+   python start.py
+   ```
+
+   **Option B: Platform-specific scripts**
+   ```bash
+   # Windows users:
+   start.bat
+
+   # macOS/Linux users:
+   ./start.sh
+   ```
+
+   **Option C: Manual startup**
+   ```bash
+   streamlit run main.py
+   ```
+
+### Troubleshooting
+
+If you encounter the error "No module named 'lime'", run:
+```bash
+pip install lime
+```
+
+For comprehensive troubleshooting, see:
+- [INSTALLATION.md](INSTALLATION.md) - Detailed installation guide
+- [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - Solutions for common deployment issues
+
 ### Core Features
 
 - **Intelligent Risk Prediction**: Multi-dimensional risk assessment based on user behavioral features

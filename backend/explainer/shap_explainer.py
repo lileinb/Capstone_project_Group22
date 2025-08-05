@@ -2,7 +2,6 @@
 SHAP Explainer Module
 For global and local feature importance analysis
 """
-import shap
 import numpy as np
 import pandas as pd
 import logging
@@ -10,6 +9,14 @@ from typing import Any, Dict, List
 
 # Configure logging
 logger = logging.getLogger(__name__)
+
+# Safe import for SHAP
+try:
+    import shap
+    SHAP_AVAILABLE = True
+except ImportError:
+    SHAP_AVAILABLE = False
+    logger.warning("SHAP package not available. Please install it using: pip install shap")
 
 class SHAPExplainer:
     def __init__(self, model=None):
@@ -28,6 +35,15 @@ class SHAPExplainer:
         Returns:
             Analysis result dictionary
         """
+        # Check if SHAP is available
+        if not SHAP_AVAILABLE:
+            logger.error("SHAP package is not installed. Please install it using: pip install shap")
+            return {
+                'error': 'SHAP package not available',
+                'message': 'Please install SHAP using: pip install shap',
+                'feature_importance': [],
+                'feature_contributions': []
+            }
         # Sampling
         if len(X) > sample_size:
             X_sample = X.sample(sample_size, random_state=42)

@@ -16,14 +16,64 @@ from datetime import datetime
 # Add project root directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-# Import backend modules
-from backend.explainer.shap_explainer import SHAPExplainer
-from backend.explainer.lime_explainer import LIMEExplainer
-from backend.analysis_reporting.report_generator import ReportGenerator
+# Safe import backend modules - delay import to avoid startup failures
+def safe_import_explainers():
+    """Safely import explainer modules when needed"""
+    global SHAPExplainer, LIMEExplainer, ReportGenerator
+    global SHAP_AVAILABLE, LIME_AVAILABLE, REPORT_GENERATOR_AVAILABLE
+
+    # Initialize flags
+    SHAP_AVAILABLE = False
+    LIME_AVAILABLE = False
+    REPORT_GENERATOR_AVAILABLE = False
+
+    # Try importing SHAP explainer
+    try:
+        from backend.explainer.shap_explainer import SHAPExplainer
+        SHAP_AVAILABLE = True
+    except ImportError as e:
+        SHAPExplainer = None
+        st.warning(f"⚠️ SHAP explainer not available: {e}")
+        st.info("💡 Please install SHAP using: pip install shap")
+
+    # Try importing LIME explainer
+    try:
+        from backend.explainer.lime_explainer import LIMEExplainer
+        LIME_AVAILABLE = True
+    except ImportError as e:
+        LIMEExplainer = None
+        st.warning(f"⚠️ LIME explainer not available: {e}")
+        st.info("💡 Please install LIME using: pip install lime")
+
+    # Try importing report generator
+    try:
+        from backend.analysis_reporting.report_generator import ReportGenerator
+        REPORT_GENERATOR_AVAILABLE = True
+    except ImportError as e:
+        ReportGenerator = None
+        st.warning(f"⚠️ Report generator not available: {e}")
+
+    return SHAP_AVAILABLE, LIME_AVAILABLE, REPORT_GENERATOR_AVAILABLE
+
+# Initialize as None - will be imported when needed
+SHAPExplainer = None
+LIMEExplainer = None
+ReportGenerator = None
+SHAP_AVAILABLE = False
+LIME_AVAILABLE = False
+REPORT_GENERATOR_AVAILABLE = False
 
 def show():
     """Display analysis report page"""
     st.markdown('<div class="sub-header">📋 Comprehensive Analysis Report & Explainability Analysis</div>', unsafe_allow_html=True)
+
+    # Safe import of backend modules
+    try:
+        shap_available, lime_available, report_available = safe_import_explainers()
+    except Exception as e:
+        st.error(f"❌ Failed to import backend modules: {e}")
+        st.info("💡 Please check your installation and try running: pip install -r requirements.txt")
+        return
 
     # Check if feature engineering data exists
     if 'engineered_features' not in st.session_state or st.session_state.engineered_features is None:
@@ -131,23 +181,32 @@ def show():
 
                 # SHAP analysis
                 if include_shap_analysis and has_labels:
-                    try:
-                        shap_explainer = SHAPExplainer()
-                        shap_analysis = shap_explainer.analyze(X, y, sample_size=analysis_sample_size)
-                        st.session_state.shap_analysis = shap_analysis
-                        st.success("✅ SHAP analysis completed")
-                    except Exception as e:
-                        st.warning(f"⚠️ SHAP analysis failed: {e}")
+                    if SHAP_AVAILABLE and SHAPExplainer:
+                        try:
+                            shap_explainer = SHAPExplainer()
+                            shap_analysis = shap_explainer.analyze(X, y, sample_size=analysis_sample_size)
+                            st.session_state.shap_analysis = shap_analysis
+                            st.success("✅ SHAP analysis completed")
+                        except Exception as e:
+                            st.warning(f"⚠️ SHAP analysis failed: {e}")
+                    else:
+                        st.warning("⚠️ SHAP explainer not available. Please install required dependencies.")
 
                 # LIME analysis
                 if include_lime_analysis and has_labels:
-                    try:
-                        lime_explainer = LIMEExplainer()
-                        lime_analysis = lime_explainer.analyze(X, y, sample_size=analysis_sample_size)
-                        st.session_state.lime_analysis = lime_analysis
-                        st.success("✅ LIME analysis completed")
-                    except Exception as e:
-                        st.warning(f"⚠️ LIME analysis failed: {e}")
+                    if LIME_AVAILABLE and LIMEExplainer:
+                        try:
+                            lime_explainer = LIMEExplainer()
+                            lime_analysis = lime_explainer.analyze(X, y, sample_size=analysis_sample_size)
+                            st.session_state.lime_analysis = lime_analysis
+                            if 'error' in lime_analysis:
+                                st.warning(f"⚠️ LIME analysis failed: {lime_analysis['message']}")
+                            else:
+                                st.success("✅ LIME analysis completed")
+                        except Exception as e:
+                            st.warning(f"⚠️ LIME analysis failed: {e}")
+                    else:
+                        st.warning("⚠️ LIME explainer not available. Please install LIME using: pip install lime")
 
                 # Generate report data
                 report_data = {
@@ -430,73 +489,83 @@ def show():
                 if report_data is None:
                     st.error("❌ Please generate analysis report first")
                 else:
-                    try:
-                        report_generator = ReportGenerator()
-                        pdf_path = report_generator.generate_pdf_report(report_data)
-                        st.success(f"✅ PDF report generated: {pdf_path}")
+                    if REPORT_GENERATOR_AVAILABLE and ReportGenerator:
+                        try:
+                            report_generator = ReportGenerator()
+                            pdf_path = report_generator.generate_pdf_report(report_data)
+                            st.success(f"✅ PDF report generated: {pdf_path}")
 
-                        # Provide download link
-                        if os.path.exists(pdf_path):
-                            with open(pdf_path, "rb") as file:
-                                st.download_button(
-                                    label="📥 Download PDF Report",
-                                    data=file.read(),
-                                    file_name="fraud_detection_report.pdf",
-                                    mime="application/pdf"
-                                )
-                        else:
-                            st.warning("⚠️ PDF file generation failed")
-                    except Exception as e:
-                        st.error(f"❌ PDF report generation failed: {str(e)}")
-                        st.info("💡 PDF report feature is under development, please try other formats")
+                            # Provide download link
+                            if os.path.exists(pdf_path):
+                                with open(pdf_path, "rb") as file:
+                                    st.download_button(
+                                        label="📥 Download PDF Report",
+                                        data=file.read(),
+                                        file_name="fraud_detection_report.pdf",
+                                        mime="application/pdf"
+                                    )
+                            else:
+                                st.warning("⚠️ PDF file generation failed")
+                        except Exception as e:
+                            st.error(f"❌ PDF report generation failed: {str(e)}")
+                            st.info("💡 PDF report feature is under development, please try other formats")
+                    else:
+                        st.warning("⚠️ Report generator not available. Please check dependencies.")
+                        st.info("💡 Please install required dependencies for report generation")
 
         with col2:
             if st.button("📊 Export Excel Report", type="primary", use_container_width=True):
                 if report_data is None:
                     st.error("❌ Please generate analysis report first")
                 else:
-                    try:
-                        report_generator = ReportGenerator()
-                        excel_path = report_generator.generate_excel_report(report_data)
-                        st.success(f"✅ Excel report generated: {excel_path}")
+                    if REPORT_GENERATOR_AVAILABLE and ReportGenerator:
+                        try:
+                            report_generator = ReportGenerator()
+                            excel_path = report_generator.generate_excel_report(report_data)
+                            st.success(f"✅ Excel report generated: {excel_path}")
 
-                        # Provide download link
-                        if os.path.exists(excel_path):
-                            with open(excel_path, "rb") as file:
-                                st.download_button(
-                                    label="📥 Download Excel Report",
-                                    data=file.read(),
-                                    file_name="fraud_detection_report.xlsx",
-                                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                )
-                        else:
-                            st.warning("⚠️ Excel file generation failed")
-                    except Exception as e:
-                        st.error(f"❌ Excel report generation failed: {str(e)}")
+                            # Provide download link
+                            if os.path.exists(excel_path):
+                                with open(excel_path, "rb") as file:
+                                    st.download_button(
+                                        label="📥 Download Excel Report",
+                                        data=file.read(),
+                                        file_name="fraud_detection_report.xlsx",
+                                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                    )
+                            else:
+                                st.warning("⚠️ Excel file generation failed")
+                        except Exception as e:
+                            st.error(f"❌ Excel report generation failed: {str(e)}")
+                    else:
+                        st.warning("⚠️ Report generator not available. Please check dependencies.")
 
         with col3:
             if st.button("📊 Export HTML Report", type="primary", use_container_width=True):
                 if report_data is None:
                     st.error("❌ Please generate analysis report first")
                 else:
-                    try:
-                        report_generator = ReportGenerator()
-                        html_path = report_generator.generate_html_report(report_data)
-                        st.success(f"✅ HTML report generated: {html_path}")
+                    if REPORT_GENERATOR_AVAILABLE and ReportGenerator:
+                        try:
+                            report_generator = ReportGenerator()
+                            html_path = report_generator.generate_html_report(report_data)
+                            st.success(f"✅ HTML report generated: {html_path}")
 
-                        # Provide download link
-                        if os.path.exists(html_path):
-                            with open(html_path, "r", encoding="utf-8") as file:
-                                st.download_button(
-                                    label="📥 Download HTML Report",
-                                    data=file.read(),
-                                    file_name="fraud_detection_report.html",
-                                    mime="text/html"
-                                )
-                        else:
-                            st.warning("⚠️ HTML file generation failed")
-                    except Exception as e:
-                        st.error(f"❌ HTML report generation failed: {str(e)}")
+                            # Provide download link
+                            if os.path.exists(html_path):
+                                with open(html_path, "r", encoding="utf-8") as file:
+                                    st.download_button(
+                                        label="📥 Download HTML Report",
+                                        data=file.read(),
+                                        file_name="fraud_detection_report.html",
+                                        mime="text/html"
+                                    )
+                            else:
+                                st.warning("⚠️ HTML file generation failed")
+                        except Exception as e:
+                            st.error(f"❌ HTML report generation failed: {str(e)}")
+                    else:
+                        st.warning("⚠️ Report generator not available. Please check dependencies.")
         
         # Report completion
         st.markdown("---")
